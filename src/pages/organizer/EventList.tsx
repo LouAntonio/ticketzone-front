@@ -1,0 +1,133 @@
+import { Link } from 'react-router-dom'
+import { useMyEvents } from '../../api/hooks/useEvents'
+import { Card } from '../../components/ui/Card'
+import { Badge } from '../../components/ui/Badge'
+import { Button } from '../../components/ui/Button'
+import { Spinner } from '../../components/ui/Spinner'
+import { formatDate, formatKwanza, getCategoryLabel } from '../../lib/format'
+
+export function EventList() {
+	const { data, isLoading } = useMyEvents()
+
+	const events = data?.events ?? []
+
+	return (
+		<div className="space-y-6">
+			<div className="flex items-center justify-between">
+				<div>
+					<h1 className="font-heading font-700 text-2xl">Os Meus Eventos</h1>
+					<p className="text-text-secondary text-sm">
+						{events.length} evento{events.length !== 1 ? 's' : ''}
+					</p>
+				</div>
+				<Link to="/organizer/events/new">
+					<Button>
+						<svg
+							width="16"
+							height="16"
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							strokeWidth="2"
+							strokeLinecap="round"
+							strokeLinejoin="round"
+						>
+							<path d="M12 5v14M5 12h14" />
+						</svg>
+						Novo Evento
+					</Button>
+				</Link>
+			</div>
+
+			{isLoading ? (
+				<div className="flex justify-center py-12">
+					<Spinner size="lg" />
+				</div>
+			) : events.length === 0 ? (
+				<Card className="text-center py-12">
+					<p className="text-text-secondary mb-4">Nenhum evento criado ainda</p>
+					<Link to="/organizer/events/new">
+						<Button>Criar Primeiro Evento</Button>
+					</Link>
+				</Card>
+			) : (
+				<div className="space-y-4">
+					{events.map((event) => (
+						<Card key={event.id}>
+							<div className="flex gap-4">
+								<img
+									src={event.coverImage}
+									alt={event.title}
+									className="w-24 h-24 rounded-xl object-cover shrink-0"
+								/>
+								<div className="flex-1 min-w-0">
+									<div className="flex items-start justify-between gap-4">
+										<div>
+											<h3 className="font-heading font-600 text-base">
+												{event.title}
+											</h3>
+											<p className="text-xs text-text-secondary mt-0.5">
+												{formatDate(event.date)} · {event.venue}
+											</p>
+											<div className="flex items-center gap-2 mt-2">
+												<Badge
+													variant={
+														event.status === 'published'
+															? 'emerald'
+															: event.status === 'draft'
+																? 'gray'
+																: 'red'
+													}
+												>
+													{event.status === 'published'
+														? 'Publicado'
+														: event.status === 'draft'
+															? 'Rascunho'
+															: 'Cancelado'}
+												</Badge>
+												<Badge>{getCategoryLabel(event.category)}</Badge>
+											</div>
+										</div>
+										<div className="text-right shrink-0">
+											<p className="text-sm font-heading font-600 text-brand">
+												{formatKwanza(
+													Math.min(
+														...event.ticketTypes.map((t) => t.price),
+													),
+												)}
+											</p>
+											<p className="text-xs text-text-secondary">
+												{event.ticketTypes.length} tipo
+												{event.ticketTypes.length !== 1 ? 's' : ''}
+											</p>
+										</div>
+									</div>
+									<div className="flex items-center gap-2 mt-3">
+										<Link
+											to={`/organizer/events/${event.id}`}
+											className="btn-ghost h-8 px-3 text-xs rounded-lg"
+										>
+											Editar
+										</Link>
+										<Link
+											to={`/organizer/events/${event.id}/sales`}
+											className="btn-ghost h-8 px-3 text-xs rounded-lg"
+										>
+											Vendas
+										</Link>
+										<Link
+											to={`/events/${event.slug}`}
+											className="btn-ghost h-8 px-3 text-xs rounded-lg"
+										>
+											Ver Página
+										</Link>
+									</div>
+								</div>
+							</div>
+						</Card>
+					))}
+				</div>
+			)}
+		</div>
+	)
+}

@@ -1,18 +1,23 @@
-import { Navigate, Route, Routes } from 'react-router-dom'
-import { PrivateRoute } from './components/PrivateRoute'
-import { HomePage } from './pages/HomePage'
-import { LoginPage } from './pages/LoginPage'
+import { RouterProvider } from 'react-router-dom'
+import { QueryClientProvider } from '@tanstack/react-query'
+import { Toaster } from 'react-hot-toast'
+import { queryClient } from './api/queryClient'
+import { router } from './router'
 
-function App() {
+export default function App() {
 	return (
-		<Routes>
-			<Route path="/login" element={<LoginPage />} />
-			<Route element={<PrivateRoute />}>
-				<Route path="/" element={<HomePage />} />
-			</Route>
-			<Route path="*" element={<Navigate to="/" replace />} />
-		</Routes>
+		<QueryClientProvider client={queryClient}>
+			<RouterProvider router={router} />
+			<Toaster
+				position="top-right"
+				toastOptions={{
+					style: {
+						borderRadius: '12px',
+						fontFamily: 'Nunito, sans-serif',
+						fontSize: '14px',
+					},
+				}}
+			/>
+		</QueryClientProvider>
 	)
 }
-
-export default App
