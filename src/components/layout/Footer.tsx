@@ -75,6 +75,12 @@ export function Footer() {
 							>
 								Privacidade
 							</Link>
+							<Link
+								to="/contacto"
+								className="text-sm text-gray-400 hover:text-white transition-colors"
+							>
+								Contacto
+							</Link>
 						</div>
 					</div>
 				</div>

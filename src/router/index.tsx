@@ -14,6 +14,7 @@ import { Ajuda } from '../pages/public/Ajuda'
 import { ComoFunciona } from '../pages/public/ComoFunciona'
 import { Termos } from '../pages/public/Termos'
 import { Privacidade } from '../pages/public/Privacidade'
+import { Contacto } from '../pages/public/Contacto'
 
 // Auth
 import { LoginPage } from '../pages/auth/LoginPage'
@@ -54,6 +55,7 @@ export const router = createBrowserRouter([
 					{ path: '/como-funciona', element: <ComoFunciona /> },
 					{ path: '/termos', element: <Termos /> },
 					{ path: '/privacidade', element: <Privacidade /> },
+					{ path: '/contacto', element: <Contacto /> },
 				],
 			},
 

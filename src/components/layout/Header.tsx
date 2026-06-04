@@ -40,6 +40,18 @@ export function Header() {
 						>
 							Rent-a-Car
 						</Link>
+						<Link
+							to="/como-funciona"
+							className="text-sm font-heading font-500 text-text-secondary hover:text-text transition-colors"
+						>
+							Como Funciona
+						</Link>
+						<Link
+							to="/contacto"
+							className="text-sm font-heading font-500 text-text-secondary hover:text-text transition-colors"
+						>
+							Contacto
+						</Link>
 						{user ? (
 							<>
 								<Link
