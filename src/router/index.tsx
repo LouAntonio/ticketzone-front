@@ -1,6 +1,7 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom'
 import { ProtectedRoute } from './ProtectedRoute'
 import { OrganizerRoute } from './OrganizerRoute'
+import { RootLayout } from './RootLayout'
 import { PublicLayout } from '../components/layout/PublicLayout'
 import { DashboardLayout } from '../components/layout/DashboardLayout'
 
@@ -34,63 +35,68 @@ import { CarCatalog } from '../pages/public/CarCatalog'
 
 export const router = createBrowserRouter([
 	{
-		element: <PublicLayout />,
-		children: [
-			{ path: '/', element: <LandingPage /> },
-			{ path: '/events', element: <EventCatalog /> },
-			{ path: '/events/:slug', element: <EventDetail /> },
-			{ path: '/rentals', element: <CarCatalog /> },
-		],
-	},
-
-	// Auth routes (no layout)
-	{ path: '/login', element: <LoginPage /> },
-	{ path: '/register', element: <RegisterPage /> },
-
-	// Buyer routes
-	{
-		element: <ProtectedRoute />,
+		element: <RootLayout />,
 		children: [
 			{
-				element: <DashboardLayout />,
+				element: <PublicLayout />,
 				children: [
-					{ path: '/account', element: <BuyerDashboard /> },
-					{ path: '/account/tickets', element: <MyTickets /> },
+					{ path: '/', element: <LandingPage /> },
+					{ path: '/events', element: <EventCatalog /> },
+					{ path: '/events/:slug', element: <EventDetail /> },
+					{ path: '/rentals', element: <CarCatalog /> },
 				],
 			},
-		],
-	},
 
-	// Checkout (minimal layout)
-	{
-		element: <ProtectedRoute />,
-		children: [{ path: '/checkout/:eventId', element: <CheckoutPage /> }],
-	},
+			// Auth routes (no layout)
+			{ path: '/login', element: <LoginPage /> },
+			{ path: '/register', element: <RegisterPage /> },
 
-	// Organizer routes
-	{
-		element: <OrganizerRoute />,
-		children: [
+			// Buyer routes
 			{
-				element: <DashboardLayout />,
+				element: <ProtectedRoute />,
 				children: [
-					{ path: '/organizer', element: <OrganizerDashboard /> },
-					{ path: '/organizer/events', element: <EventList /> },
-					{ path: '/organizer/events/new', element: <EventForm /> },
-					{ path: '/organizer/events/:id', element: <EventForm /> },
-					{ path: '/organizer/events/:id/sales', element: <SalesAnalytics /> },
-					{ path: '/organizer/attendees', element: <AttendeeList /> },
-					{ path: '/organizer/settings', element: <OrgSettings /> },
+					{
+						element: <DashboardLayout />,
+						children: [
+							{ path: '/account', element: <BuyerDashboard /> },
+							{ path: '/account/tickets', element: <MyTickets /> },
+						],
+					},
 				],
 			},
+
+			// Checkout (minimal layout)
+			{
+				element: <ProtectedRoute />,
+				children: [{ path: '/checkout/:eventId', element: <CheckoutPage /> }],
+			},
+
+			// Organizer routes
+			{
+				element: <OrganizerRoute />,
+				children: [
+					{
+						element: <DashboardLayout />,
+						children: [
+							{ path: '/organizer', element: <OrganizerDashboard /> },
+							{ path: '/organizer/events', element: <EventList /> },
+							{ path: '/organizer/events/new', element: <EventForm /> },
+							{ path: '/organizer/events/:id', element: <EventForm /> },
+							{ path: '/organizer/events/:id/sales', element: <SalesAnalytics /> },
+							{ path: '/organizer/attendees', element: <AttendeeList /> },
+							{ path: '/organizer/settings', element: <OrgSettings /> },
+						],
+					},
+				],
+			},
+
+			// Validation
+			{
+				element: <ProtectedRoute />,
+				children: [{ path: '/validate', element: <ValidationPortal /> }],
+			},
+
+			{ path: '*', element: <Navigate to="/" replace /> },
 		],
 	},
-
-	// Validation
-	{
-		element: <ProtectedRoute />,
-		children: [{ path: '/validate', element: <ValidationPortal /> }],
-	},
-
-	{ path: '*', element: <Navigate to="/" replace /> },
 ])
