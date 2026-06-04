@@ -9,6 +9,11 @@ import { DashboardLayout } from '../components/layout/DashboardLayout'
 import { LandingPage } from '../pages/public/LandingPage'
 import { EventCatalog } from '../pages/public/EventCatalog'
 import { EventDetail } from '../pages/public/EventDetail'
+import { Sobre } from '../pages/public/Sobre'
+import { Ajuda } from '../pages/public/Ajuda'
+import { ComoFunciona } from '../pages/public/ComoFunciona'
+import { Termos } from '../pages/public/Termos'
+import { Privacidade } from '../pages/public/Privacidade'
 
 // Auth
 import { LoginPage } from '../pages/auth/LoginPage'
@@ -44,6 +49,11 @@ export const router = createBrowserRouter([
 					{ path: '/events', element: <EventCatalog /> },
 					{ path: '/events/:slug', element: <EventDetail /> },
 					{ path: '/rentals', element: <CarCatalog /> },
+					{ path: '/sobre', element: <Sobre /> },
+					{ path: '/ajuda', element: <Ajuda /> },
+					{ path: '/como-funciona', element: <ComoFunciona /> },
+					{ path: '/termos', element: <Termos /> },
+					{ path: '/privacidade', element: <Privacidade /> },
 				],
 			},
 

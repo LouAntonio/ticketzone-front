@@ -26,6 +26,18 @@ export function Footer() {
 						</h3>
 						<div className="flex flex-col gap-2">
 							<Link
+								to="/sobre"
+								className="text-sm text-gray-400 hover:text-white transition-colors"
+							>
+								Sobre
+							</Link>
+							<Link
+								to="/como-funciona"
+								className="text-sm text-gray-400 hover:text-white transition-colors"
+							>
+								Como Funciona
+							</Link>
+							<Link
 								to="/events"
 								className="text-sm text-gray-400 hover:text-white transition-colors"
 							>
@@ -37,12 +49,6 @@ export function Footer() {
 							>
 								Rent-a-Car
 							</Link>
-							<Link
-								to="/register"
-								className="text-sm text-gray-400 hover:text-white transition-colors"
-							>
-								Criar Evento
-							</Link>
 						</div>
 					</div>
 
@@ -51,24 +57,24 @@ export function Footer() {
 							Suporte
 						</h3>
 						<div className="flex flex-col gap-2">
-							<a
-								href="#"
+							<Link
+								to="/ajuda"
 								className="text-sm text-gray-400 hover:text-white transition-colors"
 							>
 								Ajuda
-							</a>
-							<a
-								href="#"
+							</Link>
+							<Link
+								to="/termos"
 								className="text-sm text-gray-400 hover:text-white transition-colors"
 							>
 								Termos de Uso
-							</a>
-							<a
-								href="#"
+							</Link>
+							<Link
+								to="/privacidade"
 								className="text-sm text-gray-400 hover:text-white transition-colors"
 							>
 								Privacidade
-							</a>
+							</Link>
 						</div>
 					</div>
 				</div>
