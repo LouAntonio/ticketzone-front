@@ -11,18 +11,18 @@ interface StepProps {
 
 function StepCard({ number, icon, title, desc, delay }: StepProps) {
 	return (
-		<div className="flex gap-5 slide-up" style={{ animationDelay: `${delay}ms` }}>
+		<div className="flex gap-6 slide-up" style={{ animationDelay: `${delay}ms` }}>
 			<div className="flex flex-col items-center">
-				<div className="w-11 h-11 rounded-xl bg-brand text-white flex items-center justify-center font-heading font-700 text-sm shrink-0">
+				<span className="font-display text-4xl sm:text-5xl text-brand leading-none -mt-1 select-none">
 					{String(number).padStart(2, '0')}
-				</div>
-				{number < 4 && <div className="w-0.5 flex-1 bg-border mt-2" />}
+				</span>
+				{number < 4 && <div className="w-0.5 flex-1 bg-border mt-2 min-h-[2rem]" />}
 			</div>
-			<div className="pb-8">
-				<div className="w-12 h-12 rounded-xl bg-brand-soft flex items-center justify-center mb-3">
+			<div className="pb-10 flex-1">
+				<div className="w-10 h-10 rounded-xl bg-brand-soft flex items-center justify-center mb-3">
 					<svg
-						width="22"
-						height="22"
+						width="20"
+						height="20"
 						viewBox="0 0 24 24"
 						fill="none"
 						stroke="currentColor"
@@ -34,8 +34,8 @@ function StepCard({ number, icon, title, desc, delay }: StepProps) {
 						<path d={icon} />
 					</svg>
 				</div>
-				<h3 className="font-heading font-700 text-base mb-1">{title}</h3>
-				<p className="text-text-secondary text-sm leading-relaxed">{desc}</p>
+				<h3 className="font-heading font-700 text-base sm:text-lg mb-1.5">{title}</h3>
+				<p className="text-text-secondary text-sm leading-relaxed max-w-lg">{desc}</p>
 			</div>
 		</div>
 	)
@@ -60,7 +60,7 @@ const buyerSteps = [
 	{
 		icon: 'M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z',
 		title: 'Recebe e Entra',
-		desc: 'Os teus bilhetes chegam por email e WhatsApp. No dia do evento, apresenta o QR Code na entrada e pronto — é só aproveitar!',
+		desc: 'Os teus bilhetes chegam por email e WhatsApp. No dia do evento, apresenta o QR Code na entrada.',
 	},
 ]
 
@@ -78,12 +78,12 @@ const organizerSteps = [
 	{
 		icon: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z',
 		title: 'Vende e Gere Vendas',
-		desc: 'Acompanha as vendas em tempo real, gere a lotação e comunica com os teus compradores através do painel.',
+		desc: 'Acompanha as vendas em tempo real, gere a lotação e comunica com os compradores através do painel.',
 	},
 	{
 		icon: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z',
 		title: 'Valida os Bilhetes',
-		desc: 'No dia do evento, usa o nosso validador para escanear os QR codes dos bilhetes na entrada, garantindo que só entram pessoas com bilhetes válidos.',
+		desc: 'No dia do evento, usa o nosso validador para escanear os QR codes dos bilhetes na entrada.',
 	},
 ]
 
@@ -92,22 +92,24 @@ export function ComoFunciona() {
 
 	return (
 		<div>
-			<section className="relative overflow-hidden bg-gradient-to-br from-brand via-brand-dark to-brand-dark">
-				<div
-					className="absolute inset-0 opacity-[0.08]"
-					style={{
-						backgroundImage:
-							"url(\"data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Cpath d='M20 0v40M0 20h40'/%3E%3C/g%3E%3C/svg%3E\")",
-					}}
-				/>
-				<div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-28">
+			<section className="bg-surface border-b border-border">
+				<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20">
 					<div className="max-w-3xl">
-						<h1 className="font-display text-5xl sm:text-6xl lg:text-7xl text-white mb-4 slide-up">
-							Como Funciona
+						<div className="inline-flex items-center gap-2 bg-brand-soft text-brand text-xs font-heading font-700 uppercase tracking-[0.15em] px-4 py-1.5 rounded-full mb-4 slide-up">
+							Guia Rápido
+						</div>
+						<h1 className="font-display text-5xl sm:text-7xl lg:text-8xl text-text leading-none slide-up">
+							Como
+							<br />
+							Funciona
 						</h1>
+						<div
+							className="w-20 h-1 bg-brand rounded-full mt-6 mb-4 slide-up"
+							style={{ animationDelay: '80ms' }}
+						/>
 						<p
-							className="text-white/70 text-lg sm:text-xl font-body max-w-2xl slide-up"
-							style={{ animationDelay: '100ms' }}
+							className="text-text-secondary text-lg max-w-xl slide-up"
+							style={{ animationDelay: '120ms' }}
 						>
 							Simples, rápido e seguro — descobre como usar a TicketZone em poucos
 							passos.
@@ -116,68 +118,86 @@ export function ComoFunciona() {
 				</div>
 			</section>
 
-			<section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20">
-				<div className="max-w-2xl mx-auto">
-					<div className="text-center mb-12">
-						<span className="text-sm font-heading font-700 text-brand uppercase tracking-wider">
-							Para Compradores
+			<section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-24">
+				<div className="max-w-4xl mx-auto">
+					<div className="mb-14">
+						<span className="font-display text-4xl text-brand/20 leading-none select-none block -mb-3">
+							01
 						</span>
-						<h2 className="font-display text-4xl sm:text-5xl mt-2 mb-3">
-							Comprar Bilhetes
-						</h2>
-						<p className="text-text-secondary">
+						<div className="flex items-center gap-4 mb-3">
+							<h2 className="font-heading font-700 text-2xl sm:text-3xl text-text">
+								Comprar Bilhetes
+							</h2>
+							<div className="flex-1 h-px bg-border hidden sm:block" />
+						</div>
+						<p className="text-text-secondary max-w-lg">
 							Em apenas 4 passos tens os teus bilhetes na mão
 						</p>
 					</div>
-					{buyerSteps.map((step, i) => (
-						<StepCard key={step.title} number={i + 1} {...step} delay={i * 100} />
-					))}
-				</div>
-			</section>
-
-			<section className="bg-surface-card border-y border-border py-16 sm:py-20">
-				<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-					<div className="max-w-2xl mx-auto">
-						<div className="text-center mb-12">
-							<span className="text-sm font-heading font-700 text-brand uppercase tracking-wider">
-								Para Organizadores
-							</span>
-							<h2 className="font-display text-4xl sm:text-5xl mt-2 mb-3">
-								Vender Bilhetes
-							</h2>
-							<p className="text-text-secondary">
-								Tudo o que precisas para gerir os teus eventos
-							</p>
-						</div>
-						{organizerSteps.map((step, i) => (
-							<StepCard key={step.title} number={i + 1} {...step} delay={i * 100} />
+					<div className="grid md:grid-cols-2 gap-x-12">
+						{buyerSteps.map((step, i) => (
+							<StepCard key={step.title} number={i + 1} {...step} delay={i * 80} />
 						))}
 					</div>
 				</div>
 			</section>
 
-			<section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20">
-				<div className="card p-8 sm:p-12 bg-gradient-to-r from-brand to-brand-dark text-center">
-					<h2 className="font-display text-3xl sm:text-4xl text-white mb-4">
-						Pronto para começar?
-					</h2>
-					<p className="text-white/70 max-w-lg mx-auto mb-8">
-						Regista-te grátis e começa a explorar eventos ou a vender os teus bilhetes
-						em menos de 5 minutos.
-					</p>
-					<div className="flex flex-wrap gap-3 justify-center">
-						<Link
-							to="/register"
-							className="btn bg-white text-brand hover:bg-gray-100 h-12 px-8 text-sm font-heading font-700 rounded-xl"
-						>
-							Criar Conta Grátis
-						</Link>
-						<Link
-							to="/events"
-							className="btn border-2 border-white/30 text-white hover:bg-white/10 h-12 px-8 text-sm font-heading font-700 rounded-xl"
-						>
-							Explorar Eventos
-						</Link>
+			<section className="bg-surface-card border-y border-border py-20 sm:py-24">
+				<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+					<div className="max-w-4xl mx-auto">
+						<div className="mb-14">
+							<span className="font-display text-4xl text-brand/20 leading-none select-none block -mb-3">
+								02
+							</span>
+							<div className="flex items-center gap-4 mb-3">
+								<h2 className="font-heading font-700 text-2xl sm:text-3xl text-text">
+									Vender Bilhetes
+								</h2>
+								<div className="flex-1 h-px bg-border hidden sm:block" />
+							</div>
+							<p className="text-text-secondary max-w-lg">
+								Tudo o que precisas para gerir os teus eventos
+							</p>
+						</div>
+						<div className="grid md:grid-cols-2 gap-x-12">
+							{organizerSteps.map((step, i) => (
+								<StepCard
+									key={step.title}
+									number={i + 1}
+									{...step}
+									delay={i * 80}
+								/>
+							))}
+						</div>
+					</div>
+				</div>
+			</section>
+
+			<section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-24">
+				<div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-brand via-brand-dark to-brand-dark">
+					<div className="absolute inset-0 pattern-diamonds" />
+					<div className="relative px-8 sm:px-16 py-14 sm:py-20 text-center">
+						<h2 className="font-display text-3xl sm:text-5xl text-white mb-4">
+							Pronto para começar?
+						</h2>
+						<p className="text-white/70 max-w-lg mx-auto mb-10">
+							Regista-te grátis e começa a explorar eventos ou a vender os teus
+							bilhetes em menos de 5 minutos.
+						</p>
+						<div className="flex flex-wrap gap-4 justify-center">
+							<Link
+								to="/register"
+								className="btn bg-white text-text hover:bg-gray-100 h-12 px-8 text-sm font-heading font-700"
+							>
+								Criar Conta Grátis
+							</Link>
+							<Link
+								to="/events"
+								className="btn border-2 border-white/25 text-white hover:bg-white/10 h-12 px-8 text-sm font-heading font-700"
+							>
+								Explorar Eventos
+							</Link>
+						</div>
 					</div>
 				</div>
 			</section>
