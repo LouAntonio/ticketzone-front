@@ -20,7 +20,7 @@ export function LoginPage() {
 		try {
 			const res = await authApi.login({ email, password })
 			setSession(res.token, res.user, res.organizerProfile)
-			navigate('/')
+			navigate(res.user.role === 'admin' ? '/admin' : '/')
 		} catch (err) {
 			const axiosErr = err as AxiosError<{ error: string }>
 			setError(axiosErr?.response?.data?.error ?? 'Erro ao fazer login')

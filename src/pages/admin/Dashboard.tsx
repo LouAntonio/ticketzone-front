@@ -96,12 +96,8 @@ export function AdminDashboard() {
 		<div className="space-y-8 animate-fade-in">
 			{/* Header */}
 			<div>
-				<h1 className="font-display text-3xl tracking-wider text-white">
-					DASHBOARD
-				</h1>
-				<p className="text-gray-500 text-sm mt-1">
-					Visão geral da plataforma Ticketzone
-				</p>
+				<h1 className="font-display text-3xl tracking-wider text-white">DASHBOARD</h1>
+				<p className="text-gray-500 text-sm mt-1">Visão geral da plataforma Ticketzone</p>
 			</div>
 
 			{/* Stats Grid */}
@@ -112,7 +108,9 @@ export function AdminDashboard() {
 						className="rounded-xl bg-[#1a1a1a] border border-[#2a2a2a] p-5 hover:border-[#3a3a3a] transition-colors"
 					>
 						<div className="flex items-start justify-between mb-3">
-							<div className={`w-10 h-10 rounded-lg ${stat.bg} flex items-center justify-center`}>
+							<div
+								className={`w-10 h-10 rounded-lg ${stat.bg} flex items-center justify-center`}
+							>
 								<svg
 									width="20"
 									height="20"
@@ -146,7 +144,7 @@ export function AdminDashboard() {
 						Receita Mensal
 					</h2>
 					<div className="flex items-end justify-between gap-2 h-40">
-						{data?.revenueByMonth?.map((item, idx) => {
+						{data?.revenueByMonth?.map((item) => {
 							const maxRevenue = Math.max(
 								...data.revenueByMonth.map((r) => r.revenue),
 								1,

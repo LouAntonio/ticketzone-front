@@ -82,26 +82,20 @@ export interface AdminCar {
 }
 
 export const adminApi = {
-	stats: () =>
-		api.get<AdminStats>('/api/admin/stats').then((r) => r.data),
+	stats: () => api.get<AdminStats>('/api/admin/stats').then((r) => r.data),
 
-	users: () =>
-		api.get<{ users: AdminUser[] }>('/api/admin/users').then((r) => r.data),
+	users: () => api.get<{ users: AdminUser[] }>('/api/admin/users').then((r) => r.data),
 
-	events: () =>
-		api.get<{ events: AdminEvent[] }>('/api/admin/events').then((r) => r.data),
+	events: () => api.get<{ events: AdminEvent[] }>('/api/admin/events').then((r) => r.data),
 
-	orders: () =>
-		api.get<{ orders: AdminOrder[] }>('/api/admin/orders').then((r) => r.data),
+	orders: () => api.get<{ orders: AdminOrder[] }>('/api/admin/orders').then((r) => r.data),
 
 	organizers: () =>
 		api.get<{ organizers: AdminOrganizer[] }>('/api/admin/organizers').then((r) => r.data),
 
-	financial: () =>
-		api.get<AdminFinancial>('/api/admin/financial').then((r) => r.data),
+	financial: () => api.get<AdminFinancial>('/api/admin/financial').then((r) => r.data),
 
-	fleet: () =>
-		api.get<{ cars: AdminCar[] }>('/api/admin/fleet').then((r) => r.data),
+	fleet: () => api.get<{ cars: AdminCar[] }>('/api/admin/fleet').then((r) => r.data),
 
 	updateEventStatus: (id: string, status: string) =>
 		api.put(`/api/admin/events/${id}/status`, { status }).then((r) => r.data),

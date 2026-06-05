@@ -37,10 +37,7 @@ export function AdminEvents() {
 		if (filterStatus !== 'all' && e.status !== filterStatus) return false
 		if (searchQuery) {
 			const q = searchQuery.toLowerCase()
-			return (
-				e.title.toLowerCase().includes(q) ||
-				e.organizerName.toLowerCase().includes(q)
-			)
+			return e.title.toLowerCase().includes(q) || e.organizerName.toLowerCase().includes(q)
 		}
 		return true
 	})
@@ -64,9 +61,7 @@ export function AdminEvents() {
 	return (
 		<div className="space-y-6 animate-fade-in">
 			<div>
-				<h1 className="font-display text-3xl tracking-wider text-white">
-					EVENTOS
-				</h1>
+				<h1 className="font-display text-3xl tracking-wider text-white">EVENTOS</h1>
 				<p className="text-gray-500 text-sm mt-1">
 					Gestão de todos os eventos da plataforma
 				</p>

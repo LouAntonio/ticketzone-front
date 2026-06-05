@@ -477,7 +477,8 @@ export const handlers = [
 		const userId = authHeader(request)
 		if (!userId) return HttpResponse.json({ error: 'Não autenticado' }, { status: 401 })
 		const user = db.users.find((u) => u.id === userId)
-		if (user?.role !== 'admin') return HttpResponse.json({ error: 'Não autorizado' }, { status: 403 })
+		if (user?.role !== 'admin')
+			return HttpResponse.json({ error: 'Não autorizado' }, { status: 403 })
 
 		const totalOrders = db.orders.length
 		const confirmedOrders = db.orders.filter((o) => o.status === 'confirmed')
@@ -528,7 +529,8 @@ export const handlers = [
 		const userId = authHeader(request)
 		if (!userId) return HttpResponse.json({ error: 'Não autenticado' }, { status: 401 })
 		const user = db.users.find((u) => u.id === userId)
-		if (user?.role !== 'admin') return HttpResponse.json({ error: 'Não autorizado' }, { status: 403 })
+		if (user?.role !== 'admin')
+			return HttpResponse.json({ error: 'Não autorizado' }, { status: 403 })
 
 		return HttpResponse.json({
 			users: db.users.map((u) => {
@@ -551,7 +553,8 @@ export const handlers = [
 		const userId = authHeader(request)
 		if (!userId) return HttpResponse.json({ error: 'Não autenticado' }, { status: 401 })
 		const user = db.users.find((u) => u.id === userId)
-		if (user?.role !== 'admin') return HttpResponse.json({ error: 'Não autorizado' }, { status: 403 })
+		if (user?.role !== 'admin')
+			return HttpResponse.json({ error: 'Não autorizado' }, { status: 403 })
 
 		return HttpResponse.json({
 			events: db.events.map((e) => {
@@ -583,7 +586,8 @@ export const handlers = [
 		const userId = authHeader(request)
 		if (!userId) return HttpResponse.json({ error: 'Não autenticado' }, { status: 401 })
 		const user = db.users.find((u) => u.id === userId)
-		if (user?.role !== 'admin') return HttpResponse.json({ error: 'Não autorizado' }, { status: 403 })
+		if (user?.role !== 'admin')
+			return HttpResponse.json({ error: 'Não autorizado' }, { status: 403 })
 
 		return HttpResponse.json({
 			orders: db.orders.map((o) => ({
@@ -604,14 +608,18 @@ export const handlers = [
 		const userId = authHeader(request)
 		if (!userId) return HttpResponse.json({ error: 'Não autenticado' }, { status: 401 })
 		const user = db.users.find((u) => u.id === userId)
-		if (user?.role !== 'admin') return HttpResponse.json({ error: 'Não autorizado' }, { status: 403 })
+		if (user?.role !== 'admin')
+			return HttpResponse.json({ error: 'Não autorizado' }, { status: 403 })
 
 		return HttpResponse.json({
 			organizers: db.organizers.map((org) => {
 				const owner = db.users.find((u) => u.id === org.userId)
 				const orgEvents = db.events.filter((e) => e.organizerId === org.id)
 				const totalRevenue = db.orders
-					.filter((o) => orgEvents.some((e) => e.id === o.eventId) && o.status === 'confirmed')
+					.filter(
+						(o) =>
+							orgEvents.some((e) => e.id === o.eventId) && o.status === 'confirmed',
+					)
 					.reduce((s, o) => s + o.total, 0)
 				return {
 					id: org.id,
@@ -633,7 +641,8 @@ export const handlers = [
 		const userId = authHeader(request)
 		if (!userId) return HttpResponse.json({ error: 'Não autenticado' }, { status: 401 })
 		const user = db.users.find((u) => u.id === userId)
-		if (user?.role !== 'admin') return HttpResponse.json({ error: 'Não autorizado' }, { status: 403 })
+		if (user?.role !== 'admin')
+			return HttpResponse.json({ error: 'Não autorizado' }, { status: 403 })
 
 		const confirmedOrders = db.orders.filter((o) => o.status === 'confirmed')
 		const totalRevenue = confirmedOrders.reduce((s, o) => s + o.total, 0)
@@ -642,7 +651,8 @@ export const handlers = [
 		const pendingOrders = db.orders.filter((o) => o.status === 'pending')
 		const pendingRevenue = pendingOrders.reduce((s, o) => s + o.total, 0)
 		const pendingPayouts = Math.round(pendingRevenue * 0.9)
-		const averageCommission = db.orders.length > 0 ? Math.round(totalCommissions / db.orders.length) : 0
+		const averageCommission =
+			db.orders.length > 0 ? Math.round(totalCommissions / db.orders.length) : 0
 
 		return HttpResponse.json({
 			totalRevenue,
@@ -659,7 +669,8 @@ export const handlers = [
 		const userId = authHeader(request)
 		if (!userId) return HttpResponse.json({ error: 'Não autenticado' }, { status: 401 })
 		const user = db.users.find((u) => u.id === userId)
-		if (user?.role !== 'admin') return HttpResponse.json({ error: 'Não autorizado' }, { status: 403 })
+		if (user?.role !== 'admin')
+			return HttpResponse.json({ error: 'Não autorizado' }, { status: 403 })
 
 		return HttpResponse.json({
 			cars: db.cars.map((c) => ({
@@ -682,11 +693,13 @@ export const handlers = [
 		const userId = authHeader(request)
 		if (!userId) return HttpResponse.json({ error: 'Não autenticado' }, { status: 401 })
 		const user = db.users.find((u) => u.id === userId)
-		if (user?.role !== 'admin') return HttpResponse.json({ error: 'Não autorizado' }, { status: 403 })
+		if (user?.role !== 'admin')
+			return HttpResponse.json({ error: 'Não autorizado' }, { status: 403 })
 
 		const body = (await request.json()) as { status: string }
 		const idx = db.events.findIndex((e) => e.id === params.id)
-		if (idx === -1) return HttpResponse.json({ error: 'Evento não encontrado' }, { status: 404 })
+		if (idx === -1)
+			return HttpResponse.json({ error: 'Evento não encontrado' }, { status: 404 })
 		db.events[idx].status = body.status as 'draft' | 'published' | 'cancelled' | 'completed'
 		return HttpResponse.json({ event: db.events[idx] })
 	}),
@@ -696,11 +709,13 @@ export const handlers = [
 		const userId = authHeader(request)
 		if (!userId) return HttpResponse.json({ error: 'Não autenticado' }, { status: 401 })
 		const user = db.users.find((u) => u.id === userId)
-		if (user?.role !== 'admin') return HttpResponse.json({ error: 'Não autorizado' }, { status: 403 })
+		if (user?.role !== 'admin')
+			return HttpResponse.json({ error: 'Não autorizado' }, { status: 403 })
 
 		const body = (await request.json()) as { role: string }
 		const idx = db.users.findIndex((u) => u.id === params.id)
-		if (idx === -1) return HttpResponse.json({ error: 'Utilizador não encontrado' }, { status: 404 })
+		if (idx === -1)
+			return HttpResponse.json({ error: 'Utilizador não encontrado' }, { status: 404 })
 		db.users[idx].role = body.role as 'buyer' | 'organizer' | 'admin'
 		return HttpResponse.json({ user: db.users[idx] })
 	}),

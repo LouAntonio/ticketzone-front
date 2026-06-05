@@ -66,9 +66,7 @@ export function AdminUsers() {
 	return (
 		<div className="space-y-6 animate-fade-in">
 			<div>
-				<h1 className="font-display text-3xl tracking-wider text-white">
-					UTILIZADORES
-				</h1>
+				<h1 className="font-display text-3xl tracking-wider text-white">UTILIZADORES</h1>
 				<p className="text-gray-500 text-sm mt-1">
 					Gestão de todos os utilizadores da plataforma
 				</p>
@@ -184,7 +182,9 @@ export function AdminUsers() {
 										{user.role !== 'admin' && (
 											<select
 												value={user.role}
-												onChange={(e) => handleRoleChange(user.id, e.target.value)}
+												onChange={(e) =>
+													handleRoleChange(user.id, e.target.value)
+												}
 												className="bg-[#252525] border border-[#3a3a3a] rounded-lg text-xs text-gray-300 px-2 py-1.5 focus:border-brand focus:outline-none cursor-pointer"
 											>
 												<option value="buyer">Comprador</option>

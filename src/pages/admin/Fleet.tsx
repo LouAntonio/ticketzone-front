@@ -43,9 +43,7 @@ export function AdminFleet() {
 	return (
 		<div className="space-y-6 animate-fade-in">
 			<div>
-				<h1 className="font-display text-3xl tracking-wider text-white">
-					FROTA
-				</h1>
+				<h1 className="font-display text-3xl tracking-wider text-white">FROTA</h1>
 				<p className="text-gray-500 text-sm mt-1">
 					Todas as viaturas disponíveis na plataforma
 				</p>
@@ -57,14 +55,10 @@ export function AdminFleet() {
 					<p className="text-xs text-gray-500 font-heading font-500 mb-1">
 						Total Viaturas
 					</p>
-					<p className="font-display text-2xl tracking-wider text-white">
-						{cars.length}
-					</p>
+					<p className="font-display text-2xl tracking-wider text-white">{cars.length}</p>
 				</div>
 				<div className="rounded-xl bg-[#1a1a1a] border border-[#2a2a2a] p-5">
-					<p className="text-xs text-gray-500 font-heading font-500 mb-1">
-						Disponíveis
-					</p>
+					<p className="text-xs text-gray-500 font-heading font-500 mb-1">Disponíveis</p>
 					<p className="font-display text-2xl tracking-wider text-emerald-400">
 						{availableCount}
 					</p>
@@ -183,7 +177,9 @@ export function AdminFleet() {
 									</td>
 									<td className="px-4 py-3 text-sm font-heading font-600 text-white text-right">
 										{formatKwanza(car.pricePerDay)}
-										<span className="text-xs text-gray-500 font-normal">/dia</span>
+										<span className="text-xs text-gray-500 font-normal">
+											/dia
+										</span>
 									</td>
 									<td className="px-4 py-3 text-center">
 										{car.available ? (

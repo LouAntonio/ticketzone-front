@@ -40,10 +40,7 @@ export function AdminOrders() {
 		if (filterStatus !== 'all' && o.status !== filterStatus) return false
 		if (searchQuery) {
 			const q = searchQuery.toLowerCase()
-			return (
-				o.eventTitle.toLowerCase().includes(q) ||
-				o.buyerName.toLowerCase().includes(q)
-			)
+			return o.eventTitle.toLowerCase().includes(q) || o.buyerName.toLowerCase().includes(q)
 		}
 		return true
 	})
@@ -66,12 +63,8 @@ export function AdminOrders() {
 	return (
 		<div className="space-y-6 animate-fade-in">
 			<div>
-				<h1 className="font-display text-3xl tracking-wider text-white">
-					ENCOMENDAS
-				</h1>
-				<p className="text-gray-500 text-sm mt-1">
-					Todas as transações da plataforma
-				</p>
+				<h1 className="font-display text-3xl tracking-wider text-white">ENCOMENDAS</h1>
+				<p className="text-gray-500 text-sm mt-1">Todas as transações da plataforma</p>
 			</div>
 
 			{/* Tabs */}

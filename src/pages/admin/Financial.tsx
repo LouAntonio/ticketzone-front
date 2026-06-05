@@ -67,23 +67,18 @@ export function AdminFinancial() {
 	return (
 		<div className="space-y-8 animate-fade-in">
 			<div>
-				<h1 className="font-display text-3xl tracking-wider text-white">
-					FINANCEIRO
-				</h1>
-				<p className="text-gray-500 text-sm mt-1">
-					Visão geral das finanças da plataforma
-				</p>
+				<h1 className="font-display text-3xl tracking-wider text-white">FINANCEIRO</h1>
+				<p className="text-gray-500 text-sm mt-1">Visão geral das finanças da plataforma</p>
 			</div>
 
 			{/* Metrics Grid */}
 			<div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
 				{metrics.map((m) => (
-					<div
-						key={m.label}
-						className={`rounded-xl bg-[#1a1a1a] border ${m.border} p-5`}
-					>
+					<div key={m.label} className={`rounded-xl bg-[#1a1a1a] border ${m.border} p-5`}>
 						<div className="flex items-start justify-between mb-3">
-							<div className={`w-10 h-10 rounded-lg ${m.bg} flex items-center justify-center`}>
+							<div
+								className={`w-10 h-10 rounded-lg ${m.bg} flex items-center justify-center`}
+							>
 								<svg
 									width="20"
 									height="20"
@@ -127,7 +122,9 @@ export function AdminFinancial() {
 							value: data?.totalCommissions ?? 0,
 							color: 'bg-amber-500',
 							pct: data?.totalRevenue
-								? Math.round(((data?.totalCommissions ?? 0) / data.totalRevenue) * 100)
+								? Math.round(
+										((data?.totalCommissions ?? 0) / data.totalRevenue) * 100,
+									)
 								: 0,
 						},
 						{

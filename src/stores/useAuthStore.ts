@@ -32,7 +32,7 @@ export const useAuthStore = create<AuthState>()(
 
 			isOrganizer: () => get().user?.role === 'organizer',
 
-	isAdmin: () => get().user?.role === 'admin',
+			isAdmin: () => get().user?.role === 'admin',
 		}),
 		{
 			name: '@ticketzone:auth',

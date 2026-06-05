@@ -21,9 +21,7 @@ export function AdminOrganizers() {
 	return (
 		<div className="space-y-6 animate-fade-in">
 			<div>
-				<h1 className="font-display text-3xl tracking-wider text-white">
-					ORGANIZADORES
-				</h1>
+				<h1 className="font-display text-3xl tracking-wider text-white">ORGANIZADORES</h1>
 				<p className="text-gray-500 text-sm mt-1">
 					Gestão de organizadores e promotores de eventos
 				</p>
