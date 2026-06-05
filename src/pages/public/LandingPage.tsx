@@ -37,12 +37,6 @@ const categories = [
 	},
 ]
 
-const payments = [
-	{ name: 'Multicaixa Express', desc: 'Pagamento via push notification' },
-	{ name: 'PayPay', desc: 'Pagamento via QR Code' },
-	{ name: 'Referências', desc: 'Pagamento em ATM ou Internet Banking' },
-]
-
 export function LandingPage() {
 	const { data, isLoading } = useFeaturedEvents()
 
@@ -101,35 +95,6 @@ export function LandingPage() {
 								</div>
 							</div>
 						</div>
-					</div>
-				</div>
-			</section>
-
-			{/* Payment methods bar */}
-			<section className="bg-surface-card border-b border-border">
-				<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-					<div className="flex flex-wrap items-center justify-center gap-8 sm:gap-12">
-						{payments.map((p) => (
-							<div key={p.name} className="flex items-center gap-3">
-								<div className="w-10 h-10 rounded-lg bg-brand-soft flex items-center justify-center">
-									<svg
-										width="18"
-										height="18"
-										viewBox="0 0 24 24"
-										fill="none"
-										stroke="currentColor"
-										strokeWidth="1.5"
-										className="text-brand"
-									>
-										<path d="M12 4v16m-8-8h16" />
-									</svg>
-								</div>
-								<div>
-									<p className="text-sm font-heading font-600">{p.name}</p>
-									<p className="text-xs text-text-secondary">{p.desc}</p>
-								</div>
-							</div>
-						))}
 					</div>
 				</div>
 			</section>
