@@ -4,6 +4,7 @@ dist-ssr
 build
 coverage
 package-lock.json
+public/mockServiceWorker.js
 agents
 .agents
 skills-lock.json
