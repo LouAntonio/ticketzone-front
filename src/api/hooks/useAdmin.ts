@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { toast } from 'react-hot-toast'
 import { adminApi } from '../endpoints/admin'
 
 export function useAdminStats() {
@@ -56,8 +57,12 @@ export function useUpdateEventStatus() {
 		mutationFn: ({ id, status }: { id: string; status: string }) =>
 			adminApi.updateEventStatus(id, status),
 		onSuccess: () => {
+			toast.success('Estado do evento atualizado')
 			qc.invalidateQueries({ queryKey: ['admin', 'events'] })
 			qc.invalidateQueries({ queryKey: ['admin', 'stats'] })
+		},
+		onError: () => {
+			toast.error('Erro ao atualizar estado do evento')
 		},
 	})
 }
@@ -68,7 +73,11 @@ export function useUpdateUserRole() {
 		mutationFn: ({ id, role }: { id: string; role: string }) =>
 			adminApi.updateUserRole(id, role),
 		onSuccess: () => {
+			toast.success('Função do utilizador atualizada')
 			qc.invalidateQueries({ queryKey: ['admin', 'users'] })
+		},
+		onError: () => {
+			toast.error('Erro ao atualizar função do utilizador')
 		},
 	})
 }

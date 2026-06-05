@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom'
 import { useFeaturedEvents } from '../../api/hooks/useEvents'
 import { EventCard } from '../../components/shared/EventCard'
 import { Button } from '../../components/ui/Button'
-import { Spinner } from '../../components/ui/Spinner'
+import { SkeletonCard } from '../../components/ui/Skeleton'
 
 const categories = [
 	{
@@ -199,8 +199,16 @@ export function LandingPage() {
 					</div>
 
 					{isLoading ? (
-						<div className="flex justify-center py-12">
-							<Spinner size="lg" />
+						<div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+							{[...Array(3)].map((_, i) => (
+								<div
+									key={i}
+									className="fade-in"
+									style={{ animationDelay: `${i * 100}ms` }}
+								>
+									<SkeletonCard />
+								</div>
+							))}
 						</div>
 					) : (
 						<div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">

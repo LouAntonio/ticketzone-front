@@ -15,23 +15,23 @@ Uma plataforma de bilhetes online focada no mercado angolano. Compre e venda bil
 
 ## Stack
 
-| Camada | Tecnologia |
-|---|---|
-| Framework | React 19 |
-| Linguagem | TypeScript 6 |
-| Bundler | Vite 8 |
-| Estilos | Tailwind CSS 4 |
-| Roteamento | React Router 7 |
-| Server state | TanStack Query 5 |
-| Client state | Zustand 5 |
-| HTTP | Axios |
-| Mock API | MSW 2 |
-| Validação | Zod |
-| Datas | date-fns |
-| Notificações | react-hot-toast |
-| QR Code | qrcode.react |
-| Google OAuth | @react-oauth/google |
-| Fontes | Staatliches, Sora, Nunito |
+| Camada       | Tecnologia                |
+| ------------ | ------------------------- |
+| Framework    | React 19                  |
+| Linguagem    | TypeScript 6              |
+| Bundler      | Vite 8                    |
+| Estilos      | Tailwind CSS 4            |
+| Roteamento   | React Router 7            |
+| Server state | TanStack Query 5          |
+| Client state | Zustand 5                 |
+| HTTP         | Axios                     |
+| Mock API     | MSW 2                     |
+| Validação    | Zod                       |
+| Datas        | date-fns                  |
+| Notificações | react-hot-toast           |
+| QR Code      | qrcode.react              |
+| Google OAuth | @react-oauth/google       |
+| Fontes       | Staatliches, Sora, Nunito |
 
 ## Primeiros passos
 
@@ -54,11 +54,11 @@ Copie o ficheiro de exemplo e preencha as variáveis:
 cp .env.example .env
 ```
 
-| Variável | Descrição | Valor por omissão |
-|---|---|---|
-| `VITE_API_BASE_URL` | URL da API | `http://localhost:3000` |
-| `VITE_GOOGLE_CLIENT_ID` | Client ID do Google OAuth | — |
-| `VITE_USE_MOCK` | Activar MSW (mock) | `true` |
+| Variável                | Descrição                 | Valor por omissão       |
+| ----------------------- | ------------------------- | ----------------------- |
+| `VITE_API_BASE_URL`     | URL da API                | `http://localhost:3000` |
+| `VITE_GOOGLE_CLIENT_ID` | Client ID do Google OAuth | —                       |
+| `VITE_USE_MOCK`         | Activar MSW (mock)        | `true`                  |
 
 ### Desenvolvimento
 
@@ -70,16 +70,16 @@ A aplicação abre em `http://localhost:5173`. Por omissão, usa a API mockada v
 
 ## Scripts
 
-| Comando | Descrição |
-|---|---|
-| `npm run dev` | Inicia servidor de desenvolvimento (`--host`) |
-| `npm run build` | TypeScript check + Vite build |
-| `npm run preview` | Pré-visualização da build |
-| `npm run lint` | ESLint com auto-fix |
-| `npm run lint:check` | ESLint sem alterações |
-| `npm run format` | Prettier |
-| `npm run format:check` | Prettier check |
-| `npm run typecheck` | TypeScript check |
+| Comando                | Descrição                                     |
+| ---------------------- | --------------------------------------------- |
+| `npm run dev`          | Inicia servidor de desenvolvimento (`--host`) |
+| `npm run build`        | TypeScript check + Vite build                 |
+| `npm run preview`      | Pré-visualização da build                     |
+| `npm run lint`         | ESLint com auto-fix                           |
+| `npm run lint:check`   | ESLint sem alterações                         |
+| `npm run format`       | Prettier                                      |
+| `npm run format:check` | Prettier check                                |
+| `npm run typecheck`    | TypeScript check                              |
 
 ## Estrutura do projecto
 
@@ -114,27 +114,27 @@ src/
 
 ## Rotas
 
-| Rota | Descrição | Autenticação |
-|---|---|---|
-| `/` | Landing page | — |
-| `/events` | Catálogo de eventos | — |
-| `/events/:slug` | Detalhe do evento | — |
-| `/rentals` | Aluguer de viaturas | — |
-| `/login` | Login | — |
-| `/register` | Registo | — |
-| `/account` | Dashboard do comprador | Buyer |
-| `/account/tickets` | Os meus bilhetes | Buyer |
-| `/checkout/:eventId` | Checkout | Qualquer sessão |
-| `/organizer` | Dashboard do organizador | Organizer |
-| `/organizer/events` | Gerir eventos | Organizer |
-| `/organizer/events/new` | Novo evento | Organizer |
-| `/organizer/events/:id/sales` | Vendas do evento | Organizer |
-| `/organizer/attendees` | Participantes | Organizer |
-| `/organizer/settings` | Definições | Organizer |
-| `/admin` | Dashboard admin | Admin |
-| `/admin/*` | Gestão (users, events, orders, etc.) | Admin |
-| `/validate` | Validação de bilhetes | Qualquer sessão |
-| `/sobre`, `/ajuda`, `/como-funciona`, `/termos`, `/privacidade`, `/contacto` | Páginas estáticas | — |
+| Rota                                                                         | Descrição                            | Autenticação    |
+| ---------------------------------------------------------------------------- | ------------------------------------ | --------------- |
+| `/`                                                                          | Landing page                         | —               |
+| `/events`                                                                    | Catálogo de eventos                  | —               |
+| `/events/:slug`                                                              | Detalhe do evento                    | —               |
+| `/rentals`                                                                   | Aluguer de viaturas                  | —               |
+| `/login`                                                                     | Login                                | —               |
+| `/register`                                                                  | Registo                              | —               |
+| `/account`                                                                   | Dashboard do comprador               | Buyer           |
+| `/account/tickets`                                                           | Os meus bilhetes                     | Buyer           |
+| `/checkout/:eventId`                                                         | Checkout                             | Qualquer sessão |
+| `/organizer`                                                                 | Dashboard do organizador             | Organizer       |
+| `/organizer/events`                                                          | Gerir eventos                        | Organizer       |
+| `/organizer/events/new`                                                      | Novo evento                          | Organizer       |
+| `/organizer/events/:id/sales`                                                | Vendas do evento                     | Organizer       |
+| `/organizer/attendees`                                                       | Participantes                        | Organizer       |
+| `/organizer/settings`                                                        | Definições                           | Organizer       |
+| `/admin`                                                                     | Dashboard admin                      | Admin           |
+| `/admin/*`                                                                   | Gestão (users, events, orders, etc.) | Admin           |
+| `/validate`                                                                  | Validação de bilhetes                | Qualquer sessão |
+| `/sobre`, `/ajuda`, `/como-funciona`, `/termos`, `/privacidade`, `/contacto` | Páginas estáticas                    | —               |
 
 ## Mock API
 

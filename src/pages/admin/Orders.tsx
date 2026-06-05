@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useAdminOrders } from '../../api/hooks/useAdmin'
-import { Spinner } from '../../components/ui/Spinner'
+import { Skeleton, SkeletonTable } from '../../components/ui/Skeleton'
 import { formatDate, formatKwanza } from '../../lib/format'
 
 const statusColors: Record<string, string> = {
@@ -28,8 +28,20 @@ export function AdminOrders() {
 
 	if (isLoading) {
 		return (
-			<div className="flex justify-center py-20">
-				<Spinner size="lg" />
+			<div className="space-y-6 animate-fade-in">
+				<div className="space-y-2">
+					<Skeleton variant="dark" className="h-9 w-56" />
+					<Skeleton variant="dark" className="h-4 w-56" />
+				</div>
+				<div className="flex gap-2 flex-wrap">
+					{[...Array(4)].map((_, i) => (
+						<Skeleton key={i} variant="dark" className="h-9 w-28 rounded-lg" />
+					))}
+				</div>
+				<Skeleton variant="dark" className="h-10 w-full rounded-lg" />
+				<div className="rounded-xl bg-[#1a1a1a] border border-[#2a2a2a] overflow-hidden p-5">
+					<SkeletonTable rows={8} cols={7} variant="dark" />
+				</div>
 			</div>
 		)
 	}

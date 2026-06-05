@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { toast } from 'react-hot-toast'
 import { useAuthStore } from '../../stores/useAuthStore'
 import { Card } from '../../components/ui/Card'
 import { Input } from '../../components/ui/Input'
@@ -25,7 +26,9 @@ export function OrgSettings() {
 		setSaving(true)
 		try {
 			await api.put('/api/organizer/settings', form)
+			toast.success('Definições guardadas com sucesso')
 		} catch (err) {
+			toast.error('Erro ao guardar definições')
 			console.error(err)
 		} finally {
 			setSaving(false)

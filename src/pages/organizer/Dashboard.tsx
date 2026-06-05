@@ -3,7 +3,7 @@ import { useAuthStore } from '../../stores/useAuthStore'
 import { useOrganizerSales } from '../../api/hooks/useSales'
 import type { SalesOrder } from '../../api/hooks/useSales'
 import { Card } from '../../components/ui/Card'
-import { Spinner } from '../../components/ui/Spinner'
+import { Skeleton, SkeletonTable } from '../../components/ui/Skeleton'
 import { formatKwanza, formatDate } from '../../lib/format'
 
 export function OrganizerDashboard() {
@@ -12,8 +12,23 @@ export function OrganizerDashboard() {
 
 	if (isLoading) {
 		return (
-			<div className="flex justify-center py-20">
-				<Spinner size="lg" />
+			<div className="space-y-8">
+				<div className="space-y-2">
+					<Skeleton className="h-8 w-64" />
+					<Skeleton className="h-4 w-48" />
+				</div>
+				<div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+					{[...Array(4)].map((_, i) => (
+						<div key={i} className="rounded-xl border border-border p-5 space-y-2">
+							<Skeleton className="h-3 w-20" />
+							<Skeleton className="h-8 w-32" />
+						</div>
+					))}
+				</div>
+				<div className="rounded-xl border border-border p-5">
+					<Skeleton className="h-5 w-28 mb-4" />
+					<SkeletonTable rows={5} cols={2} />
+				</div>
 			</div>
 		)
 	}

@@ -3,7 +3,7 @@ import { useEvent, useEventSales } from '../../api/hooks/useEvents'
 import type { SalesOrder } from '../../api/hooks/useSales'
 import { Card } from '../../components/ui/Card'
 import { Badge } from '../../components/ui/Badge'
-import { Spinner } from '../../components/ui/Spinner'
+import { Skeleton, SkeletonTable } from '../../components/ui/Skeleton'
 import { formatKwanza, formatDate } from '../../lib/format'
 
 export function SalesAnalytics() {
@@ -13,8 +13,23 @@ export function SalesAnalytics() {
 
 	if (isLoading) {
 		return (
-			<div className="flex justify-center py-20">
-				<Spinner size="lg" />
+			<div className="space-y-6">
+				<div className="space-y-2">
+					<Skeleton className="h-8 w-32" />
+					<Skeleton className="h-4 w-48" />
+				</div>
+				<div className="grid sm:grid-cols-3 gap-4">
+					{[...Array(3)].map((_, i) => (
+						<div key={i} className="rounded-xl border border-border p-5 space-y-2">
+							<Skeleton className="h-3 w-24" />
+							<Skeleton className="h-8 w-32" />
+						</div>
+					))}
+				</div>
+				<div className="rounded-xl border border-border p-5">
+					<Skeleton className="h-5 w-20 mb-4" />
+					<SkeletonTable rows={5} cols={2} />
+				</div>
 			</div>
 		)
 	}

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { toast } from 'react-hot-toast'
 import { useValidateTicket } from '../../api/hooks/useTickets'
 import { Card } from '../../components/ui/Card'
 import { Badge } from '../../components/ui/Badge'
@@ -17,6 +18,7 @@ export function ValidationPortal() {
 			const res = await validate.mutateAsync(qrCode.trim())
 			setResult(res)
 		} catch {
+			toast.error('Bilhete inválido ou código incorreto')
 			setResult({
 				ticketId: '',
 				eventTitle: '',

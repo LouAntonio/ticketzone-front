@@ -1,5 +1,5 @@
 import { useAdminOrganizers } from '../../api/hooks/useAdmin'
-import { Spinner } from '../../components/ui/Spinner'
+import { Skeleton, SkeletonTable } from '../../components/ui/Skeleton'
 import { formatKwanza } from '../../lib/format'
 
 export function AdminOrganizers() {
@@ -7,8 +7,25 @@ export function AdminOrganizers() {
 
 	if (isLoading) {
 		return (
-			<div className="flex justify-center py-20">
-				<Spinner size="lg" />
+			<div className="space-y-6 animate-fade-in">
+				<div className="space-y-2">
+					<Skeleton variant="dark" className="h-9 w-64" />
+					<Skeleton variant="dark" className="h-4 w-72" />
+				</div>
+				<div className="grid sm:grid-cols-3 gap-4">
+					{[...Array(3)].map((_, i) => (
+						<div
+							key={i}
+							className="rounded-xl bg-[#1a1a1a] border border-[#2a2a2a] p-5 space-y-2"
+						>
+							<Skeleton variant="dark" className="h-3 w-28" />
+							<Skeleton variant="dark" className="h-8 w-24" />
+						</div>
+					))}
+				</div>
+				<div className="rounded-xl bg-[#1a1a1a] border border-[#2a2a2a] overflow-hidden p-5">
+					<SkeletonTable rows={5} cols={7} variant="dark" />
+				</div>
 			</div>
 		)
 	}

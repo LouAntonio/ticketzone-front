@@ -5,7 +5,7 @@ import { useAuthStore } from '../../stores/useAuthStore'
 import { useCartStore } from '../../stores/useCartStore'
 import { Button } from '../../components/ui/Button'
 import { Badge } from '../../components/ui/Badge'
-import { Spinner } from '../../components/ui/Spinner'
+import { Skeleton, SkeletonText } from '../../components/ui/Skeleton'
 import { formatDate, formatKwanza, getCategoryLabel, getPeriodLabel } from '../../lib/format'
 
 export function EventDetail() {
@@ -18,8 +18,40 @@ export function EventDetail() {
 
 	if (isLoading) {
 		return (
-			<div className="flex justify-center py-32">
-				<Spinner size="lg" />
+			<div>
+				<Skeleton className="h-64 sm:h-80 lg:h-96 w-full rounded-none" />
+				<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+					<div className="grid lg:grid-cols-3 gap-8">
+						<div className="lg:col-span-2 space-y-8">
+							<div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+								{[...Array(4)].map((_, i) => (
+									<div
+										key={i}
+										className="rounded-xl border border-border p-4 space-y-2"
+									>
+										<Skeleton className="w-5 h-5" />
+										<Skeleton className="h-3 w-16" />
+										<Skeleton className="h-4 w-24" />
+									</div>
+								))}
+							</div>
+							<div className="space-y-3">
+								<Skeleton className="h-6 w-40" />
+								<SkeletonText lines={4} />
+							</div>
+						</div>
+						<div className="rounded-xl border border-border p-6 space-y-5">
+							<Skeleton className="h-6 w-20" />
+							{[...Array(3)].map((_, i) => (
+								<div key={i} className="space-y-2 pb-4 border-b border-border">
+									<Skeleton className="h-4 w-32" />
+									<Skeleton className="h-3 w-24" />
+									<Skeleton className="h-9 w-full rounded-lg" />
+								</div>
+							))}
+						</div>
+					</div>
+				</div>
 			</div>
 		)
 	}

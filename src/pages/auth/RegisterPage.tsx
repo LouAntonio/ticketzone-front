@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { toast } from 'react-hot-toast'
 import { useAuthStore } from '../../stores/useAuthStore'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
@@ -31,10 +32,13 @@ export function RegisterPage() {
 			}
 			const res = await authApi.register(regData)
 			setSession(res.token, res.user, res.organizerProfile)
+			toast.success('Conta criada com sucesso!')
 			navigate('/')
 		} catch (err) {
 			const axiosErr = err as { response?: { data?: { error?: string } } }
-			setError(axiosErr?.response?.data?.error ?? 'Erro ao registar')
+			const msg = axiosErr?.response?.data?.error ?? 'Erro ao registar'
+			setError(msg)
+			toast.error(msg)
 		} finally {
 			setLoading(false)
 		}

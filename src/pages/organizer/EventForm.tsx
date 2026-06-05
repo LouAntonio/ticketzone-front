@@ -1,11 +1,12 @@
 import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+import { toast } from 'react-hot-toast'
 import { useCreateEvent, useUpdateEvent } from '../../api/hooks/useEvents'
 import { useEvent } from '../../api/hooks/useEvents'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
 import { Card } from '../../components/ui/Card'
-import { Spinner } from '../../components/ui/Spinner'
+import { Skeleton } from '../../components/ui/Skeleton'
 import { EVENT_CATEGORIES, PROVINCES, PERIODS } from '../../lib/constants'
 import type { EventFormData, TicketType } from '../../types/event'
 
@@ -137,19 +138,45 @@ export function EventForm() {
 		try {
 			if (isEdit) {
 				await updateEvent.mutateAsync(form as unknown as Record<string, unknown>)
+				toast.success('Evento atualizado com sucesso')
 			} else {
 				await createEvent.mutateAsync(form)
+				toast.success('Evento criado com sucesso')
 			}
 			navigate('/organizer/events')
 		} catch (err) {
+			const msg = isEdit ? 'Erro ao atualizar evento' : 'Erro ao criar evento'
+			toast.error(msg)
 			console.error(err)
 		}
 	}
 
 	if (isEdit && loadingEvent) {
 		return (
-			<div className="flex justify-center py-20">
-				<Spinner size="lg" />
+			<div className="max-w-3xl space-y-6">
+				<Skeleton className="h-8 w-48" />
+				<div className="rounded-xl border border-border p-6 space-y-4">
+					<Skeleton className="h-5 w-40" />
+					<Skeleton className="h-10 w-full" />
+					<Skeleton className="h-24 w-full" />
+					<Skeleton className="h-10 w-full" />
+				</div>
+				<div className="rounded-xl border border-border p-6 space-y-4">
+					<Skeleton className="h-5 w-32" />
+					<div className="grid sm:grid-cols-2 gap-4">
+						<Skeleton className="h-10 w-full" />
+						<Skeleton className="h-10 w-full" />
+						<Skeleton className="h-10 w-full" />
+						<Skeleton className="h-10 w-full" />
+					</div>
+				</div>
+				<div className="rounded-xl border border-border p-6 space-y-4">
+					<div className="flex items-center justify-between">
+						<Skeleton className="h-5 w-40" />
+						<Skeleton className="h-9 w-28 rounded-lg" />
+					</div>
+					<Skeleton className="h-32 w-full" />
+				</div>
 			</div>
 		)
 	}

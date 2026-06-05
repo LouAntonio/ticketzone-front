@@ -4,7 +4,7 @@ import { useCars } from '../../api/hooks/useRentals'
 import { Card } from '../../components/ui/Card'
 import { Badge } from '../../components/ui/Badge'
 import { Button } from '../../components/ui/Button'
-import { Spinner } from '../../components/ui/Spinner'
+import { SkeletonCard } from '../../components/ui/Skeleton'
 import { useAuthStore } from '../../stores/useAuthStore'
 import { formatKwanza } from '../../lib/format'
 
@@ -36,8 +36,12 @@ export function CarCatalog() {
 			</div>
 
 			{isLoading ? (
-				<div className="flex justify-center py-20">
-					<Spinner size="lg" />
+				<div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+					{[...Array(6)].map((_, i) => (
+						<div key={i} className="fade-in" style={{ animationDelay: `${i * 80}ms` }}>
+							<SkeletonCard />
+						</div>
+					))}
 				</div>
 			) : cars.length === 0 ? (
 				<Card className="text-center py-12">

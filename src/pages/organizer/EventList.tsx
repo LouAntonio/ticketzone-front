@@ -3,7 +3,7 @@ import { useMyEvents } from '../../api/hooks/useEvents'
 import { Card } from '../../components/ui/Card'
 import { Badge } from '../../components/ui/Badge'
 import { Button } from '../../components/ui/Button'
-import { Spinner } from '../../components/ui/Spinner'
+import { Skeleton } from '../../components/ui/Skeleton'
 import { formatDate, formatKwanza, getCategoryLabel } from '../../lib/format'
 
 export function EventList() {
@@ -40,8 +40,28 @@ export function EventList() {
 			</div>
 
 			{isLoading ? (
-				<div className="flex justify-center py-12">
-					<Spinner size="lg" />
+				<div className="space-y-4">
+					{[...Array(3)].map((_, i) => (
+						<div key={i} className="rounded-xl border border-border p-4 flex gap-4">
+							<Skeleton className="w-24 h-24 rounded-xl shrink-0" />
+							<div className="flex-1 space-y-3">
+								<div className="flex items-start justify-between">
+									<div className="space-y-2">
+										<Skeleton className="h-5 w-48" />
+										<Skeleton className="h-3 w-36" />
+										<div className="flex gap-2">
+											<Skeleton className="h-5 w-20 rounded-full" />
+											<Skeleton className="h-5 w-16 rounded-full" />
+										</div>
+									</div>
+									<div className="space-y-1 text-right">
+										<Skeleton className="h-4 w-20" />
+										<Skeleton className="h-3 w-16" />
+									</div>
+								</div>
+							</div>
+						</div>
+					))}
 				</div>
 			) : events.length === 0 ? (
 				<Card className="text-center py-12">

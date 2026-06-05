@@ -1,5 +1,5 @@
 import { useAdminFinancial } from '../../api/hooks/useAdmin'
-import { Spinner } from '../../components/ui/Spinner'
+import { Skeleton } from '../../components/ui/Skeleton'
 import { formatKwanza } from '../../lib/format'
 
 export function AdminFinancial() {
@@ -7,8 +7,35 @@ export function AdminFinancial() {
 
 	if (isLoading) {
 		return (
-			<div className="flex justify-center py-20">
-				<Spinner size="lg" />
+			<div className="space-y-8 animate-fade-in">
+				<div className="space-y-2">
+					<Skeleton variant="dark" className="h-9 w-56" />
+					<Skeleton variant="dark" className="h-4 w-64" />
+				</div>
+				<div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+					{[...Array(6)].map((_, i) => (
+						<div
+							key={i}
+							className="rounded-xl bg-[#1a1a1a] border border-[#2a2a2a] p-5 space-y-3"
+						>
+							<Skeleton variant="dark" className="w-10 h-10 rounded-lg" />
+							<Skeleton variant="dark" className="h-8 w-28" />
+							<Skeleton variant="dark" className="h-3 w-32" />
+						</div>
+					))}
+				</div>
+				<div className="rounded-xl bg-[#1a1a1a] border border-[#2a2a2a] p-6 space-y-4">
+					<Skeleton variant="dark" className="h-5 w-40" />
+					{[...Array(3)].map((_, i) => (
+						<div key={i} className="space-y-2">
+							<div className="flex justify-between">
+								<Skeleton variant="dark" className="h-4 w-44" />
+								<Skeleton variant="dark" className="h-4 w-24" />
+							</div>
+							<Skeleton variant="dark" className="h-2 w-full rounded-full" />
+						</div>
+					))}
+				</div>
 			</div>
 		)
 	}

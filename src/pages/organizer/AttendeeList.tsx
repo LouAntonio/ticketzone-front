@@ -2,7 +2,7 @@ import { useOrganizerAttendees } from '../../api/hooks/useSales'
 import type { SalesOrder } from '../../api/hooks/useSales'
 import { Card } from '../../components/ui/Card'
 import { Badge } from '../../components/ui/Badge'
-import { Spinner } from '../../components/ui/Spinner'
+import { Skeleton, SkeletonTable } from '../../components/ui/Skeleton'
 import { formatDate, formatKwanza } from '../../lib/format'
 
 export function AttendeeList() {
@@ -10,8 +10,14 @@ export function AttendeeList() {
 
 	if (isLoading) {
 		return (
-			<div className="flex justify-center py-20">
-				<Spinner size="lg" />
+			<div className="space-y-6">
+				<div className="space-y-2">
+					<Skeleton className="h-8 w-48" />
+					<Skeleton className="h-4 w-36" />
+				</div>
+				<div className="rounded-xl border border-border overflow-hidden p-5">
+					<SkeletonTable rows={6} cols={6} />
+				</div>
 			</div>
 		)
 	}

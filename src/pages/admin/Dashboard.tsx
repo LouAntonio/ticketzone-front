@@ -1,5 +1,5 @@
 import { useAdminStats } from '../../api/hooks/useAdmin'
-import { Spinner } from '../../components/ui/Spinner'
+import { Skeleton, SkeletonTable } from '../../components/ui/Skeleton'
 import { formatKwanza, formatDate } from '../../lib/format'
 
 export function AdminDashboard() {
@@ -7,8 +7,41 @@ export function AdminDashboard() {
 
 	if (isLoading) {
 		return (
-			<div className="flex justify-center py-20">
-				<Spinner size="lg" />
+			<div className="space-y-8 animate-fade-in">
+				<div className="space-y-2">
+					<Skeleton variant="dark" className="h-9 w-56" />
+					<Skeleton variant="dark" className="h-4 w-64" />
+				</div>
+				<div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+					{[...Array(8)].map((_, i) => (
+						<div
+							key={i}
+							className="rounded-xl bg-[#1a1a1a] border border-[#2a2a2a] p-5 space-y-3"
+						>
+							<Skeleton variant="dark" className="w-10 h-10 rounded-lg" />
+							<Skeleton variant="dark" className="h-8 w-28" />
+							<Skeleton variant="dark" className="h-3 w-20" />
+						</div>
+					))}
+				</div>
+				<div className="grid lg:grid-cols-2 gap-6">
+					<div className="rounded-xl bg-[#1a1a1a] border border-[#2a2a2a] p-6">
+						<Skeleton variant="dark" className="h-5 w-28 mb-6" />
+						<div className="flex items-end justify-between gap-2 h-40">
+							{[...Array(12)].map((_, i) => (
+								<Skeleton
+									key={i}
+									variant="dark"
+									className="flex-1 h-24 rounded-md"
+								/>
+							))}
+						</div>
+					</div>
+					<div className="rounded-xl bg-[#1a1a1a] border border-[#2a2a2a] p-6">
+						<Skeleton variant="dark" className="h-5 w-36 mb-4" />
+						<SkeletonTable rows={4} cols={2} variant="dark" />
+					</div>
+				</div>
 			</div>
 		)
 	}

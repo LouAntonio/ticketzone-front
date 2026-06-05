@@ -1,7 +1,7 @@
 import { Navigate, Outlet } from 'react-router-dom'
 import { useShallow } from 'zustand/react/shallow'
 import { useAuthStore } from '../stores/useAuthStore'
-import { Spinner } from '../components/ui/Spinner'
+import { Skeleton } from '../components/ui/Skeleton'
 
 export function AdminRoute() {
 	const hydrated = useAuthStore.persist.hasHydrated()
@@ -10,7 +10,10 @@ export function AdminRoute() {
 	if (!hydrated) {
 		return (
 			<div className="min-h-screen flex items-center justify-center bg-[#121212]">
-				<Spinner size="lg" />
+				<div className="flex flex-col items-center gap-4">
+					<Skeleton variant="dark" className="w-12 h-12 rounded-xl" />
+					<Skeleton variant="dark" className="h-4 w-40" />
+				</div>
 			</div>
 		)
 	}

@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router-dom'
 import { useEvents } from '../../api/hooks/useEvents'
 import { EventCard } from '../../components/shared/EventCard'
 import { CategoryNav } from '../../components/shared/CategoryNav'
-import { Spinner } from '../../components/ui/Spinner'
+import { SkeletonCard } from '../../components/ui/Skeleton'
 import { PROVINCES, PERIODS } from '../../lib/constants'
 import type { EventFilters, EventCategory, EventPeriod } from '../../types/event'
 
@@ -83,8 +83,12 @@ export function EventCatalog() {
 
 			{/* Results */}
 			{isLoading ? (
-				<div className="flex justify-center py-20">
-					<Spinner size="lg" />
+				<div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+					{[...Array(6)].map((_, i) => (
+						<div key={i} className="fade-in" style={{ animationDelay: `${i * 80}ms` }}>
+							<SkeletonCard />
+						</div>
+					))}
 				</div>
 			) : data?.events && data.events.length > 0 ? (
 				<>

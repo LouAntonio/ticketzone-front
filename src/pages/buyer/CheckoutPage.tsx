@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+import { toast } from 'react-hot-toast'
 import { useCartStore } from '../../stores/useCartStore'
 import { useCreateOrder } from '../../api/hooks/useOrders'
 import { Button } from '../../components/ui/Button'
@@ -42,6 +43,7 @@ export function CheckoutPage() {
 			setOrderCreated(true)
 			cart.clear()
 		} catch (err) {
+			toast.error('Erro ao processar o pedido. Tenta novamente.')
 			console.error(err)
 		}
 	}

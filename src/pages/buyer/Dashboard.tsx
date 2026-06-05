@@ -4,7 +4,7 @@ import { useOrders } from '../../api/hooks/useOrders'
 import type { OrderDisplay } from '../../api/hooks/useOrders'
 import { Card } from '../../components/ui/Card'
 import { Badge } from '../../components/ui/Badge'
-import { Spinner } from '../../components/ui/Spinner'
+import { Skeleton } from '../../components/ui/Skeleton'
 import { formatDate, formatKwanza } from '../../lib/format'
 
 const statusVariant: Record<string, 'emerald' | 'amber' | 'red'> = {
@@ -69,8 +69,24 @@ export function BuyerDashboard() {
 			<div>
 				<h2 className="font-heading font-700 text-lg mb-4">Compras Recentes</h2>
 				{isLoading ? (
-					<div className="flex justify-center py-8">
-						<Spinner />
+					<div className="space-y-3">
+						{[...Array(3)].map((_, i) => (
+							<div
+								key={i}
+								className="rounded-xl border border-border p-4 flex items-center gap-4"
+							>
+								<Skeleton className="w-16 h-16 rounded-xl shrink-0" />
+								<div className="flex-1 space-y-2">
+									<Skeleton className="h-4 w-40" />
+									<Skeleton className="h-3 w-28" />
+									<Skeleton className="h-3 w-32" />
+								</div>
+								<div className="space-y-2 text-right">
+									<Skeleton className="h-4 w-20" />
+									<Skeleton className="h-5 w-16 rounded-full" />
+								</div>
+							</div>
+						))}
 					</div>
 				) : data?.orders && data.orders.length > 0 ? (
 					<div className="space-y-3">
