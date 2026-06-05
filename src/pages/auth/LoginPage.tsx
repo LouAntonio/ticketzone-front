@@ -166,8 +166,9 @@ export function LoginPage() {
 					{/* Demo hint */}
 					<div className="mt-6 p-3 bg-brand-soft/50 border border-brand/20 rounded-xl text-xs text-text-secondary">
 						<p className="font-heading font-600 text-brand mb-1">Demo:</p>
-						<p>Email: ana@email.com — Senha: qualquer</p>
+						<p>Email: ana@email.com — Comprador</p>
 						<p>Email: carlos@email.com — Organizador</p>
+						<p>Email: admin@ticketzone.com — Admin</p>
 					</div>
 				</div>
 			</div>

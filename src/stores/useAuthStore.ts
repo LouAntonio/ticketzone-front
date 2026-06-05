@@ -11,6 +11,7 @@ interface AuthState {
 	isAuthenticated: () => boolean
 	hasRole: (role: UserRole) => boolean
 	isOrganizer: () => boolean
+	isAdmin: () => boolean
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -30,6 +31,8 @@ export const useAuthStore = create<AuthState>()(
 			hasRole: (role) => get().user?.role === role,
 
 			isOrganizer: () => get().user?.role === 'organizer',
+
+	isAdmin: () => get().user?.role === 'admin',
 		}),
 		{
 			name: '@ticketzone:auth',

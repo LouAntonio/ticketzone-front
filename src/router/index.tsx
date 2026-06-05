@@ -1,9 +1,11 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom'
 import { ProtectedRoute } from './ProtectedRoute'
 import { OrganizerRoute } from './OrganizerRoute'
+import { AdminRoute } from './AdminRoute'
 import { RootLayout } from './RootLayout'
 import { PublicLayout } from '../components/layout/PublicLayout'
 import { DashboardLayout } from '../components/layout/DashboardLayout'
+import { AdminLayout } from '../components/layout/AdminLayout'
 
 // Public
 import { LandingPage } from '../pages/public/LandingPage'
@@ -35,6 +37,15 @@ import { OrgSettings } from '../pages/organizer/Settings'
 
 // Validation
 import { ValidationPortal } from '../pages/validation/ValidationPortal'
+
+// Admin
+import { AdminDashboard } from '../pages/admin/Dashboard'
+import { AdminUsers } from '../pages/admin/Users'
+import { AdminEvents } from '../pages/admin/Events'
+import { AdminOrders } from '../pages/admin/Orders'
+import { AdminOrganizers } from '../pages/admin/Organizers'
+import { AdminFinancial } from '../pages/admin/Financial'
+import { AdminFleet } from '../pages/admin/Fleet'
 
 // Rentals
 import { CarCatalog } from '../pages/public/CarCatalog'
@@ -97,6 +108,25 @@ export const router = createBrowserRouter([
 							{ path: '/organizer/events/:id/sales', element: <SalesAnalytics /> },
 							{ path: '/organizer/attendees', element: <AttendeeList /> },
 							{ path: '/organizer/settings', element: <OrgSettings /> },
+						],
+					},
+				],
+			},
+
+			// Admin routes
+			{
+				element: <AdminRoute />,
+				children: [
+					{
+						element: <AdminLayout />,
+						children: [
+							{ path: '/admin', element: <AdminDashboard /> },
+							{ path: '/admin/users', element: <AdminUsers /> },
+							{ path: '/admin/events', element: <AdminEvents /> },
+							{ path: '/admin/orders', element: <AdminOrders /> },
+							{ path: '/admin/organizers', element: <AdminOrganizers /> },
+							{ path: '/admin/financial', element: <AdminFinancial /> },
+							{ path: '/admin/fleet', element: <AdminFleet /> },
 						],
 					},
 				],

@@ -471,6 +471,240 @@ export const handlers = [
 		})
 	}),
 
+	// --- Admin ---
+	http.get(`${API}/admin/stats`, async ({ request }) => {
+		await delay(400)
+		const userId = authHeader(request)
+		if (!userId) return HttpResponse.json({ error: 'Não autenticado' }, { status: 401 })
+		const user = db.users.find((u) => u.id === userId)
+		if (user?.role !== 'admin') return HttpResponse.json({ error: 'Não autorizado' }, { status: 403 })
+
+		const totalOrders = db.orders.length
+		const confirmedOrders = db.orders.filter((o) => o.status === 'confirmed')
+		const totalRevenue = confirmedOrders.reduce((s, o) => s + o.total, 0)
+		const totalCommissions = Math.round(totalRevenue * 0.1)
+		const totalTicketsSold = confirmedOrders.reduce(
+			(s, o) => s + o.items.reduce((s2, i) => s2 + i.quantity, 0),
+			0,
+		)
+		const pendingOrders = db.orders.filter((o) => o.status === 'pending').length
+
+		const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun']
+		const revenueByMonth = months.map((month, idx) => {
+			const base = totalRevenue / 6
+			const variation = Math.sin((idx + 1) * 1.2) * base * 0.3
+			return { month, revenue: Math.round(base + variation) }
+		})
+
+		return HttpResponse.json({
+			totalUsers: db.users.length,
+			totalOrganizers: db.organizers.length,
+			totalEvents: db.events.length,
+			totalOrders,
+			totalRevenue,
+			totalCommissions,
+			totalTicketsSold,
+			totalCars: db.cars.length,
+			pendingOrders,
+			recentOrders: db.orders
+				.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+				.slice(0, 5)
+				.map((o) => ({
+					id: o.id,
+					eventTitle: o.eventTitle,
+					buyerName: o.buyerName,
+					total: o.total,
+					status: o.status,
+					paymentMethod: o.paymentMethod,
+					createdAt: o.createdAt,
+					commission: Math.round(o.total * 0.1),
+				})),
+			revenueByMonth,
+		})
+	}),
+
+	http.get(`${API}/admin/users`, async ({ request }) => {
+		await delay(400)
+		const userId = authHeader(request)
+		if (!userId) return HttpResponse.json({ error: 'Não autenticado' }, { status: 401 })
+		const user = db.users.find((u) => u.id === userId)
+		if (user?.role !== 'admin') return HttpResponse.json({ error: 'Não autorizado' }, { status: 403 })
+
+		return HttpResponse.json({
+			users: db.users.map((u) => {
+				const org = db.organizers.find((o) => o.userId === u.id)
+				return {
+					id: u.id,
+					name: u.name,
+					email: u.email,
+					phone: u.phone,
+					role: u.role,
+					createdAt: u.createdAt,
+					organizerCompany: org?.companyName,
+				}
+			}),
+		})
+	}),
+
+	http.get(`${API}/admin/events`, async ({ request }) => {
+		await delay(400)
+		const userId = authHeader(request)
+		if (!userId) return HttpResponse.json({ error: 'Não autenticado' }, { status: 401 })
+		const user = db.users.find((u) => u.id === userId)
+		if (user?.role !== 'admin') return HttpResponse.json({ error: 'Não autorizado' }, { status: 403 })
+
+		return HttpResponse.json({
+			events: db.events.map((e) => {
+				const eventOrders = db.orders.filter(
+					(o) => o.eventId === e.id && o.status === 'confirmed',
+				)
+				const ticketsSold = eventOrders.reduce(
+					(s, o) => s + o.items.reduce((s2, i) => s2 + i.quantity, 0),
+					0,
+				)
+				const revenue = eventOrders.reduce((s, o) => s + o.total, 0)
+				return {
+					id: e.id,
+					title: e.title,
+					category: e.category,
+					province: e.province,
+					date: e.date,
+					status: e.status,
+					organizerName: e.organizerName,
+					ticketsSold,
+					revenue,
+				}
+			}),
+		})
+	}),
+
+	http.get(`${API}/admin/orders`, async ({ request }) => {
+		await delay(400)
+		const userId = authHeader(request)
+		if (!userId) return HttpResponse.json({ error: 'Não autenticado' }, { status: 401 })
+		const user = db.users.find((u) => u.id === userId)
+		if (user?.role !== 'admin') return HttpResponse.json({ error: 'Não autorizado' }, { status: 403 })
+
+		return HttpResponse.json({
+			orders: db.orders.map((o) => ({
+				id: o.id,
+				eventTitle: o.eventTitle,
+				buyerName: o.buyerName,
+				total: o.total,
+				status: o.status,
+				paymentMethod: o.paymentMethod,
+				createdAt: o.createdAt,
+				commission: Math.round(o.total * 0.1),
+			})),
+		})
+	}),
+
+	http.get(`${API}/admin/organizers`, async ({ request }) => {
+		await delay(400)
+		const userId = authHeader(request)
+		if (!userId) return HttpResponse.json({ error: 'Não autenticado' }, { status: 401 })
+		const user = db.users.find((u) => u.id === userId)
+		if (user?.role !== 'admin') return HttpResponse.json({ error: 'Não autorizado' }, { status: 403 })
+
+		return HttpResponse.json({
+			organizers: db.organizers.map((org) => {
+				const owner = db.users.find((u) => u.id === org.userId)
+				const orgEvents = db.events.filter((e) => e.organizerId === org.id)
+				const totalRevenue = db.orders
+					.filter((o) => orgEvents.some((e) => e.id === o.eventId) && o.status === 'confirmed')
+					.reduce((s, o) => s + o.total, 0)
+				return {
+					id: org.id,
+					userId: org.userId,
+					companyName: org.companyName ?? '',
+					ownerName: owner?.name ?? '',
+					document: org.document,
+					bankName: org.bankName,
+					balance: org.balance,
+					eventsCount: orgEvents.length,
+					totalRevenue,
+				}
+			}),
+		})
+	}),
+
+	http.get(`${API}/admin/financial`, async ({ request }) => {
+		await delay(400)
+		const userId = authHeader(request)
+		if (!userId) return HttpResponse.json({ error: 'Não autenticado' }, { status: 401 })
+		const user = db.users.find((u) => u.id === userId)
+		if (user?.role !== 'admin') return HttpResponse.json({ error: 'Não autorizado' }, { status: 403 })
+
+		const confirmedOrders = db.orders.filter((o) => o.status === 'confirmed')
+		const totalRevenue = confirmedOrders.reduce((s, o) => s + o.total, 0)
+		const totalCommissions = Math.round(totalRevenue * 0.1)
+		const totalPayouts = Math.round(totalRevenue * 0.85)
+		const pendingOrders = db.orders.filter((o) => o.status === 'pending')
+		const pendingRevenue = pendingOrders.reduce((s, o) => s + o.total, 0)
+		const pendingPayouts = Math.round(pendingRevenue * 0.9)
+		const averageCommission = db.orders.length > 0 ? Math.round(totalCommissions / db.orders.length) : 0
+
+		return HttpResponse.json({
+			totalRevenue,
+			totalCommissions,
+			totalPayouts,
+			pendingPayouts,
+			organizersCount: db.organizers.length,
+			averageCommission,
+		})
+	}),
+
+	http.get(`${API}/admin/fleet`, async ({ request }) => {
+		await delay(400)
+		const userId = authHeader(request)
+		if (!userId) return HttpResponse.json({ error: 'Não autenticado' }, { status: 401 })
+		const user = db.users.find((u) => u.id === userId)
+		if (user?.role !== 'admin') return HttpResponse.json({ error: 'Não autorizado' }, { status: 403 })
+
+		return HttpResponse.json({
+			cars: db.cars.map((c) => ({
+				id: c.id,
+				make: c.make,
+				model: c.model,
+				year: c.year,
+				pricePerDay: c.pricePerDay,
+				transmission: c.transmission,
+				seats: c.seats,
+				fuelType: c.fuelType,
+				available: c.available,
+				location: c.location,
+			})),
+		})
+	}),
+
+	http.put(`${API}/admin/events/:id/status`, async ({ params, request }) => {
+		await delay(400)
+		const userId = authHeader(request)
+		if (!userId) return HttpResponse.json({ error: 'Não autenticado' }, { status: 401 })
+		const user = db.users.find((u) => u.id === userId)
+		if (user?.role !== 'admin') return HttpResponse.json({ error: 'Não autorizado' }, { status: 403 })
+
+		const body = (await request.json()) as { status: string }
+		const idx = db.events.findIndex((e) => e.id === params.id)
+		if (idx === -1) return HttpResponse.json({ error: 'Evento não encontrado' }, { status: 404 })
+		db.events[idx].status = body.status as 'draft' | 'published' | 'cancelled' | 'completed'
+		return HttpResponse.json({ event: db.events[idx] })
+	}),
+
+	http.put(`${API}/admin/users/:id/role`, async ({ params, request }) => {
+		await delay(400)
+		const userId = authHeader(request)
+		if (!userId) return HttpResponse.json({ error: 'Não autenticado' }, { status: 401 })
+		const user = db.users.find((u) => u.id === userId)
+		if (user?.role !== 'admin') return HttpResponse.json({ error: 'Não autorizado' }, { status: 403 })
+
+		const body = (await request.json()) as { role: string }
+		const idx = db.users.findIndex((u) => u.id === params.id)
+		if (idx === -1) return HttpResponse.json({ error: 'Utilizador não encontrado' }, { status: 404 })
+		db.users[idx].role = body.role as 'buyer' | 'organizer' | 'admin'
+		return HttpResponse.json({ user: db.users[idx] })
+	}),
+
 	// --- Rentals ---
 	http.get(`${API}/rentals/cars`, async () => {
 		await delay(400)

@@ -165,6 +165,10 @@
 	animation: fadeIn 0.4s ease-out both;
 }
 
+@utility animate-fade-in {
+	animation: fadeIn 0.5s ease-out both;
+}
+
 @utility slide-up {
 	animation: slideUp 0.5s ease-out both;
 }
