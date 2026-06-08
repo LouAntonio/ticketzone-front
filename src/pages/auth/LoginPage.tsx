@@ -1,13 +1,14 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { toast } from 'react-hot-toast'
-import { useGoogleLogin } from '@react-oauth/google'
+import { useGoogleLogin, useGoogleOneTapLogin } from '@react-oauth/google'
 import { useAuthStore } from '../../stores/useAuthStore'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
 import { PasswordInput } from '../../components/ui/PasswordInput'
 import { authApi } from '../../api/endpoints/auth'
 import { USE_MOCK } from '../../lib/env'
+import { parseJwt } from '../../lib/jwt'
 import type { AxiosError } from 'axios'
 
 export function LoginPage() {
@@ -18,6 +19,8 @@ export function LoginPage() {
 	const navigate = useNavigate()
 	const location = useLocation()
 	const setSession = useAuthStore((s) => s.setSession)
+	const lastGoogleAccount = useAuthStore((s) => s.lastGoogleAccount)
+	const setLastGoogleAccount = useAuthStore((s) => s.setLastGoogleAccount)
 
 	useEffect(() => {
 		if (location.state?.registered) {
@@ -27,6 +30,36 @@ export function LoginPage() {
 			window.history.replaceState({}, document.title)
 		}
 	}, [location.state])
+
+	const handleGoogleSuccess = useCallback(
+		async (credential: string) => {
+			const payload = parseJwt(credential)
+			if (payload?.email) {
+				setLastGoogleAccount({
+					email: payload.email as string,
+					name: (payload.name as string) ?? (payload.email as string),
+					picture: (payload.picture as string) ?? '',
+				})
+			}
+			setGoogleLoading(true)
+			try {
+				const data = await authApi.googleLogin(credential)
+				setSession(data.accessToken, data.refreshToken, data.user)
+				toast.success('Login efetuado com sucesso')
+				navigate(data.user.role === 'ADMIN' ? '/admin' : '/')
+			} catch (err) {
+				const axiosErr = err as AxiosError<{ msg?: string }>
+				const msg =
+					axiosErr?.response?.data?.msg ??
+					axiosErr?.message ??
+					'Erro ao fazer login com Google'
+				toast.error(msg)
+			} finally {
+				setGoogleLoading(false)
+			}
+		},
+		[navigate, setSession, setLastGoogleAccount],
+	)
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault()
@@ -45,25 +78,17 @@ export function LoginPage() {
 		}
 	}
 
+	useGoogleOneTapLogin({
+		onSuccess: (response) => {
+			if (!response.credential) return
+			handleGoogleSuccess(response.credential)
+		},
+		onError: () => {},
+	})
+
 	const googleLogin = useGoogleLogin({
 		onSuccess: async (tokenResponse) => {
-			const accessToken = tokenResponse.access_token
-			setGoogleLoading(true)
-			try {
-				const data = await authApi.googleLogin(accessToken)
-				setSession(data.accessToken, data.refreshToken, data.user)
-				toast.success('Login efetuado com sucesso')
-				navigate(data.user.role === 'ADMIN' ? '/admin' : '/')
-			} catch (err) {
-				const axiosErr = err as AxiosError<{ msg?: string }>
-				const msg =
-					axiosErr?.response?.data?.msg ??
-					axiosErr?.message ??
-					'Erro ao fazer login com Google'
-				toast.error(msg)
-			} finally {
-				setGoogleLoading(false)
-			}
+			await handleGoogleSuccess(tokenResponse.access_token)
 		},
 		onError: () => {
 			toast.error('Autenticação Google cancelada ou falhou')
@@ -185,7 +210,18 @@ export function LoginPage() {
 								fill="#EA4335"
 							/>
 						</svg>
-						{googleLoading ? 'A entrar...' : 'Continuar com Google'}
+						{lastGoogleAccount && !googleLoading && (
+							<img
+								src={lastGoogleAccount.picture}
+								alt=""
+								className="w-5 h-5 rounded-full"
+							/>
+						)}
+						{googleLoading
+							? 'A entrar...'
+							: lastGoogleAccount
+								? `Continuar como ${lastGoogleAccount.name}`
+								: 'Continuar com Google'}
 					</button>
 
 					<p className="mt-8 text-center text-sm text-text-secondary">
