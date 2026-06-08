@@ -1,115 +1,209 @@
 import { useState } from 'react'
-import { useAdminFleet } from '../../api/hooks/useAdmin'
-import { Skeleton, SkeletonTable } from '../../components/ui/Skeleton'
+import {
+	useAdminFleet,
+	useCreateVehicle,
+	useUpdateVehicle,
+	useDeleteVehicle,
+	useUpdateVehicleStatus,
+} from '../../api/hooks/useAdmin'
+import { Skeleton } from '../../components/ui/Skeleton'
+import { Modal } from '../../components/ui/Modal'
 import { formatKwanza } from '../../lib/format'
 
-const transmissionLabels: Record<string, string> = {
-	auto: 'Automático',
-	manual: 'Manual',
+const statusColors: Record<string, string> = {
+	AVAILABLE: 'text-emerald-400',
+	RENTED: 'text-blue-400',
+	MAINTENANCE: 'text-amber-400',
 }
 
+const statusLabels: Record<string, string> = {
+	AVAILABLE: 'Disponível',
+	RENTED: 'Alugado',
+	MAINTENANCE: 'Manutenção',
+}
+
+interface VehicleForm {
+	make: string
+	model: string
+	plate: string
+	year: string
+	price: string
+}
+
+const emptyForm: VehicleForm = { make: '', model: '', plate: '', year: '', price: '' }
+
 export function AdminFleet() {
-	const { data, isLoading } = useAdminFleet()
-	const [filterAvailable, setFilterAvailable] = useState<string>('all')
+	const [page, setPage] = useState(1)
+	const [filterStatus, setFilterStatus] = useState('')
 	const [searchQuery, setSearchQuery] = useState('')
 
-	if (isLoading) {
-		return (
-			<div className="space-y-6 animate-fade-in">
-				<div className="space-y-2">
-					<Skeleton variant="dark" className="h-9 w-36" />
-					<Skeleton variant="dark" className="h-4 w-72" />
-				</div>
-				<div className="grid sm:grid-cols-3 gap-4">
-					{[...Array(3)].map((_, i) => (
-						<div
-							key={i}
-							className="rounded-xl bg-[#1a1a1a] border border-[#2a2a2a] p-5 space-y-2"
-						>
-							<Skeleton variant="dark" className="h-3 w-24" />
-							<Skeleton variant="dark" className="h-8 w-16" />
-						</div>
-					))}
-				</div>
-				<div className="flex gap-2 flex-wrap">
-					{[...Array(3)].map((_, i) => (
-						<Skeleton key={i} variant="dark" className="h-9 w-28 rounded-lg" />
-					))}
-				</div>
-				<Skeleton variant="dark" className="h-10 w-full rounded-lg" />
-				<div className="rounded-xl bg-[#1a1a1a] border border-[#2a2a2a] overflow-hidden p-5">
-					<SkeletonTable rows={5} cols={7} variant="dark" />
-				</div>
-			</div>
-		)
-	}
-
-	const cars = data?.cars ?? []
-
-	const filtered = cars.filter((c) => {
-		if (filterAvailable === 'available' && !c.available) return false
-		if (filterAvailable === 'unavailable' && c.available) return false
-		if (searchQuery) {
-			const q = searchQuery.toLowerCase()
-			return (
-				c.make.toLowerCase().includes(q) ||
-				c.model.toLowerCase().includes(q) ||
-				c.location.toLowerCase().includes(q)
-			)
-		}
-		return true
+	const { data, isLoading } = useAdminFleet({
+		page,
+		limit: 20,
+		search: searchQuery || undefined,
+		status: filterStatus || undefined,
 	})
 
-	const availableCount = cars.filter((c) => c.available).length
-	const unavailableCount = cars.filter((c) => !c.available).length
+	const createVehicle = useCreateVehicle()
+	const updateVehicle = useUpdateVehicle()
+	const deleteVehicle = useDeleteVehicle()
+	const updateStatus = useUpdateVehicleStatus()
+
+	const [showForm, setShowForm] = useState(false)
+	const [editTarget, setEditTarget] = useState<({ id: string } & VehicleForm) | null>(null)
+	const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null)
+	const [form, setForm] = useState<VehicleForm>(emptyForm)
+
+	const vehicles = data?.vehicles ?? []
+	const availableCount = vehicles.filter((v) => v.available).length
+	const maintenanceCount = vehicles.filter((v) => v.status === 'MAINTENANCE').length
+	const rentedCount = vehicles.filter((v) => v.status === 'RENTED').length
+
+	const resetForm = () => {
+		setForm(emptyForm)
+		setEditTarget(null)
+	}
+
+	const handleSubmit = () => {
+		const payload = {
+			make: form.make,
+			model: form.model,
+			plate: form.plate,
+			year: form.year ? Number(form.year) : undefined,
+			price: Number(form.price),
+		}
+
+		if (editTarget) {
+			updateVehicle.mutate(
+				{ id: editTarget.id, ...payload },
+				{
+					onSuccess: () => {
+						setShowForm(false)
+						resetForm()
+					},
+				},
+			)
+		} else {
+			createVehicle.mutate(payload, {
+				onSuccess: () => {
+					setShowForm(false)
+					resetForm()
+				},
+			})
+		}
+	}
+
+	const handleEdit = (v: (typeof vehicles)[0]) => {
+		setEditTarget({
+			id: v.id,
+			make: v.make,
+			model: v.model,
+			plate: v.plate,
+			year: String(v.year ?? ''),
+			price: String(Math.round(v.pricePerDay)),
+		})
+		setForm({
+			make: v.make,
+			model: v.model,
+			plate: v.plate,
+			year: String(v.year ?? ''),
+			price: String(Math.round(v.pricePerDay)),
+		})
+		setShowForm(true)
+	}
+
+	const handleDelete = () => {
+		if (!deleteTarget) return
+		deleteVehicle.mutate({ id: deleteTarget.id }, { onSuccess: () => setDeleteTarget(null) })
+	}
+
+	const handleStatusToggle = (id: string, currentStatus: string) => {
+		const newStatus = currentStatus === 'AVAILABLE' ? 'MAINTENANCE' : 'AVAILABLE'
+		updateStatus.mutate({ id, status: newStatus })
+	}
 
 	return (
-		<div className="space-y-6 animate-fade-in">
-			<div>
-				<h1 className="font-display text-3xl tracking-wider text-white">FROTA</h1>
-				<p className="text-gray-500 text-sm mt-1">
-					Todas as viaturas disponíveis na plataforma
-				</p>
+		<div className="space-y-6">
+			<div className="admin-stagger-1">
+				<div className="flex items-center justify-between">
+					<div>
+						<h1 className="font-display text-4xl tracking-[0.08em] text-white uppercase">
+							Frota
+						</h1>
+						<p className="text-[#8a7a6e] text-sm mt-1 font-heading">
+							Gestão de viaturas da plataforma
+						</p>
+					</div>
+					<button
+						onClick={() => {
+							resetForm()
+							setShowForm(true)
+						}}
+						className="btn-admin-brand"
+					>
+						<svg
+							width="16"
+							height="16"
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							strokeWidth="2"
+							strokeLinecap="round"
+							strokeLinejoin="round"
+						>
+							<path d="M12 5v14M5 12h14" />
+						</svg>
+						Adicionar
+					</button>
+				</div>
 			</div>
 
 			{/* Summary */}
-			<div className="grid sm:grid-cols-3 gap-4">
-				<div className="rounded-xl bg-[#1a1a1a] border border-[#2a2a2a] p-5">
-					<p className="text-xs text-gray-500 font-heading font-500 mb-1">
-						Total Viaturas
+			<div className="grid sm:grid-cols-4 gap-4 admin-stagger-2">
+				<div className="card-admin p-5">
+					<p className="text-xs text-[#8a7a6e] font-heading font-500 mb-1">Total</p>
+					<p className="font-display text-2xl tracking-wider text-white">
+						{vehicles.length}
 					</p>
-					<p className="font-display text-2xl tracking-wider text-white">{cars.length}</p>
 				</div>
-				<div className="rounded-xl bg-[#1a1a1a] border border-[#2a2a2a] p-5">
-					<p className="text-xs text-gray-500 font-heading font-500 mb-1">Disponíveis</p>
+				<div className="card-admin p-5">
+					<p className="text-xs text-[#8a7a6e] font-heading font-500 mb-1">Disponíveis</p>
 					<p className="font-display text-2xl tracking-wider text-emerald-400">
 						{availableCount}
 					</p>
 				</div>
-				<div className="rounded-xl bg-[#1a1a1a] border border-[#2a2a2a] p-5">
-					<p className="text-xs text-gray-500 font-heading font-500 mb-1">
-						Indisponíveis
+				<div className="card-admin p-5">
+					<p className="text-xs text-[#8a7a6e] font-heading font-500 mb-1">Alugados</p>
+					<p className="font-display text-2xl tracking-wider text-blue-400">
+						{rentedCount}
 					</p>
-					<p className="font-display text-2xl tracking-wider text-rose-400">
-						{unavailableCount}
+				</div>
+				<div className="card-admin p-5">
+					<p className="text-xs text-[#8a7a6e] font-heading font-500 mb-1">Manutenção</p>
+					<p className="font-display text-2xl tracking-wider text-amber-400">
+						{maintenanceCount}
 					</p>
 				</div>
 			</div>
 
 			{/* Filters */}
-			<div className="flex gap-2 flex-wrap">
+			<div className="admin-stagger-3 flex gap-2 flex-wrap">
 				{[
-					{ key: 'all', label: 'Todas', count: cars.length },
-					{ key: 'available', label: 'Disponíveis', count: availableCount },
-					{ key: 'unavailable', label: 'Indisponíveis', count: unavailableCount },
+					{ key: '', label: 'Todas', count: data?.total ?? 0 },
+					{ key: 'AVAILABLE', label: 'Disponíveis', count: availableCount },
+					{ key: 'RENTED', label: 'Alugados', count: rentedCount },
+					{ key: 'MAINTENANCE', label: 'Manutenção', count: maintenanceCount },
 				].map((tab) => (
 					<button
 						key={tab.key}
-						onClick={() => setFilterAvailable(tab.key)}
-						className={`px-4 py-2 rounded-lg text-sm font-heading font-500 transition-all ${
-							filterAvailable === tab.key
-								? 'bg-brand text-white shadow-lg shadow-brand/20'
-								: 'bg-[#1a1a1a] text-gray-400 border border-[#2a2a2a] hover:border-[#3a3a3a] hover:text-white'
+						onClick={() => {
+							setFilterStatus(tab.key)
+							setPage(1)
+						}}
+						className={`px-4 py-2 text-sm font-heading font-500 transition-all duration-150 border-2 ${
+							filterStatus === tab.key
+								? 'bg-brand text-white border-brand'
+								: 'bg-transparent text-[#8a7a6e] border-[#3d3028] hover:text-[#d4c5b8] hover:border-[#5a4a3e]'
 						}`}
 					>
 						{tab.label}
@@ -119,7 +213,7 @@ export function AdminFleet() {
 			</div>
 
 			{/* Search */}
-			<div className="relative">
+			<div className="admin-stagger-4 relative">
 				<svg
 					width="16"
 					height="16"
@@ -129,99 +223,296 @@ export function AdminFleet() {
 					strokeWidth="2"
 					strokeLinecap="round"
 					strokeLinejoin="round"
-					className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"
+					className="absolute left-3 top-1/2 -translate-y-1/2 text-[#5a4a3e]"
 				>
 					<circle cx="11" cy="11" r="8" />
 					<path d="M21 21l-4.35-4.35" />
 				</svg>
 				<input
 					type="text"
-					placeholder="Pesquisar por marca, modelo ou localização..."
+					placeholder="Pesquisar por marca, modelo ou matrícula..."
 					value={searchQuery}
-					onChange={(e) => setSearchQuery(e.target.value)}
-					className="w-full bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg pl-10 pr-4 py-2.5 text-sm text-white placeholder-gray-500 focus:border-brand focus:outline-none transition-colors"
+					onChange={(e) => {
+						setSearchQuery(e.target.value)
+						setPage(1)
+					}}
+					className="input-admin pl-10"
 				/>
 			</div>
 
 			{/* Table */}
-			<div className="rounded-xl bg-[#1a1a1a] border border-[#2a2a2a] overflow-hidden">
-				<div className="overflow-x-auto">
-					<table className="w-full">
-						<thead>
-							<tr className="border-b border-[#2a2a2a]">
-								<th className="text-left px-4 py-3 text-xs font-heading font-600 text-gray-500 uppercase tracking-wider">
-									Viatura
-								</th>
-								<th className="text-left px-4 py-3 text-xs font-heading font-600 text-gray-500 uppercase tracking-wider hidden sm:table-cell">
-									Ano
-								</th>
-								<th className="text-left px-4 py-3 text-xs font-heading font-600 text-gray-500 uppercase tracking-wider hidden sm:table-cell">
-									Transmissão
-								</th>
-								<th className="text-left px-4 py-3 text-xs font-heading font-600 text-gray-500 uppercase tracking-wider hidden md:table-cell">
-									Combustível
-								</th>
-								<th className="text-left px-4 py-3 text-xs font-heading font-600 text-gray-500 uppercase tracking-wider">
-									Localização
-								</th>
-								<th className="text-right px-4 py-3 text-xs font-heading font-600 text-gray-500 uppercase tracking-wider">
-									Preço/Dia
-								</th>
-								<th className="text-center px-4 py-3 text-xs font-heading font-600 text-gray-500 uppercase tracking-wider">
-									Disponível
-								</th>
-							</tr>
-						</thead>
-						<tbody>
-							{filtered.map((car) => (
-								<tr
-									key={car.id}
-									className="border-b border-[#2a2a2a] last:border-0 hover:bg-[#222] transition-colors"
-								>
-									<td className="px-4 py-3">
-										<p className="text-sm font-heading font-500 text-white">
-											{car.make} {car.model}
-										</p>
-										<p className="text-xs text-gray-500 mt-0.5">
-											{car.seats} lugares
-										</p>
-									</td>
-									<td className="px-4 py-3 text-sm text-gray-400 hidden sm:table-cell">
-										{car.year}
-									</td>
-									<td className="px-4 py-3 text-sm text-gray-400 hidden sm:table-cell">
-										{transmissionLabels[car.transmission] ?? car.transmission}
-									</td>
-									<td className="px-4 py-3 text-sm text-gray-400 hidden md:table-cell">
-										{car.fuelType}
-									</td>
-									<td className="px-4 py-3 text-sm text-gray-400">
-										{car.location}
-									</td>
-									<td className="px-4 py-3 text-sm font-heading font-600 text-white text-right">
-										{formatKwanza(car.pricePerDay)}
-										<span className="text-xs text-gray-500 font-normal">
-											/dia
-										</span>
-									</td>
-									<td className="px-4 py-3 text-center">
-										{car.available ? (
-											<span className="inline-block w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-lg shadow-emerald-500/30" />
-										) : (
-											<span className="inline-block w-2.5 h-2.5 rounded-full bg-rose-500 shadow-lg shadow-rose-500/30" />
-										)}
-									</td>
-								</tr>
-							))}
-						</tbody>
-					</table>
+			{isLoading ? (
+				<div className="card-admin overflow-hidden p-5 admin-stagger-5">
+					<div className="space-y-4">
+						{[...Array(5)].map((_, i) => (
+							<div key={i} className="flex items-center gap-4">
+								<Skeleton variant="dark" className="h-4 flex-1" />
+								<Skeleton variant="dark" className="h-4 w-20" />
+								<Skeleton variant="dark" className="h-4 w-16" />
+								<Skeleton variant="dark" className="h-4 w-16 shrink-0" />
+							</div>
+						))}
+					</div>
 				</div>
-				{filtered.length === 0 && (
-					<p className="text-gray-500 text-sm text-center py-8">
-						Nenhuma viatura encontrada
+			) : (
+				<div className="card-admin overflow-hidden admin-stagger-5">
+					<div className="overflow-x-auto">
+						<table className="w-full">
+							<thead>
+								<tr className="border-b-2 border-[#3d3028]">
+									<th className="text-left px-4 py-3 text-[10px] font-heading font-600 text-[#6a5a4e] uppercase tracking-[0.12em]">
+										Viatura
+									</th>
+									<th className="text-left px-4 py-3 text-[10px] font-heading font-600 text-[#6a5a4e] uppercase tracking-[0.12em] hidden sm:table-cell">
+										Matrícula
+									</th>
+									<th className="text-left px-4 py-3 text-[10px] font-heading font-600 text-[#6a5a4e] uppercase tracking-[0.12em]">
+										Estado
+									</th>
+									<th className="text-right px-4 py-3 text-[10px] font-heading font-600 text-[#6a5a4e] uppercase tracking-[0.12em]">
+										Preço
+									</th>
+									<th className="text-right px-4 py-3 text-[10px] font-heading font-600 text-[#6a5a4e] uppercase tracking-[0.12em]">
+										Ações
+									</th>
+								</tr>
+							</thead>
+							<tbody>
+								{vehicles.map((v) => (
+									<tr
+										key={v.id}
+										className="border-b border-[#3d3028] last:border-0 hover:bg-white/[0.02] transition-colors"
+									>
+										<td className="px-4 py-3">
+											<p className="text-sm font-heading font-500 text-[#d4c5b8]">
+												{v.make} {v.model}
+											</p>
+											<p className="text-xs text-[#6a5a4e] mt-0.5 font-heading">
+												{v.year ?? '—'}
+											</p>
+										</td>
+										<td className="px-4 py-3 text-sm text-[#8a7a6e] hidden sm:table-cell font-heading font-mono tracking-wider">
+											{v.plate}
+										</td>
+										<td className="px-4 py-3">
+											<span
+												className={`text-xs font-heading font-600 flex items-center gap-1.5 ${statusColors[v.status] ?? ''}`}
+											>
+												<span
+													className={`inline-block w-1.5 h-1.5 rounded-full ${v.status === 'AVAILABLE' ? 'bg-emerald-400' : v.status === 'RENTED' ? 'bg-blue-400' : 'bg-amber-400'}`}
+												/>
+												{statusLabels[v.status] ?? v.status}
+											</span>
+										</td>
+										<td className="px-4 py-3 text-sm font-heading font-600 text-white text-right">
+											{formatKwanza(v.pricePerDay)}
+											<span className="text-xs text-[#6a5a4e] font-normal">
+												/evento
+											</span>
+										</td>
+										<td className="px-4 py-3 text-right">
+											<div className="flex items-center justify-end gap-1.5">
+												{(v.status === 'AVAILABLE' ||
+													v.status === 'MAINTENANCE') && (
+													<button
+														onClick={() =>
+															handleStatusToggle(v.id, v.status)
+														}
+														disabled={updateStatus.isPending}
+														className={`text-[11px] px-2 py-1 border-2 font-heading font-500 transition-colors ${
+															v.status === 'AVAILABLE'
+																? 'border-amber-500/40 text-amber-400 hover:bg-amber-500/10'
+																: 'border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/10'
+														}`}
+													>
+														{v.status === 'AVAILABLE'
+															? 'Manutenção'
+															: 'Disponível'}
+													</button>
+												)}
+												<button
+													onClick={() => handleEdit(v)}
+													className="border-brand/40 text-brand text-[11px] px-2 py-1 border-2 font-heading font-500 hover:bg-brand/10 transition-colors"
+												>
+													Editar
+												</button>
+												{v.status !== 'RENTED' && (
+													<button
+														onClick={() =>
+															setDeleteTarget({
+																id: v.id,
+																name: `${v.make} ${v.model}`,
+															})
+														}
+														className="border-red-500/40 text-red-400 text-[11px] px-2 py-1 border-2 font-heading font-500 hover:bg-red-500/10 transition-colors"
+													>
+														Remover
+													</button>
+												)}
+											</div>
+										</td>
+									</tr>
+								))}
+							</tbody>
+						</table>
+					</div>
+					{vehicles.length === 0 && (
+						<p className="text-[#6a5a4e] text-sm text-center py-8 font-heading">
+							Nenhuma viatura encontrada
+						</p>
+					)}
+				</div>
+			)}
+
+			{/* Pagination */}
+			{data && data.totalPages > 1 && (
+				<div className="flex items-center justify-between admin-stagger-6">
+					<p className="text-sm text-[#6a5a4e] font-heading">
+						Página {page} de {data.totalPages} ({data.total} total)
 					</p>
-				)}
-			</div>
+					<div className="flex gap-2">
+						<button
+							onClick={() => setPage((p) => Math.max(1, p - 1))}
+							disabled={page <= 1}
+							className="btn-admin-ghost text-sm"
+						>
+							Anterior
+						</button>
+						<button
+							onClick={() => setPage((p) => Math.min(data.totalPages, p + 1))}
+							disabled={page >= data.totalPages}
+							className="btn-admin-ghost text-sm"
+						>
+							Seguinte
+						</button>
+					</div>
+				</div>
+			)}
+
+			{/* Create/Edit Modal */}
+			<Modal
+				open={showForm}
+				onClose={() => {
+					setShowForm(false)
+					resetForm()
+				}}
+			>
+				<div className="space-y-4">
+					<h3 className="font-heading font-700 text-lg text-white">
+						{editTarget ? 'Editar Viatura' : 'Adicionar Viatura'}
+					</h3>
+					<div className="grid grid-cols-2 gap-3">
+						<div className="col-span-2 sm:col-span-1">
+							<label className="block text-xs text-[#8a7a6e] font-heading font-500 mb-1">
+								Marca *
+							</label>
+							<input
+								value={form.make}
+								onChange={(e) => setForm({ ...form, make: e.target.value })}
+								placeholder="Toyota"
+								className="input-admin"
+							/>
+						</div>
+						<div className="col-span-2 sm:col-span-1">
+							<label className="block text-xs text-[#8a7a6e] font-heading font-500 mb-1">
+								Modelo *
+							</label>
+							<input
+								value={form.model}
+								onChange={(e) => setForm({ ...form, model: e.target.value })}
+								placeholder="Hiace"
+								className="input-admin"
+							/>
+						</div>
+						<div className="col-span-2 sm:col-span-1">
+							<label className="block text-xs text-[#8a7a6e] font-heading font-500 mb-1">
+								Matrícula *
+							</label>
+							<input
+								value={form.plate}
+								onChange={(e) => setForm({ ...form, plate: e.target.value })}
+								placeholder="LD-45-13-AA"
+								className="input-admin font-mono tracking-wider uppercase"
+							/>
+						</div>
+						<div className="col-span-2 sm:col-span-1">
+							<label className="block text-xs text-[#8a7a6e] font-heading font-500 mb-1">
+								Ano
+							</label>
+							<input
+								value={form.year}
+								onChange={(e) => setForm({ ...form, year: e.target.value })}
+								placeholder="2024"
+								type="number"
+								className="input-admin"
+							/>
+						</div>
+						<div className="col-span-2">
+							<label className="block text-xs text-[#8a7a6e] font-heading font-500 mb-1">
+								Preço por Evento (Kz) *
+							</label>
+							<input
+								value={form.price}
+								onChange={(e) => setForm({ ...form, price: e.target.value })}
+								placeholder="50000"
+								type="number"
+								className="input-admin"
+							/>
+						</div>
+					</div>
+					<div className="flex gap-2 pt-2">
+						<button
+							onClick={() => {
+								setShowForm(false)
+								resetForm()
+							}}
+							className="btn-admin-ghost flex-1"
+						>
+							Cancelar
+						</button>
+						<button
+							onClick={handleSubmit}
+							disabled={
+								!form.make ||
+								!form.model ||
+								!form.plate ||
+								!form.price ||
+								createVehicle.isPending ||
+								updateVehicle.isPending
+							}
+							className="btn-admin-brand flex-1"
+						>
+							{editTarget ? 'Atualizar' : 'Criar'}
+						</button>
+					</div>
+				</div>
+			</Modal>
+
+			{/* Delete Modal */}
+			<Modal open={!!deleteTarget} onClose={() => setDeleteTarget(null)}>
+				<div className="space-y-4">
+					<h3 className="font-heading font-700 text-lg text-white">Remover Viatura</h3>
+					<p className="text-sm text-[#8a7a6e] font-heading">
+						Tens a certeza que queres remover{' '}
+						<strong className="text-[#d4c5b8]">{deleteTarget?.name}</strong>?
+					</p>
+					<div className="flex gap-2 pt-2">
+						<button
+							onClick={() => setDeleteTarget(null)}
+							className="btn-admin-ghost flex-1"
+						>
+							Cancelar
+						</button>
+						<button
+							onClick={handleDelete}
+							disabled={deleteVehicle.isPending}
+							className="btn-admin-danger flex-1"
+						>
+							{deleteVehicle.isPending ? 'A remover...' : 'Remover'}
+						</button>
+					</div>
+				</div>
+			</Modal>
 		</div>
 	)
 }

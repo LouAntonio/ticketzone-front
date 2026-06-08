@@ -1,13 +1,22 @@
 import { useState } from 'react'
-import { useAdminEvents, useUpdateEventStatus } from '../../api/hooks/useAdmin'
-import { Skeleton, SkeletonTable } from '../../components/ui/Skeleton'
-import { formatDate, formatKwanza, getCategoryLabel } from '../../lib/format'
+import {
+	useAdminEvents,
+	useAdminPendingEvents,
+	useApproveEvent,
+	useRejectEvent,
+	useCancelEvent,
+} from '../../api/hooks/useAdmin'
+import { Skeleton } from '../../components/ui/Skeleton'
+import { Modal } from '../../components/ui/Modal'
+import { formatDate } from '../../lib/format'
 
 const statusColors: Record<string, string> = {
-	draft: 'bg-gray-500/20 text-gray-400',
-	published: 'bg-emerald-500/20 text-emerald-400',
-	cancelled: 'bg-red-500/20 text-red-400',
-	completed: 'bg-blue-500/20 text-blue-400',
+	draft: 'border-gray-500/40 text-gray-400',
+	published: 'border-emerald-500/40 text-emerald-400',
+	cancelled: 'border-red-500/40 text-red-400',
+	completed: 'border-blue-500/40 text-blue-400',
+	hidden: 'border-gray-500/40 text-gray-400',
+	pending_approval: 'border-amber-500/40 text-amber-400',
 }
 
 const statusLabels: Record<string, string> = {
@@ -15,205 +24,363 @@ const statusLabels: Record<string, string> = {
 	published: 'Publicado',
 	cancelled: 'Cancelado',
 	completed: 'Concluído',
+	hidden: 'Oculto',
+	pending_approval: 'Pendente',
 }
 
 export function AdminEvents() {
-	const { data, isLoading } = useAdminEvents()
-	const updateStatus = useUpdateEventStatus()
-	const [filterStatus, setFilterStatus] = useState<string>('all')
+	const [activeTab, setActiveTab] = useState<
+		'all' | 'pending' | 'published' | 'draft' | 'cancelled'
+	>('all')
+	const [page, setPage] = useState(1)
 	const [searchQuery, setSearchQuery] = useState('')
 
-	if (isLoading) {
-		return (
-			<div className="space-y-6 animate-fade-in">
-				<div className="space-y-2">
-					<Skeleton variant="dark" className="h-9 w-48" />
-					<Skeleton variant="dark" className="h-4 w-64" />
-				</div>
-				<div className="flex gap-2 flex-wrap">
-					{[...Array(5)].map((_, i) => (
-						<Skeleton key={i} variant="dark" className="h-9 w-28 rounded-lg" />
-					))}
-				</div>
-				<Skeleton variant="dark" className="h-10 w-full rounded-lg" />
-				<div className="rounded-xl bg-[#1a1a1a] border border-[#2a2a2a] overflow-hidden p-5">
-					<SkeletonTable rows={8} cols={7} variant="dark" />
-				</div>
-			</div>
+	const { data, isLoading } = useAdminEvents({
+		page,
+		limit: 20,
+		search: searchQuery || undefined,
+	})
+	const { data: pendingData, isLoading: pendingLoading } = useAdminPendingEvents({
+		page: activeTab === 'pending' ? page : 1,
+		limit: 20,
+	})
+
+	const approveEvent = useApproveEvent()
+	const rejectEvent = useRejectEvent()
+	const cancelEvent = useCancelEvent()
+
+	const [rejectTarget, setRejectTarget] = useState<{ id: string; title: string } | null>(null)
+	const [rejectMotive, setRejectMotive] = useState('')
+	const [cancelTarget, setCancelTarget] = useState<{ id: string; title: string } | null>(null)
+
+	const events = activeTab === 'pending' ? (pendingData?.events ?? []) : (data?.events ?? [])
+	const isLoadingEvents = activeTab === 'pending' ? pendingLoading : isLoading
+
+	const allCounts = data?.total ?? 0
+	const pendingCount = pendingData?.total ?? 0
+
+	const tabs = [
+		{ key: 'all' as const, label: 'Todos', count: allCounts },
+		{ key: 'pending' as const, label: 'Pendentes', count: pendingCount },
+		{ key: 'published' as const, label: 'Publicados' },
+		{ key: 'draft' as const, label: 'Rascunhos' },
+		{ key: 'cancelled' as const, label: 'Cancelados' },
+	]
+
+	const handleApprove = (id: string) => {
+		approveEvent.mutate({ id })
+	}
+
+	const handleReject = () => {
+		if (!rejectTarget || !rejectMotive.trim()) return
+		rejectEvent.mutate(
+			{ id: rejectTarget.id, motive: rejectMotive },
+			{
+				onSuccess: () => {
+					setRejectTarget(null)
+					setRejectMotive('')
+				},
+			},
 		)
 	}
 
-	const events = data?.events ?? []
+	const handleCancel = () => {
+		if (!cancelTarget) return
+		cancelEvent.mutate({ id: cancelTarget.id }, { onSuccess: () => setCancelTarget(null) })
+	}
 
-	const filtered = events.filter((e) => {
-		if (filterStatus !== 'all' && e.status !== filterStatus) return false
-		if (searchQuery) {
-			const q = searchQuery.toLowerCase()
-			return e.title.toLowerCase().includes(q) || e.organizerName.toLowerCase().includes(q)
-		}
-		return true
-	})
-
-	const counts = events.reduce(
-		(acc, e) => {
-			acc[e.status] = (acc[e.status] ?? 0) + 1
-			return acc
-		},
-		{} as Record<string, number>,
-	)
-
-	const tabs = [
-		{ key: 'all', label: 'Todos', count: events.length },
-		{ key: 'published', label: 'Publicados', count: counts.published ?? 0 },
-		{ key: 'draft', label: 'Rascunhos', count: counts.draft ?? 0 },
-		{ key: 'completed', label: 'Concluídos', count: counts.completed ?? 0 },
-		{ key: 'cancelled', label: 'Cancelados', count: counts.cancelled ?? 0 },
-	]
+	const filtered =
+		activeTab === 'all' || activeTab === 'pending'
+			? events
+			: events.filter((e) => e.status === activeTab)
 
 	return (
-		<div className="space-y-6 animate-fade-in">
-			<div>
-				<h1 className="font-display text-3xl tracking-wider text-white">EVENTOS</h1>
-				<p className="text-gray-500 text-sm mt-1">
+		<div className="space-y-6">
+			<div className="admin-stagger-1">
+				<h1 className="font-display text-4xl tracking-[0.08em] text-white uppercase">
+					Eventos
+				</h1>
+				<p className="text-[#8a7a6e] text-sm mt-1 font-heading">
 					Gestão de todos os eventos da plataforma
 				</p>
 			</div>
 
 			{/* Tabs */}
-			<div className="flex gap-2 flex-wrap">
+			<div className="admin-stagger-2 flex gap-2 flex-wrap">
 				{tabs.map((tab) => (
 					<button
 						key={tab.key}
-						onClick={() => setFilterStatus(tab.key)}
-						className={`px-4 py-2 rounded-lg text-sm font-heading font-500 transition-all ${
-							filterStatus === tab.key
-								? 'bg-brand text-white shadow-lg shadow-brand/20'
-								: 'bg-[#1a1a1a] text-gray-400 border border-[#2a2a2a] hover:border-[#3a3a3a] hover:text-white'
+						onClick={() => {
+							setActiveTab(tab.key)
+							setPage(1)
+						}}
+						className={`px-4 py-2 text-sm font-heading font-500 transition-all duration-150 border-2 ${
+							activeTab === tab.key
+								? 'bg-brand text-white border-brand'
+								: 'bg-transparent text-[#8a7a6e] border-[#3d3028] hover:text-[#d4c5b8] hover:border-[#5a4a3e]'
 						}`}
 					>
 						{tab.label}
-						<span className="ml-2 text-xs opacity-60">{tab.count}</span>
+						{tab.count !== undefined && (
+							<span className="ml-2 text-xs opacity-60">{tab.count}</span>
+						)}
 					</button>
 				))}
 			</div>
 
 			{/* Search */}
-			<div className="relative">
-				<svg
-					width="16"
-					height="16"
-					viewBox="0 0 24 24"
-					fill="none"
-					stroke="currentColor"
-					strokeWidth="2"
-					strokeLinecap="round"
-					strokeLinejoin="round"
-					className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"
-				>
-					<circle cx="11" cy="11" r="8" />
-					<path d="M21 21l-4.35-4.35" />
-				</svg>
-				<input
-					type="text"
-					placeholder="Pesquisar eventos..."
-					value={searchQuery}
-					onChange={(e) => setSearchQuery(e.target.value)}
-					className="w-full bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg pl-10 pr-4 py-2.5 text-sm text-white placeholder-gray-500 focus:border-brand focus:outline-none transition-colors"
-				/>
-			</div>
+			{activeTab !== 'pending' && (
+				<div className="admin-stagger-3 relative">
+					<svg
+						width="16"
+						height="16"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						strokeWidth="2"
+						strokeLinecap="round"
+						strokeLinejoin="round"
+						className="absolute left-3 top-1/2 -translate-y-1/2 text-[#5a4a3e]"
+					>
+						<circle cx="11" cy="11" r="8" />
+						<path d="M21 21l-4.35-4.35" />
+					</svg>
+					<input
+						type="text"
+						placeholder="Pesquisar eventos..."
+						value={searchQuery}
+						onChange={(e) => {
+							setSearchQuery(e.target.value)
+							setPage(1)
+						}}
+						className="input-admin pl-10"
+					/>
+				</div>
+			)}
 
 			{/* Table */}
-			<div className="rounded-xl bg-[#1a1a1a] border border-[#2a2a2a] overflow-hidden">
-				<div className="overflow-x-auto">
-					<table className="w-full">
-						<thead>
-							<tr className="border-b border-[#2a2a2a]">
-								<th className="text-left px-4 py-3 text-xs font-heading font-600 text-gray-500 uppercase tracking-wider">
-									Evento
-								</th>
-								<th className="text-left px-4 py-3 text-xs font-heading font-600 text-gray-500 uppercase tracking-wider hidden sm:table-cell">
-									Categoria
-								</th>
-								<th className="text-left px-4 py-3 text-xs font-heading font-600 text-gray-500 uppercase tracking-wider">
-									Estado
-								</th>
-								<th className="text-left px-4 py-3 text-xs font-heading font-600 text-gray-500 uppercase tracking-wider hidden md:table-cell">
-									Data
-								</th>
-								<th className="text-right px-4 py-3 text-xs font-heading font-600 text-gray-500 uppercase tracking-wider hidden lg:table-cell">
-									Bilhetes
-								</th>
-								<th className="text-right px-4 py-3 text-xs font-heading font-600 text-gray-500 uppercase tracking-wider hidden lg:table-cell">
-									Receita
-								</th>
-								<th className="text-right px-4 py-3 text-xs font-heading font-600 text-gray-500 uppercase tracking-wider">
-									Ações
-								</th>
-							</tr>
-						</thead>
-						<tbody>
-							{filtered.map((event) => (
-								<tr
-									key={event.id}
-									className="border-b border-[#2a2a2a] last:border-0 hover:bg-[#222] transition-colors"
-								>
-									<td className="px-4 py-3">
-										<div>
-											<p className="text-sm font-heading font-500 text-white">
-												{event.title}
-											</p>
-											<p className="text-xs text-gray-500 mt-0.5">
-												{event.organizerName} · {event.province}
-											</p>
-										</div>
-									</td>
-									<td className="px-4 py-3 text-sm text-gray-400 hidden sm:table-cell">
-										{getCategoryLabel(event.category)}
-									</td>
-									<td className="px-4 py-3">
-										<span
-											className={`px-2 py-0.5 rounded-md text-xs font-heading font-600 ${statusColors[event.status] ?? 'bg-gray-500/20 text-gray-400'}`}
-										>
-											{statusLabels[event.status] ?? event.status}
-										</span>
-									</td>
-									<td className="px-4 py-3 text-sm text-gray-400 hidden md:table-cell">
-										{formatDate(event.date)}
-									</td>
-									<td className="px-4 py-3 text-sm text-gray-400 text-right hidden lg:table-cell">
-										{event.ticketsSold}
-									</td>
-									<td className="px-4 py-3 text-sm text-gray-400 text-right hidden lg:table-cell">
-										{formatKwanza(event.revenue)}
-									</td>
-									<td className="px-4 py-3 text-right">
-										<select
-											value={event.status}
-											onChange={(e) =>
-												updateStatus.mutate({
-													id: event.id,
-													status: e.target.value,
-												})
-											}
-											className="bg-[#252525] border border-[#3a3a3a] rounded-lg text-xs text-gray-300 px-2 py-1.5 focus:border-brand focus:outline-none cursor-pointer"
-										>
-											<option value="draft">Rascunho</option>
-											<option value="published">Publicado</option>
-											<option value="completed">Concluído</option>
-											<option value="cancelled">Cancelado</option>
-										</select>
-									</td>
-								</tr>
-							))}
-						</tbody>
-					</table>
+			{isLoadingEvents ? (
+				<div className="card-admin overflow-hidden p-5 admin-stagger-4">
+					<div className="space-y-4">
+						{[...Array(8)].map((_, i) => (
+							<div key={i} className="flex items-center gap-4">
+								<Skeleton variant="dark" className="h-4 flex-1" />
+								<Skeleton variant="dark" className="h-4 w-20" />
+								<Skeleton variant="dark" className="h-4 w-24 shrink-0" />
+							</div>
+						))}
+					</div>
 				</div>
-				{filtered.length === 0 && (
-					<p className="text-gray-500 text-sm text-center py-8">
-						Nenhum evento encontrado
+			) : (
+				<div className="card-admin overflow-hidden admin-stagger-4">
+					<div className="overflow-x-auto">
+						<table className="w-full">
+							<thead>
+								<tr className="border-b-2 border-[#3d3028]">
+									<th className="text-left px-4 py-3 text-[10px] font-heading font-600 text-[#6a5a4e] uppercase tracking-[0.12em]">
+										Evento
+									</th>
+									<th className="text-left px-4 py-3 text-[10px] font-heading font-600 text-[#6a5a4e] uppercase tracking-[0.12em] hidden sm:table-cell">
+										Organizador
+									</th>
+									<th className="text-left px-4 py-3 text-[10px] font-heading font-600 text-[#6a5a4e] uppercase tracking-[0.12em]">
+										Estado
+									</th>
+									<th className="text-left px-4 py-3 text-[10px] font-heading font-600 text-[#6a5a4e] uppercase tracking-[0.12em] hidden md:table-cell">
+										Data
+									</th>
+									<th className="text-right px-4 py-3 text-[10px] font-heading font-600 text-[#6a5a4e] uppercase tracking-[0.12em]">
+										Ações
+									</th>
+								</tr>
+							</thead>
+							<tbody>
+								{filtered.map((event) => (
+									<tr
+										key={event.id}
+										className="border-b border-[#3d3028] last:border-0 hover:bg-white/[0.02] transition-colors"
+									>
+										<td className="px-4 py-3">
+											<div>
+												<p className="text-sm font-heading font-500 text-[#d4c5b8]">
+													{event.title}
+												</p>
+												<p className="text-xs text-[#6a5a4e] mt-0.5 font-heading">
+													{event.province} ·{' '}
+													{event.categoryName ?? event.category ?? '—'}
+												</p>
+												{event.denialReason && (
+													<p className="text-[10px] text-red-400 mt-0.5 font-heading">
+														Motivo: {event.denialReason}
+													</p>
+												)}
+											</div>
+										</td>
+										<td className="px-4 py-3 text-sm text-[#8a7a6e] hidden sm:table-cell font-heading">
+											{event.organizerName}
+										</td>
+										<td className="px-4 py-3">
+											<span
+												className={`badge-admin ${statusColors[event.status] ?? statusColors.pending_approval}`}
+											>
+												{statusLabels[event.status] ?? event.status}
+											</span>
+										</td>
+										<td className="px-4 py-3 text-sm text-[#6a5a4e] hidden md:table-cell font-heading">
+											{formatDate(event.date)}
+										</td>
+										<td className="px-4 py-3 text-right">
+											<div className="flex items-center justify-end gap-1.5 flex-wrap">
+												{!event.isApproved &&
+													event.status !== 'cancelled' && (
+														<>
+															<button
+																onClick={() =>
+																	handleApprove(event.id)
+																}
+																disabled={approveEvent.isPending}
+																className="btn-admin-success text-[11px] px-2 py-1"
+															>
+																Aprovar
+															</button>
+															<button
+																onClick={() =>
+																	setRejectTarget({
+																		id: event.id,
+																		title: event.title,
+																	})
+																}
+																className="btn-admin-danger text-[11px] px-2 py-1"
+															>
+																Rejeitar
+															</button>
+														</>
+													)}
+												{event.status !== 'cancelled' &&
+													event.isApproved && (
+														<button
+															onClick={() =>
+																setCancelTarget({
+																	id: event.id,
+																	title: event.title,
+																})
+															}
+															className="btn-admin-danger text-[11px] px-2 py-1"
+														>
+															Cancelar
+														</button>
+													)}
+												{event.status === 'cancelled' && (
+													<span className="text-xs text-[#5a4a3e] font-heading italic">
+														—
+													</span>
+												)}
+											</div>
+										</td>
+									</tr>
+								))}
+							</tbody>
+						</table>
+					</div>
+					{filtered.length === 0 && (
+						<p className="text-[#6a5a4e] text-sm text-center py-8 font-heading">
+							Nenhum evento encontrado
+						</p>
+					)}
+				</div>
+			)}
+
+			{/* Pagination */}
+			{data && data.totalPages > 1 && activeTab !== 'pending' && (
+				<div className="flex items-center justify-between admin-stagger-5">
+					<p className="text-sm text-[#6a5a4e] font-heading">
+						Página {page} de {data.totalPages} ({data.total} total)
 					</p>
-				)}
-			</div>
+					<div className="flex gap-2">
+						<button
+							onClick={() => setPage((p) => Math.max(1, p - 1))}
+							disabled={page <= 1}
+							className="btn-admin-ghost text-sm"
+						>
+							Anterior
+						</button>
+						<button
+							onClick={() => setPage((p) => Math.min(data.totalPages, p + 1))}
+							disabled={page >= data.totalPages}
+							className="btn-admin-ghost text-sm"
+						>
+							Seguinte
+						</button>
+					</div>
+				</div>
+			)}
+
+			{/* Reject Modal */}
+			<Modal open={!!rejectTarget} onClose={() => setRejectTarget(null)}>
+				<div className="space-y-4">
+					<h3 className="font-heading font-700 text-lg text-white">Rejeitar Evento</h3>
+					<p className="text-sm text-[#8a7a6e] font-heading">
+						Indica o motivo da rejeição de{' '}
+						<strong className="text-[#d4c5b8]">{rejectTarget?.title}</strong>
+					</p>
+					<div>
+						<label className="block text-xs text-[#8a7a6e] font-heading font-500 mb-1">
+							Motivo *
+						</label>
+						<textarea
+							value={rejectMotive}
+							onChange={(e) => setRejectMotive(e.target.value)}
+							placeholder="Informações insuficientes..."
+							className="input-admin min-h-[80px] resize-none"
+						/>
+					</div>
+					<div className="flex gap-2 pt-2">
+						<button
+							onClick={() => setRejectTarget(null)}
+							className="btn-admin-ghost flex-1"
+						>
+							Cancelar
+						</button>
+						<button
+							onClick={handleReject}
+							disabled={!rejectMotive.trim() || rejectEvent.isPending}
+							className="btn-admin-danger flex-1"
+						>
+							{rejectEvent.isPending ? 'A rejeitar...' : 'Rejeitar'}
+						</button>
+					</div>
+				</div>
+			</Modal>
+
+			{/* Cancel Modal */}
+			<Modal open={!!cancelTarget} onClose={() => setCancelTarget(null)}>
+				<div className="space-y-4">
+					<h3 className="font-heading font-700 text-lg text-white">Cancelar Evento</h3>
+					<div className="p-3 bg-red-500/10 border border-red-500/30 text-red-400 text-sm font-heading">
+						<strong>Atenção:</strong> Isto irá cancelar todos os bilhetes, reembolsar
+						encomendas pagas e libertar viaturas alugadas.
+					</div>
+					<p className="text-sm text-[#8a7a6e] font-heading">
+						Tens a certeza que queres cancelar{' '}
+						<strong className="text-[#d4c5b8]">{cancelTarget?.title}</strong>?
+					</p>
+					<div className="flex gap-2 pt-2">
+						<button
+							onClick={() => setCancelTarget(null)}
+							className="btn-admin-ghost flex-1"
+						>
+							Voltar
+						</button>
+						<button
+							onClick={handleCancel}
+							disabled={cancelEvent.isPending}
+							className="btn-admin-danger flex-1"
+						>
+							{cancelEvent.isPending ? 'A cancelar...' : 'Sim, Cancelar Evento'}
+						</button>
+					</div>
+				</div>
+			</Modal>
 		</div>
 	)
 }

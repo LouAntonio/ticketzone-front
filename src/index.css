@@ -338,3 +338,210 @@
 		border-color: transparent;
 	}
 }
+
+/* Warm Brutalist Admin utilities */
+@utility card-admin {
+	background-color: #261e1a;
+	border: 2px solid #3d3028;
+	position: relative;
+}
+
+@utility card-admin-accent {
+	background-color: #261e1a;
+	border: 2px solid #3d3028;
+	position: relative;
+
+	&::before {
+		content: '';
+		position: absolute;
+		top: -2px;
+		left: 2rem;
+		right: 2rem;
+		height: 3px;
+		background: linear-gradient(90deg, var(--color-brand), #d4a373);
+	}
+}
+
+@utility btn-admin-brand {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.5rem;
+	font-family: var(--font-heading);
+	font-weight: 600;
+	font-size: 0.8125rem;
+	padding: 0.5rem 1rem;
+	background-color: var(--color-brand);
+	color: white;
+	border: none;
+	cursor: pointer;
+	transition: all 0.15s ease;
+
+	&:hover {
+		background-color: var(--color-brand-dark);
+	}
+
+	&:active {
+		transform: scale(0.97);
+	}
+
+	&:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
+	}
+}
+
+@utility btn-admin-ghost {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.5rem;
+	font-family: var(--font-heading);
+	font-weight: 600;
+	font-size: 0.8125rem;
+	padding: 0.5rem 1rem;
+	background-color: transparent;
+	color: #8a7a6e;
+	border: 2px solid #3d3028;
+	cursor: pointer;
+	transition: all 0.15s ease;
+
+	&:hover {
+		color: #d4c5b8;
+		border-color: #5a4a3e;
+	}
+
+	&:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
+	}
+}
+
+@utility btn-admin-danger {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.5rem;
+	font-family: var(--font-heading);
+	font-weight: 600;
+	font-size: 0.8125rem;
+	padding: 0.5rem 1rem;
+	background-color: #7f1d1d;
+	color: #fca5a5;
+	border: 2px solid #991b1b;
+	cursor: pointer;
+	transition: all 0.15s ease;
+
+	&:hover {
+		background-color: #991b1b;
+	}
+
+	&:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
+	}
+}
+
+@utility btn-admin-success {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.5rem;
+	font-family: var(--font-heading);
+	font-weight: 600;
+	font-size: 0.8125rem;
+	padding: 0.5rem 1rem;
+	background-color: #14532d;
+	color: #86efac;
+	border: 2px solid #166534;
+	cursor: pointer;
+	transition: all 0.15s ease;
+
+	&:hover {
+		background-color: #166534;
+	}
+
+	&:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
+	}
+}
+
+@utility input-admin {
+	width: 100%;
+	background-color: #1c1613;
+	border: 2px solid #3d3028;
+	padding: 0.625rem 0.75rem;
+	font-family: var(--font-heading);
+	font-size: 0.8125rem;
+	color: #d4c5b8;
+	outline: none;
+	transition: border-color 0.15s ease;
+
+	&::placeholder {
+		color: #5a4a3e;
+	}
+
+	&:focus {
+		border-color: var(--color-brand);
+	}
+}
+
+@utility select-admin {
+	width: 100%;
+	background-color: #1c1613;
+	border: 2px solid #3d3028;
+	padding: 0.5rem 0.75rem;
+	font-family: var(--font-heading);
+	font-size: 0.75rem;
+	color: #d4c5b8;
+	outline: none;
+	cursor: pointer;
+	transition: border-color 0.15s ease;
+
+	&:focus {
+		border-color: var(--color-brand);
+	}
+}
+
+@utility badge-admin {
+	display: inline-flex;
+	align-items: center;
+	padding: 0.125rem 0.5rem;
+	font-family: var(--font-heading);
+	font-weight: 600;
+	font-size: 0.6875rem;
+	border: 1px solid;
+}
+
+@utility admin-stagger-1 {
+	animation: fadeSlideUp 0.4s ease-out both;
+}
+@utility admin-stagger-2 {
+	animation: fadeSlideUp 0.4s ease-out both;
+	animation-delay: 0.05s;
+}
+@utility admin-stagger-3 {
+	animation: fadeSlideUp 0.4s ease-out both;
+	animation-delay: 0.1s;
+}
+@utility admin-stagger-4 {
+	animation: fadeSlideUp 0.4s ease-out both;
+	animation-delay: 0.15s;
+}
+@utility admin-stagger-5 {
+	animation: fadeSlideUp 0.4s ease-out both;
+	animation-delay: 0.2s;
+}
+@utility admin-stagger-6 {
+	animation: fadeSlideUp 0.4s ease-out both;
+	animation-delay: 0.25s;
+}
+@utility admin-stagger-7 {
+	animation: fadeSlideUp 0.4s ease-out both;
+	animation-delay: 0.3s;
+}
+@utility admin-stagger-8 {
+	animation: fadeSlideUp 0.4s ease-out both;
+	animation-delay: 0.35s;
+}

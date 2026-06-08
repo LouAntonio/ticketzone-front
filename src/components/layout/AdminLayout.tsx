@@ -44,52 +44,60 @@ export function AdminLayout() {
 	const user = useAuthStore((s) => s.user)
 
 	return (
-		<div className="min-h-screen flex flex-col bg-[#121212]">
+		<div className="min-h-screen flex flex-col bg-surface-dark">
+			{/* Warm grain overlay */}
+			<div className="fixed inset-0 pointer-events-none grain-overlay opacity-40 z-0" />
+
 			{/* Header */}
-			<header className="h-16 bg-[#1a1a1a] border-b border-[#2a2a2a] flex items-center px-6 shrink-0">
+			<header className="relative h-16 bg-[#1c1613] border-b-2 border-[#3d3028] flex items-center px-6 shrink-0 z-10">
 				<Link to="/admin" className="flex items-center gap-3">
-					<span className="font-display text-xl tracking-wider text-white">
+					<div className="w-8 h-8 bg-brand flex items-center justify-center rounded-sm">
+						<span className="font-display text-sm text-white">TZ</span>
+					</div>
+					<span className="font-display text-xl tracking-[0.15em] text-white">
 						TICKET<span className="text-brand">ZONE</span>
 					</span>
-					<span className="px-2 py-0.5 rounded-md bg-brand/20 text-brand text-xs font-heading font-600">
+					<span className="px-2 py-0.5 bg-brand/20 text-brand text-[10px] font-heading font-700 uppercase tracking-widest border border-brand/30">
 						ADMIN
 					</span>
 				</Link>
 				<div className="ml-auto flex items-center gap-4">
 					<Link
 						to="/"
-						className="text-sm text-gray-400 hover:text-white transition-colors font-heading"
+						className="text-sm text-[#8a7a6e] hover:text-[#d4c5b8] transition-colors font-heading font-500"
 					>
 						Ver Site
 					</Link>
-					<div className="flex items-center gap-3 pl-4 border-l border-[#2a2a2a]">
-						<div className="w-8 h-8 rounded-full bg-brand/20 flex items-center justify-center text-brand font-heading font-700 text-xs">
+					<div className="flex items-center gap-3 pl-4 border-l-2 border-[#3d3028]">
+						<div className="w-8 h-8 rounded-full bg-brand/20 flex items-center justify-center text-brand font-heading font-700 text-xs ring-2 ring-brand/30">
 							{user?.name?.charAt(0)?.toUpperCase() ?? 'A'}
 						</div>
 						<div className="hidden sm:block">
-							<p className="text-sm text-white font-heading font-600 leading-tight">
+							<p className="text-sm text-[#d4c5b8] font-heading font-600 leading-tight">
 								{user?.name}
 							</p>
-							<p className="text-xs text-gray-500">Administrador</p>
+							<p className="text-[11px] text-[#8a7a6e] font-heading font-500 uppercase tracking-wider">
+								Administrador
+							</p>
 						</div>
 					</div>
 				</div>
 			</header>
 
-			<div className="flex-1 flex">
+			<div className="relative flex-1 flex z-10">
 				{/* Sidebar */}
-				<aside className="hidden lg:flex flex-col w-64 bg-[#1a1a1a] border-r border-[#2a2a2a] shrink-0">
-					<nav className="flex-1 p-3 space-y-1">
+				<aside className="hidden lg:flex flex-col w-64 bg-[#1c1613] border-r-2 border-[#3d3028] shrink-0">
+					<nav className="flex-1 p-3 space-y-0.5">
 						{navItems.map((item) => (
 							<NavLink
 								key={item.to}
 								to={item.to}
 								end={item.end}
 								className={({ isActive }) =>
-									`flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-heading font-500 transition-all ${
+									`flex items-center gap-3 px-4 py-2.5 text-sm font-heading font-500 transition-all duration-150 border-l-2 ${
 										isActive
-											? 'bg-brand text-white shadow-lg shadow-brand/20'
-											: 'text-gray-400 hover:bg-[#252525] hover:text-white'
+											? 'bg-brand/10 text-brand border-brand shadow-[inset_0_0_20px_-12px_rgba(241,101,34,0.3)]'
+											: 'text-[#8a7a6e] border-transparent hover:text-[#d4c5b8] hover:bg-white/[0.03] hover:border-[#8a7a6e]/30'
 									}`
 								}
 							>
@@ -102,6 +110,7 @@ export function AdminLayout() {
 									strokeWidth="1.5"
 									strokeLinecap="round"
 									strokeLinejoin="round"
+									className="shrink-0"
 								>
 									<path d={item.icon} />
 								</svg>
@@ -109,10 +118,47 @@ export function AdminLayout() {
 							</NavLink>
 						))}
 					</nav>
+
+					{/* Footer */}
+					<div className="p-4 border-t-2 border-[#3d3028]">
+						<div className="text-[10px] text-[#6a5a4e] font-heading font-500 uppercase tracking-widest">
+							Ticketzone v1.0
+						</div>
+					</div>
 				</aside>
 
+				{/* Mobile bottom nav */}
+				<nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-[#1c1613] border-t-2 border-[#3d3028] flex z-20 overflow-x-auto scrollbar-hide">
+					{navItems.map((item) => (
+						<NavLink
+							key={item.to}
+							to={item.to}
+							end={item.end}
+							className={({ isActive }) =>
+								`flex flex-col items-center gap-0.5 px-3 py-2 min-w-[64px] text-[10px] font-heading font-500 transition-colors ${
+									isActive ? 'text-brand' : 'text-[#6a5a4e]'
+								}`
+							}
+						>
+							<svg
+								width="16"
+								height="16"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								strokeWidth="1.5"
+								strokeLinecap="round"
+								strokeLinejoin="round"
+							>
+								<path d={item.icon} />
+							</svg>
+							<span>{item.label}</span>
+						</NavLink>
+					))}
+				</nav>
+
 				{/* Content */}
-				<div className="flex-1 min-w-0 overflow-auto">
+				<div className="flex-1 min-w-0 overflow-auto pb-16 lg:pb-0">
 					<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 						<Outlet />
 					</div>

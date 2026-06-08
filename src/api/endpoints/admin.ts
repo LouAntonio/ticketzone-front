@@ -1,62 +1,140 @@
 import { api } from '../client'
 
+// ==================== Types ====================
+
 export interface AdminStats {
 	totalUsers: number
 	totalOrganizers: number
+	totalPromoters: number
+	pendingPromoters: number
 	totalEvents: number
+	pendingEvents: number
 	totalOrders: number
-	totalRevenue: number
-	totalCommissions: number
-	totalTicketsSold: number
-	totalCars: number
 	pendingOrders: number
-	recentOrders: AdminOrder[]
+	totalRevenue: number
+	totalVehicles: number
+	rentedVehicles: number
+	vehiclesInMaintenance: number
+	totalRentals: number
+	totalTicketsSold: number
 	revenueByMonth: { month: string; revenue: number }[]
+	recentOrders: {
+		id: string
+		eventTitle: string
+		buyerName: string
+		total: number
+		status: string
+		createdAt: string
+		paymentMethod: string | null
+	}[]
 }
 
 export interface AdminUser {
 	id: string
 	name: string
 	email: string
-	phone?: string
+	phone: string | null
 	role: string
+	status: string
+	bannedUntil: string | null
+	banMotive: string | null
+	emailVerified: boolean
+	image: string | null
+	organizerCompany: string | null
+	promoterId: string | null
 	createdAt: string
-	organizerCompany?: string
+}
+
+export interface PaginatedUsers {
+	users: AdminUser[]
+	total: number
+	page: number
+	limit: number
+	totalPages: number
 }
 
 export interface AdminEvent {
 	id: string
 	title: string
-	category: string
-	province: string
-	date: string
 	status: string
+	isApproved: boolean
+	denialReason: string | null
+	province: string
+	location: string
+	category: string | null
+	categoryName: string | null
 	organizerName: string
+	organizerEmail: string | null
+	date: string
+	startDate: string
+	endDate: string
 	ticketsSold: number
+	capacity: number
+	totalTickets: number
 	revenue: number
+	salesPaused: boolean
+	bannerUrl: string | null
+	createdAt: string
+}
+
+export interface PaginatedEvents {
+	events: AdminEvent[]
+	total: number
+	page: number
+	limit: number
+	totalPages: number
 }
 
 export interface AdminOrder {
 	id: string
 	eventTitle: string
 	buyerName: string
+	buyerEmail: string
 	total: number
-	status: string
-	paymentMethod: string
-	createdAt: string
 	commission: number
+	status: string
+	paymentMethod: string | null
+	paymentStatus: string
+	ticketCount: number
+	createdAt: string
 }
 
-export interface AdminOrganizer {
+export interface PaginatedOrders {
+	orders: AdminOrder[]
+	total: number
+	page: number
+	limit: number
+	totalPages: number
+}
+
+export interface AdminPromoter {
 	id: string
 	userId: string
 	companyName: string
+	nif: string | null
+	iban: string | null
+	isVerified: boolean
 	ownerName: string
+	ownerEmail: string
 	document: string
 	bankName: string
 	balance: number
+	verificationStatus: string
+	status: string
+	bannedUntil: string | null
+	banMotive: string | null
 	eventsCount: number
 	totalRevenue: number
+	payoutsCount: number
+	createdAt: string
+}
+
+export interface PaginatedPromoters {
+	promoters: AdminPromoter[]
+	total: number
+	page: number
+	limit: number
+	totalPages: number
 }
 
 export interface AdminFinancial {
@@ -65,41 +143,175 @@ export interface AdminFinancial {
 	totalPayouts: number
 	pendingPayouts: number
 	organizersCount: number
+	totalOrders: number
+	paidOrders: number
 	averageCommission: number
+	netRevenue: number
 }
 
-export interface AdminCar {
+export interface AdminVehicle {
 	id: string
 	make: string
 	model: string
-	year: number
+	plate: string
+	year: number | null
 	pricePerDay: number
-	transmission: string
-	seats: number
-	fuelType: string
+	status: string
 	available: boolean
-	location: string
+	ownerName: string
+	rentalsCount: number
+	createdAt: string
 }
 
+export interface PaginatedVehicles {
+	vehicles: AdminVehicle[]
+	total: number
+	page: number
+	limit: number
+	totalPages: number
+}
+
+export interface AuditLog {
+	id: string
+	action: string
+	entity: string
+	entityId: string
+	adminName: string
+	adminEmail: string
+	payload: unknown
+	ipAddress: string | null
+	createdAt: string
+}
+
+export interface PaginatedAuditLogs {
+	logs: AuditLog[]
+	total: number
+	page: number
+	limit: number
+	totalPages: number
+}
+
+// ==================== API Calls ====================
+
 export const adminApi = {
-	stats: () => api.get<AdminStats>('/api/admin/stats').then((r) => r.data),
+	// Stats
+	stats: () => api.get<{ stats: AdminStats }>('/api/admin/stats').then((r) => r.data.stats),
 
-	users: () => api.get<{ users: AdminUser[] }>('/api/admin/users').then((r) => r.data),
+	// Users
+	listUsers: (params?: {
+		page?: number
+		limit?: number
+		search?: string
+		role?: string
+		status?: string
+	}) => api.get<PaginatedUsers>('/api/admin/users', { params }).then((r) => r.data),
 
-	events: () => api.get<{ events: AdminEvent[] }>('/api/admin/events').then((r) => r.data),
-
-	orders: () => api.get<{ orders: AdminOrder[] }>('/api/admin/orders').then((r) => r.data),
-
-	organizers: () =>
-		api.get<{ organizers: AdminOrganizer[] }>('/api/admin/organizers').then((r) => r.data),
-
-	financial: () => api.get<AdminFinancial>('/api/admin/financial').then((r) => r.data),
-
-	fleet: () => api.get<{ cars: AdminCar[] }>('/api/admin/fleet').then((r) => r.data),
-
-	updateEventStatus: (id: string, status: string) =>
-		api.put(`/api/admin/events/${id}/status`, { status }).then((r) => r.data),
+	getUser: (id: string) =>
+		api.get<{ data: unknown }>(`/api/admin/users/${id}`).then((r) => r.data),
 
 	updateUserRole: (id: string, role: string) =>
-		api.put(`/api/admin/users/${id}/role`, { role }).then((r) => r.data),
+		api.patch<{ msg: string }>(`/api/admin/users/${id}/role`, { role }).then((r) => r.data),
+
+	banUser: (id: string, motive: string, bannedUntil?: string) =>
+		api
+			.post<{ msg: string }>(`/api/admin/users/${id}/ban`, { motive, bannedUntil })
+			.then((r) => r.data),
+
+	unbanUser: (id: string) =>
+		api.post<{ msg: string }>(`/api/admin/users/${id}/unban`).then((r) => r.data),
+
+	// Events
+	listEvents: (params?: {
+		page?: number
+		limit?: number
+		search?: string
+		categoryId?: string
+		province?: string
+	}) => api.get<PaginatedEvents>('/api/admin/events', { params }).then((r) => r.data),
+
+	listPendingEvents: (params?: { page?: number; limit?: number }) =>
+		api.get<PaginatedEvents>('/api/admin/events/pending', { params }).then((r) => r.data),
+
+	getEvent: (id: string) =>
+		api.get<{ data: unknown }>(`/api/admin/events/${id}`).then((r) => r.data),
+
+	updateEvent: (id: string, data: Record<string, unknown>) =>
+		api.patch<{ msg: string }>(`/api/admin/events/${id}`, data).then((r) => r.data),
+
+	approveEvent: (id: string) =>
+		api.post<{ msg: string }>(`/api/admin/events/${id}/approve`).then((r) => r.data),
+
+	rejectEvent: (id: string, motive: string) =>
+		api.post<{ msg: string }>(`/api/admin/events/${id}/reject`, { motive }).then((r) => r.data),
+
+	cancelEvent: (id: string) =>
+		api.post<{ msg: string }>(`/api/admin/events/${id}/cancel`).then((r) => r.data),
+
+	// Promoters
+	listPromoters: (params?: {
+		page?: number
+		limit?: number
+		search?: string
+		status?: string
+		verificationStatus?: string
+	}) => api.get<PaginatedPromoters>('/api/admin/promoters', { params }).then((r) => r.data),
+
+	verificationRequests: (params?: { page?: number; limit?: number }) =>
+		api
+			.get<PaginatedPromoters>('/api/admin/promoters/verification-requests', { params })
+			.then((r) => r.data),
+
+	getPromoter: (id: string) =>
+		api.get<{ data: unknown }>(`/api/admin/promoters/${id}`).then((r) => r.data),
+
+	approvePromoter: (id: string) =>
+		api.post<{ msg: string }>(`/api/admin/promoters/${id}/approve`).then((r) => r.data),
+
+	rejectPromoter: (id: string, motive: string) =>
+		api
+			.post<{ msg: string }>(`/api/admin/promoters/${id}/reject`, { motive })
+			.then((r) => r.data),
+
+	banPromoter: (id: string, motive: string, bannedUntil?: string) =>
+		api
+			.post<{ msg: string }>(`/api/admin/promoters/${id}/ban`, { motive, bannedUntil })
+			.then((r) => r.data),
+
+	unbanPromoter: (id: string) =>
+		api.post<{ msg: string }>(`/api/admin/promoters/${id}/unban`).then((r) => r.data),
+
+	// Orders
+	listOrders: (params?: { page?: number; limit?: number; search?: string; status?: string }) =>
+		api.get<PaginatedOrders>('/api/admin/orders', { params }).then((r) => r.data),
+
+	refundOrder: (id: string) =>
+		api.post<{ msg: string }>(`/api/admin/orders/${id}/refund`).then((r) => r.data),
+
+	// Financial
+	getFinancial: () => api.get<AdminFinancial>('/api/admin/financial').then((r) => r.data),
+
+	// Fleet
+	listFleet: (params?: { page?: number; limit?: number; search?: string; status?: string }) =>
+		api.get<PaginatedVehicles>('/api/admin/fleet', { params }).then((r) => r.data),
+
+	createVehicle: (data: {
+		make: string
+		model: string
+		plate: string
+		year?: number
+		price: number
+	}) => api.post<{ msg: string }>('/api/admin/fleet', data).then((r) => r.data),
+
+	updateVehicle: (id: string, data: Record<string, unknown>) =>
+		api.patch<{ msg: string }>(`/api/admin/fleet/${id}`, data).then((r) => r.data),
+
+	deleteVehicle: (id: string) =>
+		api.delete<{ msg: string }>(`/api/admin/fleet/${id}`).then((r) => r.data),
+
+	updateVehicleStatus: (id: string, status: string) =>
+		api.patch<{ msg: string }>(`/api/admin/fleet/${id}/status`, { status }).then((r) => r.data),
+
+	// Audit Logs
+	getAuditLogs: (params?: { page?: number; limit?: number; action?: string; entity?: string }) =>
+		api.get<PaginatedAuditLogs>('/api/admin/audit-logs', { params }).then((r) => r.data),
 }

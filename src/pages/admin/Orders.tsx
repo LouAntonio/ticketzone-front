@@ -1,61 +1,43 @@
 import { useState } from 'react'
-import { useAdminOrders } from '../../api/hooks/useAdmin'
-import { Skeleton, SkeletonTable } from '../../components/ui/Skeleton'
+import { useAdminOrders, useRefundOrder } from '../../api/hooks/useAdmin'
+import { Skeleton } from '../../components/ui/Skeleton'
+import { Modal } from '../../components/ui/Modal'
 import { formatDate, formatKwanza } from '../../lib/format'
 
 const statusColors: Record<string, string> = {
-	confirmed: 'bg-emerald-500/20 text-emerald-400',
-	pending: 'bg-amber-500/20 text-amber-400',
-	cancelled: 'bg-red-500/20 text-red-400',
+	paid: 'border-emerald-500/40 text-emerald-400',
+	pending: 'border-amber-500/40 text-amber-400',
+	refunded: 'border-blue-500/40 text-blue-400',
+	cancelled: 'border-red-500/40 text-red-400',
 }
 
 const statusLabels: Record<string, string> = {
-	confirmed: 'Confirmado',
+	paid: 'Pago',
 	pending: 'Pendente',
+	refunded: 'Reembolsado',
 	cancelled: 'Cancelado',
 }
 
-const paymentLabels: Record<string, string> = {
-	multicaixa: 'Multicaixa Express',
-	paypay: 'PayPay',
-	reference: 'Referência',
-}
-
 export function AdminOrders() {
-	const { data, isLoading } = useAdminOrders()
-	const [filterStatus, setFilterStatus] = useState<string>('all')
+	const [page, setPage] = useState(1)
+	const [filterStatus, setFilterStatus] = useState('all')
 	const [searchQuery, setSearchQuery] = useState('')
 
-	if (isLoading) {
-		return (
-			<div className="space-y-6 animate-fade-in">
-				<div className="space-y-2">
-					<Skeleton variant="dark" className="h-9 w-56" />
-					<Skeleton variant="dark" className="h-4 w-56" />
-				</div>
-				<div className="flex gap-2 flex-wrap">
-					{[...Array(4)].map((_, i) => (
-						<Skeleton key={i} variant="dark" className="h-9 w-28 rounded-lg" />
-					))}
-				</div>
-				<Skeleton variant="dark" className="h-10 w-full rounded-lg" />
-				<div className="rounded-xl bg-[#1a1a1a] border border-[#2a2a2a] overflow-hidden p-5">
-					<SkeletonTable rows={8} cols={7} variant="dark" />
-				</div>
-			</div>
-		)
-	}
+	const { data, isLoading } = useAdminOrders({
+		page,
+		limit: 20,
+		search: searchQuery || undefined,
+		status: filterStatus !== 'all' ? filterStatus : undefined,
+	})
+	const refundOrder = useRefundOrder()
+
+	const [refundTarget, setRefundTarget] = useState<{
+		id: string
+		buyerName: string
+		total: number
+	} | null>(null)
 
 	const orders = data?.orders ?? []
-
-	const filtered = orders.filter((o) => {
-		if (filterStatus !== 'all' && o.status !== filterStatus) return false
-		if (searchQuery) {
-			const q = searchQuery.toLowerCase()
-			return o.eventTitle.toLowerCase().includes(q) || o.buyerName.toLowerCase().includes(q)
-		}
-		return true
-	})
 
 	const counts = orders.reduce(
 		(acc, o) => {
@@ -66,29 +48,42 @@ export function AdminOrders() {
 	)
 
 	const tabs = [
-		{ key: 'all', label: 'Todas', count: orders.length },
-		{ key: 'confirmed', label: 'Confirmadas', count: counts.confirmed ?? 0 },
+		{ key: 'all', label: 'Todas', count: data?.total ?? 0 },
+		{ key: 'paid', label: 'Pagas', count: counts.paid ?? 0 },
 		{ key: 'pending', label: 'Pendentes', count: counts.pending ?? 0 },
+		{ key: 'refunded', label: 'Reembolsadas', count: counts.refunded ?? 0 },
 		{ key: 'cancelled', label: 'Canceladas', count: counts.cancelled ?? 0 },
 	]
 
+	const handleRefund = () => {
+		if (!refundTarget) return
+		refundOrder.mutate({ id: refundTarget.id }, { onSuccess: () => setRefundTarget(null) })
+	}
+
 	return (
-		<div className="space-y-6 animate-fade-in">
-			<div>
-				<h1 className="font-display text-3xl tracking-wider text-white">ENCOMENDAS</h1>
-				<p className="text-gray-500 text-sm mt-1">Todas as transações da plataforma</p>
+		<div className="space-y-6">
+			<div className="admin-stagger-1">
+				<h1 className="font-display text-4xl tracking-[0.08em] text-white uppercase">
+					Encomendas
+				</h1>
+				<p className="text-[#8a7a6e] text-sm mt-1 font-heading">
+					Todas as transações da plataforma
+				</p>
 			</div>
 
 			{/* Tabs */}
-			<div className="flex gap-2 flex-wrap">
+			<div className="admin-stagger-2 flex gap-2 flex-wrap">
 				{tabs.map((tab) => (
 					<button
 						key={tab.key}
-						onClick={() => setFilterStatus(tab.key)}
-						className={`px-4 py-2 rounded-lg text-sm font-heading font-500 transition-all ${
+						onClick={() => {
+							setFilterStatus(tab.key)
+							setPage(1)
+						}}
+						className={`px-4 py-2 text-sm font-heading font-500 transition-all duration-150 border-2 ${
 							filterStatus === tab.key
-								? 'bg-brand text-white shadow-lg shadow-brand/20'
-								: 'bg-[#1a1a1a] text-gray-400 border border-[#2a2a2a] hover:border-[#3a3a3a] hover:text-white'
+								? 'bg-brand text-white border-brand'
+								: 'bg-transparent text-[#8a7a6e] border-[#3d3028] hover:text-[#d4c5b8] hover:border-[#5a4a3e]'
 						}`}
 					>
 						{tab.label}
@@ -98,7 +93,7 @@ export function AdminOrders() {
 			</div>
 
 			{/* Search */}
-			<div className="relative">
+			<div className="admin-stagger-3 relative">
 				<svg
 					width="16"
 					height="16"
@@ -108,93 +103,187 @@ export function AdminOrders() {
 					strokeWidth="2"
 					strokeLinecap="round"
 					strokeLinejoin="round"
-					className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"
+					className="absolute left-3 top-1/2 -translate-y-1/2 text-[#5a4a3e]"
 				>
 					<circle cx="11" cy="11" r="8" />
 					<path d="M21 21l-4.35-4.35" />
 				</svg>
 				<input
 					type="text"
-					placeholder="Pesquisar encomendas..."
+					placeholder="Pesquisar por comprador..."
 					value={searchQuery}
-					onChange={(e) => setSearchQuery(e.target.value)}
-					className="w-full bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg pl-10 pr-4 py-2.5 text-sm text-white placeholder-gray-500 focus:border-brand focus:outline-none transition-colors"
+					onChange={(e) => {
+						setSearchQuery(e.target.value)
+						setPage(1)
+					}}
+					className="input-admin pl-10"
 				/>
 			</div>
 
 			{/* Table */}
-			<div className="rounded-xl bg-[#1a1a1a] border border-[#2a2a2a] overflow-hidden">
-				<div className="overflow-x-auto">
-					<table className="w-full">
-						<thead>
-							<tr className="border-b border-[#2a2a2a]">
-								<th className="text-left px-4 py-3 text-xs font-heading font-600 text-gray-500 uppercase tracking-wider">
-									Evento
-								</th>
-								<th className="text-left px-4 py-3 text-xs font-heading font-600 text-gray-500 uppercase tracking-wider hidden sm:table-cell">
-									Comprador
-								</th>
-								<th className="text-right px-4 py-3 text-xs font-heading font-600 text-gray-500 uppercase tracking-wider">
-									Total
-								</th>
-								<th className="text-right px-4 py-3 text-xs font-heading font-600 text-gray-500 uppercase tracking-wider hidden md:table-cell">
-									Comissão
-								</th>
-								<th className="text-left px-4 py-3 text-xs font-heading font-600 text-gray-500 uppercase tracking-wider hidden sm:table-cell">
-									Pagamento
-								</th>
-								<th className="text-left px-4 py-3 text-xs font-heading font-600 text-gray-500 uppercase tracking-wider">
-									Estado
-								</th>
-								<th className="text-left px-4 py-3 text-xs font-heading font-600 text-gray-500 uppercase tracking-wider hidden lg:table-cell">
-									Data
-								</th>
-							</tr>
-						</thead>
-						<tbody>
-							{filtered.map((order) => (
-								<tr
-									key={order.id}
-									className="border-b border-[#2a2a2a] last:border-0 hover:bg-[#222] transition-colors"
-								>
-									<td className="px-4 py-3">
-										<p className="text-sm font-heading font-500 text-white">
-											{order.eventTitle}
-										</p>
-									</td>
-									<td className="px-4 py-3 text-sm text-gray-400 hidden sm:table-cell">
-										{order.buyerName}
-									</td>
-									<td className="px-4 py-3 text-sm font-heading font-600 text-white text-right">
-										{formatKwanza(order.total)}
-									</td>
-									<td className="px-4 py-3 text-sm text-gray-400 text-right hidden md:table-cell">
-										{formatKwanza(order.commission)}
-									</td>
-									<td className="px-4 py-3 text-sm text-gray-400 hidden sm:table-cell">
-										{paymentLabels[order.paymentMethod] ?? order.paymentMethod}
-									</td>
-									<td className="px-4 py-3">
-										<span
-											className={`px-2 py-0.5 rounded-md text-xs font-heading font-600 ${statusColors[order.status] ?? 'bg-gray-500/20 text-gray-400'}`}
-										>
-											{statusLabels[order.status] ?? order.status}
-										</span>
-									</td>
-									<td className="px-4 py-3 text-sm text-gray-400 hidden lg:table-cell">
-										{formatDate(order.createdAt)}
-									</td>
-								</tr>
-							))}
-						</tbody>
-					</table>
+			{isLoading ? (
+				<div className="card-admin overflow-hidden p-5 admin-stagger-4">
+					<div className="space-y-4">
+						{[...Array(8)].map((_, i) => (
+							<div key={i} className="flex items-center gap-4">
+								<Skeleton variant="dark" className="h-4 flex-1" />
+								<Skeleton variant="dark" className="h-4 w-20" />
+								<Skeleton variant="dark" className="h-4 w-24 shrink-0" />
+							</div>
+						))}
+					</div>
 				</div>
-				{filtered.length === 0 && (
-					<p className="text-gray-500 text-sm text-center py-8">
-						Nenhuma encomenda encontrada
+			) : (
+				<div className="card-admin overflow-hidden admin-stagger-4">
+					<div className="overflow-x-auto">
+						<table className="w-full">
+							<thead>
+								<tr className="border-b-2 border-[#3d3028]">
+									<th className="text-left px-4 py-3 text-[10px] font-heading font-600 text-[#6a5a4e] uppercase tracking-[0.12em]">
+										Evento
+									</th>
+									<th className="text-left px-4 py-3 text-[10px] font-heading font-600 text-[#6a5a4e] uppercase tracking-[0.12em] hidden sm:table-cell">
+										Comprador
+									</th>
+									<th className="text-right px-4 py-3 text-[10px] font-heading font-600 text-[#6a5a4e] uppercase tracking-[0.12em]">
+										Total
+									</th>
+									<th className="text-right px-4 py-3 text-[10px] font-heading font-600 text-[#6a5a4e] uppercase tracking-[0.12em] hidden md:table-cell">
+										Comissão
+									</th>
+									<th className="text-left px-4 py-3 text-[10px] font-heading font-600 text-[#6a5a4e] uppercase tracking-[0.12em]">
+										Estado
+									</th>
+									<th className="text-left px-4 py-3 text-[10px] font-heading font-600 text-[#6a5a4e] uppercase tracking-[0.12em] hidden lg:table-cell">
+										Data
+									</th>
+									<th className="text-right px-4 py-3 text-[10px] font-heading font-600 text-[#6a5a4e] uppercase tracking-[0.12em]">
+										Ações
+									</th>
+								</tr>
+							</thead>
+							<tbody>
+								{orders.map((order) => (
+									<tr
+										key={order.id}
+										className="border-b border-[#3d3028] last:border-0 hover:bg-white/[0.02] transition-colors"
+									>
+										<td className="px-4 py-3">
+											<p className="text-sm font-heading font-500 text-[#d4c5b8]">
+												{order.eventTitle}
+											</p>
+										</td>
+										<td className="px-4 py-3 text-sm text-[#8a7a6e] hidden sm:table-cell font-heading">
+											{order.buyerName}
+										</td>
+										<td className="px-4 py-3 text-sm font-heading font-600 text-white text-right">
+											{formatKwanza(order.total)}
+										</td>
+										<td className="px-4 py-3 text-sm text-[#6a5a4e] text-right hidden md:table-cell font-heading">
+											{formatKwanza(order.commission)}
+										</td>
+										<td className="px-4 py-3">
+											<span
+												className={`badge-admin ${statusColors[order.status] ?? 'border-gray-500/40 text-gray-400'}`}
+											>
+												{statusLabels[order.status] ?? order.status}
+											</span>
+										</td>
+										<td className="px-4 py-3 text-sm text-[#6a5a4e] hidden lg:table-cell font-heading">
+											{formatDate(order.createdAt)}
+										</td>
+										<td className="px-4 py-3 text-right">
+											{order.status === 'paid' ? (
+												<button
+													onClick={() =>
+														setRefundTarget({
+															id: order.id,
+															buyerName: order.buyerName,
+															total: order.total,
+														})
+													}
+													className="btn-admin-danger text-[11px] px-2 py-1"
+												>
+													Reembolsar
+												</button>
+											) : (
+												<span className="text-xs text-[#5a4a3e] font-heading italic">
+													—
+												</span>
+											)}
+										</td>
+									</tr>
+								))}
+							</tbody>
+						</table>
+					</div>
+					{orders.length === 0 && (
+						<p className="text-[#6a5a4e] text-sm text-center py-8 font-heading">
+							Nenhuma encomenda encontrada
+						</p>
+					)}
+				</div>
+			)}
+
+			{/* Pagination */}
+			{data && data.totalPages > 1 && (
+				<div className="flex items-center justify-between admin-stagger-5">
+					<p className="text-sm text-[#6a5a4e] font-heading">
+						Página {page} de {data.totalPages} ({data.total} total)
 					</p>
-				)}
-			</div>
+					<div className="flex gap-2">
+						<button
+							onClick={() => setPage((p) => Math.max(1, p - 1))}
+							disabled={page <= 1}
+							className="btn-admin-ghost text-sm"
+						>
+							Anterior
+						</button>
+						<button
+							onClick={() => setPage((p) => Math.min(data.totalPages, p + 1))}
+							disabled={page >= data.totalPages}
+							className="btn-admin-ghost text-sm"
+						>
+							Seguinte
+						</button>
+					</div>
+				</div>
+			)}
+
+			{/* Refund Modal */}
+			<Modal open={!!refundTarget} onClose={() => setRefundTarget(null)}>
+				<div className="space-y-4">
+					<h3 className="font-heading font-700 text-lg text-white">
+						Reembolsar Encomenda
+					</h3>
+					<div className="p-3 bg-amber-500/10 border border-amber-500/30 text-amber-400 text-sm font-heading">
+						<strong>Atenção:</strong> Isto irá cancelar os bilhetes, repor a capacidade
+						dos lotes e libertar viaturas alugadas.
+					</div>
+					<p className="text-sm text-[#8a7a6e] font-heading">
+						Tens a certeza que queres reembolsar{' '}
+						<strong className="text-[#d4c5b8]">
+							{formatKwanza(refundTarget?.total ?? 0)}
+						</strong>{' '}
+						a <strong className="text-[#d4c5b8]">{refundTarget?.buyerName}</strong>?
+					</p>
+					<div className="flex gap-2 pt-2">
+						<button
+							onClick={() => setRefundTarget(null)}
+							className="btn-admin-ghost flex-1"
+						>
+							Cancelar
+						</button>
+						<button
+							onClick={handleRefund}
+							disabled={refundOrder.isPending}
+							className="btn-admin-danger flex-1"
+						>
+							{refundOrder.isPending ? 'A reembolsar...' : 'Sim, Reembolsar'}
+						</button>
+					</div>
+				</div>
+			</Modal>
 		</div>
 	)
 }
