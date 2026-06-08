@@ -1,6 +1,8 @@
 export type PaymentMethod = 'multicaixa' | 'paypay' | 'reference'
 
-export type OrderStatus = 'pending' | 'confirmed' | 'cancelled'
+export type OrderStatus = 'PENDING' | 'PAID' | 'CANCELLED' | 'REFUNDED'
+
+export type PaymentStatus = 'PENDING' | 'PAID' | 'FAILED' | 'REFUNDED' | 'CANCELLED'
 
 export interface OrderItem {
 	ticketTypeId: string
@@ -29,12 +31,31 @@ export interface Order {
 	items: OrderItem[]
 	addons?: AddonItem[]
 	total: number
-	status: OrderStatus
+	status: string
 	paymentMethod: PaymentMethod
+	paymentStatus?: PaymentStatus
 	paymentRef?: string
 	paymentQrCode?: string
 	ticketIds: string[]
 	createdAt: string
+}
+
+export interface OrderDetail extends Order {
+	tickets?: Array<{
+		id: string
+		qrCode: string
+		status: string
+		ticketTypeName: string
+		entriesUsed: number
+		entriesAllowed: number
+	}>
+	eventProvince?: string
+	eventVenue?: string
+	eventAddress?: string
+	eventStartDate?: string
+	eventEndDate?: string
+	userPhoneNumber?: string
+	userEmail?: string
 }
 
 export interface CreateOrderData {

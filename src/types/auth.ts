@@ -1,5 +1,11 @@
 export type UserRole = 'USER' | 'PROMOTER' | 'STAFF' | 'ADMIN'
 
+export interface LinkedAccount {
+	providerId: string
+	accountId: string
+	createdAt: string
+}
+
 export interface User {
 	id: string
 	name: string
@@ -9,7 +15,25 @@ export interface User {
 	role: UserRole
 	phoneNumber?: string
 	createdAt: string
-	accounts?: { providerId: string }[]
+	updatedAt?: string
+	accounts?: LinkedAccount[]
+}
+
+export interface PromoterRequest {
+	id?: string
+	companyName: string
+	nif?: string
+	iban?: string
+	verificationStatus: 'PENDING' | 'VERIFIED' | 'REJECTED'
+	status?: 'ACTIVE' | 'BANNED'
+	personalDocs?: DocFile[]
+	enterpriseDocs?: DocFile[]
+	createdAt?: string
+}
+
+export interface DocFile {
+	url: string
+	idcloudinary: string
 }
 
 export interface AuthTokens {
@@ -80,8 +104,8 @@ export interface BecomePromoterData {
 	companyName: string
 	nif?: string
 	iban?: string
-	personalDocs?: string[]
-	enterpriseDocs?: string[]
+	personalDocs?: DocFile[]
+	enterpriseDocs?: DocFile[]
 }
 
 export interface OrganizerProfile {

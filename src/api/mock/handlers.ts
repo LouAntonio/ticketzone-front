@@ -26,6 +26,13 @@ function authHeader(request: Request) {
 	return null
 }
 
+function findUserByToken(token: string): string | null {
+	if (token.startsWith('verify-user-')) {
+		return token.replace('verify-', '')
+	}
+	return null
+}
+
 function filterEvents(params: URLSearchParams): Event[] {
 	let list = db.events.filter((e) => e.status === 'published')
 	const category = params.get('category')
@@ -193,6 +200,7 @@ export const handlers = [
 		if (!user) {
 			return apiError('Utilizador não encontrado', 404)
 		}
+		const linkedAccounts = db.linkedAccounts.get(userId) ?? []
 		return HttpResponse.json(
 			apiResponse(
 				{
@@ -204,7 +212,7 @@ export const handlers = [
 					role: user.role,
 					phoneNumber: user.phoneNumber ?? '',
 					createdAt: user.createdAt,
-					accounts: [],
+					accounts: linkedAccounts,
 				},
 				'Dados do usuário',
 			),
@@ -849,5 +857,163 @@ export const handlers = [
 				status: 'confirmed',
 			},
 		})
+	}),
+
+	// --- Account Linking ---
+	http.post(`${API}/auth/link/google`, async ({ request }) => {
+		await delay(300)
+		const userId = authHeader(request)
+		if (!userId) return apiError('Não autenticado', 401)
+		const body = (await request.json()) as { idToken: string }
+		if (!body.idToken) return apiError('Token inválido', 400)
+
+		const accounts = db.linkedAccounts.get(userId) ?? []
+		if (accounts.some((a) => a.providerId === 'google')) {
+			return apiError('Conta Google já vinculada', 409)
+		}
+		accounts.push({
+			providerId: 'google',
+			accountId: `google-${Date.now()}`,
+			createdAt: new Date().toISOString(),
+		})
+		db.linkedAccounts.set(userId, accounts)
+		return HttpResponse.json(apiResponse(null, 'Conta Google vinculada com sucesso'))
+	}),
+
+	http.post(`${API}/auth/link/password`, async ({ request }) => {
+		await delay(300)
+		const userId = authHeader(request)
+		if (!userId) return apiError('Não autenticado', 401)
+		const body = (await request.json()) as { password: string }
+		if (!body.password || body.password.length < 8) {
+			return apiError('Palavra-passe deve ter no mínimo 8 caracteres', 400)
+		}
+		return HttpResponse.json(apiResponse(null, 'Palavra-passe definida com sucesso'))
+	}),
+
+	http.post(`${API}/auth/become-promoter`, async ({ request }) => {
+		await delay(800)
+		const userId = authHeader(request)
+		if (!userId) return apiError('Não autenticado', 401)
+		const body = (await request.json()) as {
+			companyName: string
+			nif?: string
+			iban?: string
+			personalDocs?: Array<{ url: string; idcloudinary: string }>
+			enterpriseDocs?: Array<{ url: string; idcloudinary: string }>
+		}
+
+		const existing = db.promoterRequests.find((r) => r.id === userId)
+		if (existing) return apiError('Já tens um pedido de promotor pendente', 409)
+
+		db.promoterRequests.push({
+			id: userId,
+			companyName: body.companyName,
+			nif: body.nif,
+			iban: body.iban,
+			verificationStatus: 'PENDING',
+			status: 'ACTIVE',
+			personalDocs: body.personalDocs ?? [],
+			enterpriseDocs: body.enterpriseDocs ?? [],
+			createdAt: new Date().toISOString(),
+		})
+		return HttpResponse.json(apiResponse(null, 'Pedido de promotor enviado com sucesso'))
+	}),
+
+	http.post(`${API}/auth/verify-email`, async ({ request }) => {
+		await delay(300)
+		const body = (await request.json()) as { token: string }
+		if (!body.token) return apiError('Token inválido', 400)
+		const userId = findUserByToken(body.token)
+		if (!userId) return apiError('Token inválido ou expirado', 400)
+
+		const user = db.users.find((u) => u.id === userId)
+		if (user) user.emailVerified = true
+		return HttpResponse.json(apiResponse(null, 'Email verificado com sucesso'))
+	}),
+
+	http.post(`${API}/auth/resend-verification`, async () => {
+		await delay(300)
+		return HttpResponse.json(apiResponse(null, 'Email de verificação reenviado'))
+	}),
+
+	// --- Order details ---
+	http.get(`${API}/orders/:id`, async ({ params, request }) => {
+		await delay(300)
+		const userId = authHeader(request)
+		if (!userId) return apiError('Não autenticado', 401)
+
+		const order = db.orders.find((o) => o.id === params.id && o.buyerId === userId)
+		if (!order) return apiError('Encomenda não encontrada', 404)
+
+		const event = db.events.find((e) => e.id === order.eventId)
+		const orderTickets = db.tickets.filter((t) => order.ticketIds.includes(t.id))
+
+		return HttpResponse.json({
+			...order,
+			eventProvince: event?.province,
+			eventVenue: event?.venue,
+			eventAddress: event?.address,
+			eventStartDate: event?.date,
+			eventEndDate: event?.endDate,
+			userPhoneNumber: '+244 923 456 789',
+			userEmail: 'user@email.com',
+			tickets: orderTickets.map((t) => ({
+				id: t.id,
+				qrCode: t.qrCode,
+				status: t.status,
+				ticketTypeName: t.ticketTypeName,
+				entriesUsed: t.used,
+				entriesAllowed: t.groupSize ?? 1,
+			})),
+		})
+	}),
+
+	http.post(`${API}/orders/:id/pay`, async ({ params, request }) => {
+		await delay(500)
+		const userId = authHeader(request)
+		if (!userId) return apiError('Não autenticado', 401)
+
+		const order = db.orders.find((o) => o.id === params.id && o.buyerId === userId)
+		if (!order) return apiError('Encomenda não encontrada', 404)
+		if (order.status !== 'pending') return apiError('Encomenda não está pendente', 400)
+
+		order.status = 'confirmed'
+		return HttpResponse.json(apiResponse(null, 'Pagamento confirmado com sucesso'))
+	}),
+
+	http.post(`${API}/orders/:id/cancel`, async ({ params, request }) => {
+		await delay(400)
+		const userId = authHeader(request)
+		if (!userId) return apiError('Não autenticado', 401)
+
+		const order = db.orders.find((o) => o.id === params.id && o.buyerId === userId)
+		if (!order) return apiError('Encomenda não encontrada', 404)
+		if (order.status !== 'pending')
+			return apiError('Apenas encomendas pendentes podem ser canceladas', 400)
+
+		order.status = 'cancelled'
+		for (const ticketId of order.ticketIds) {
+			const ticket = db.tickets.find((t) => t.id === ticketId)
+			if (ticket) ticket.status = 'cancelled'
+		}
+		return HttpResponse.json(apiResponse(null, 'Encomenda cancelada com sucesso'))
+	}),
+
+	// --- Uploads ---
+	http.post(`${API}/uploads/signature`, async ({ request }) => {
+		await delay(200)
+		const userId = authHeader(request)
+		if (!userId) return apiError('Não autenticado', 401)
+		const body = (await request.json().catch(() => ({}))) as { folder?: string }
+		return HttpResponse.json(
+			apiResponse({
+				signature: 'mock-signature-' + Date.now(),
+				timestamp: Math.round(Date.now() / 1000),
+				cloudName: 'df9svkaon',
+				apiKey: '125776985212896',
+				folder: body.folder ?? 'ticketzone',
+			}),
+		)
 	}),
 ]

@@ -1,5 +1,6 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom'
 import { ProtectedRoute } from './ProtectedRoute'
+import { RedirectIfAuthenticated } from './RedirectIfAuthenticated'
 import { OrganizerRoute } from './OrganizerRoute'
 import { AdminRoute } from './AdminRoute'
 import { RootLayout } from './RootLayout'
@@ -26,8 +27,14 @@ import { ResetPasswordPage } from '../pages/auth/ResetPasswordPage'
 import { VerifyEmailPage } from '../pages/auth/VerifyEmailPage'
 
 // Buyer
-import { BuyerDashboard } from '../pages/buyer/Dashboard'
 import { MyTickets } from '../pages/buyer/MyTickets'
+import { AccountDashboard } from '../pages/account/Dashboard'
+import { ProfilePage } from '../pages/account/Profile'
+import { OrdersPage } from '../pages/account/Orders'
+import { OrderDetailPage } from '../pages/account/OrderDetail'
+import { TicketDetailPage } from '../pages/account/TicketDetail'
+import { BecomePromoterPage } from '../pages/account/BecomePromoter'
+import { SecurityPage } from '../pages/account/Security'
 import { CheckoutPage } from '../pages/buyer/CheckoutPage'
 
 // Organizer
@@ -73,12 +80,17 @@ export const router = createBrowserRouter([
 				],
 			},
 
-			// Auth routes (no layout)
-			{ path: '/login', element: <LoginPage /> },
-			{ path: '/register', element: <RegisterPage /> },
-			{ path: '/forgot-password', element: <ForgotPasswordPage /> },
-			{ path: '/resetar-senha', element: <ResetPasswordPage /> },
-			{ path: '/verificar-email', element: <VerifyEmailPage /> },
+			// Auth routes (redirect if already logged in)
+			{
+				element: <RedirectIfAuthenticated />,
+				children: [
+					{ path: '/login', element: <LoginPage /> },
+					{ path: '/register', element: <RegisterPage /> },
+					{ path: '/forgot-password', element: <ForgotPasswordPage /> },
+					{ path: '/resetar-senha', element: <ResetPasswordPage /> },
+					{ path: '/verificar-email', element: <VerifyEmailPage /> },
+				],
+			},
 
 			// Buyer routes
 			{
@@ -87,8 +99,14 @@ export const router = createBrowserRouter([
 					{
 						element: <DashboardLayout />,
 						children: [
-							{ path: '/account', element: <BuyerDashboard /> },
+							{ path: '/account', element: <AccountDashboard /> },
 							{ path: '/account/tickets', element: <MyTickets /> },
+							{ path: '/account/tickets/:id', element: <TicketDetailPage /> },
+							{ path: '/account/orders', element: <OrdersPage /> },
+							{ path: '/account/orders/:id', element: <OrderDetailPage /> },
+							{ path: '/account/profile', element: <ProfilePage /> },
+							{ path: '/account/security', element: <SecurityPage /> },
+							{ path: '/account/become-promoter', element: <BecomePromoterPage /> },
 						],
 					},
 				],

@@ -15,6 +15,7 @@ interface AuthState {
 		organizerProfile?: OrganizerProfile,
 	) => void
 	setAccessToken: (accessToken: string) => void
+	setUser: (user: User | null) => void
 	clear: () => void
 	isAuthenticated: () => boolean
 	hasRole: (role: UserRole) => boolean
@@ -39,6 +40,8 @@ export const useAuthStore = create<AuthState>()(
 				}),
 
 			setAccessToken: (accessToken) => set({ token: accessToken }),
+
+			setUser: (user) => set({ user }),
 
 			clear: () =>
 				set({ user: null, token: null, refreshToken: null, organizerProfile: null }),

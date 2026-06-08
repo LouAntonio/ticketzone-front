@@ -1,6 +1,9 @@
 export type {
 	UserRole,
 	User,
+	LinkedAccount,
+	PromoterRequest,
+	DocFile,
 	OrganizerProfile,
 	LoginCredentials,
 	RegisterData,
@@ -23,9 +26,11 @@ export type {
 export type {
 	PaymentMethod,
 	OrderStatus,
+	PaymentStatus,
 	OrderItem,
 	AddonItem,
 	Order,
+	OrderDetail,
 	CreateOrderData,
 } from './order'
 

@@ -3,6 +3,7 @@ import type { Event } from '../../types/event'
 import type { Order } from '../../types/order'
 import type { Ticket } from '../../types/ticket'
 import type { Car } from '../../types/rental'
+import type { LinkedAccount, PromoterRequest } from '../../types/auth'
 
 const today = new Date()
 
@@ -14,6 +15,9 @@ export interface MockDB {
 	tickets: Ticket[]
 	cars: Car[]
 	tokens: Map<string, string>
+	linkedAccounts: Map<string, LinkedAccount[]>
+	promoterRequests: PromoterRequest[]
+	verificationTokens: Map<string, string>
 }
 
 function createSlug(title: string): string {
@@ -867,4 +871,24 @@ export const db: MockDB = {
 	],
 
 	tokens: new Map(),
+	linkedAccounts: new Map([
+		[
+			'user-1',
+			[{ providerId: 'google', accountId: 'google-123', createdAt: '2025-04-01T10:00:00Z' }],
+		],
+	]),
+	promoterRequests: [
+		{
+			id: 'promo-req-1',
+			companyName: 'Mega Produções Lda',
+			nif: '5000123456',
+			iban: 'AO06012345678901234567890',
+			verificationStatus: 'PENDING',
+			status: 'ACTIVE' as const,
+			personalDocs: [{ url: 'https://example.com/doc1.pdf', idcloudinary: 'doc1' }],
+			enterpriseDocs: [{ url: 'https://example.com/doc2.pdf', idcloudinary: 'doc2' }],
+			createdAt: '2025-05-15T10:00:00Z',
+		},
+	],
+	verificationTokens: new Map(),
 }

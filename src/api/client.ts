@@ -40,10 +40,7 @@ api.interceptors.response.use(
 		if (status === 401) {
 			const refreshToken = useAuthStore.getState().refreshToken
 
-			if (
-				refreshToken &&
-				!originalRequest?.url?.includes('/auth/refresh')
-			) {
+			if (refreshToken && !originalRequest?.url?.includes('/auth/refresh')) {
 				try {
 					const response = await api.post<{
 						accessToken: string

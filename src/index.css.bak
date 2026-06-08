@@ -10,11 +10,6 @@
 @import '@fontsource/nunito/600.css';
 @import '@fontsource/nunito/700.css';
 @import '@fontsource/nunito/800.css';
-@import '@fontsource/playfair-display/400.css';
-@import '@fontsource/playfair-display/500.css';
-@import '@fontsource/playfair-display/600.css';
-@import '@fontsource/playfair-display/700.css';
-@import '@fontsource/playfair-display/800.css';
 
 @theme {
 	--color-brand: #f16522;
@@ -27,13 +22,6 @@
 	--color-surface-dark: #1a1a1a;
 	--color-surface-card-dark: #2a2a2a;
 
-	--color-warm-bg: #faf8f5;
-	--color-warm-border: #e8e2dc;
-	--color-warm-text: #1a1a1a;
-	--color-terracotta: #c4501a;
-	--color-success: #1a7a4a;
-	--color-emerald-deep: #065f46;
-
 	--color-text: #1c1917;
 	--color-text-secondary: #78716c;
 	--color-border: #e7e5e4;
@@ -42,7 +30,6 @@
 	--font-display: 'Staatliches', sans-serif;
 	--font-heading: 'Sora', sans-serif;
 	--font-body: 'Nunito', sans-serif;
-	--font-display-alt: 'Playfair Display', serif;
 
 	--radius-sm: 6px;
 	--radius-md: 12px;
@@ -243,75 +230,6 @@
 	}
 }
 
-@keyframes fadeSlideUp {
-	from {
-		opacity: 0;
-		transform: translateY(12px);
-	}
-	to {
-		opacity: 1;
-		transform: translateY(0);
-	}
-}
-
-@keyframes shimmer {
-	0% {
-		background-position: -200% 0;
-	}
-	100% {
-		background-position: 200% 0;
-	}
-}
-
-@utility card-account {
-	background-color: var(--color-surface-card);
-	border-radius: var(--radius-lg);
-	box-shadow:
-		0 1px 2px rgba(0, 0, 0, 0.04),
-		0 4px 16px rgba(0, 0, 0, 0.06);
-	position: relative;
-
-	&::before {
-		content: '';
-		position: absolute;
-		top: 0;
-		left: 2rem;
-		right: 2rem;
-		height: 3px;
-		background: linear-gradient(90deg, var(--color-brand), var(--color-brand-light));
-		border-radius: 0 0 3px 3px;
-	}
-}
-
-@utility fade-slide-up {
-	animation: fadeSlideUp 0.5s ease-out both;
-}
-
-@utility stagger-1 {
-	animation: fadeSlideUp 0.5s ease-out both;
-	animation-delay: 0.05s;
-}
-
-@utility stagger-2 {
-	animation: fadeSlideUp 0.5s ease-out both;
-	animation-delay: 0.1s;
-}
-
-@utility stagger-3 {
-	animation: fadeSlideUp 0.5s ease-out both;
-	animation-delay: 0.15s;
-}
-
-@utility stagger-4 {
-	animation: fadeSlideUp 0.5s ease-out both;
-	animation-delay: 0.2s;
-}
-
-@utility stagger-5 {
-	animation: fadeSlideUp 0.5s ease-out both;
-	animation-delay: 0.25s;
-}
-
 @utility pattern-diamonds {
 	background-image: url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23f16522' fill-opacity='0.07'%3E%3Cpath d='M40 0l40 40-40 40L0 40z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
 	background-size: 80px 80px;
@@ -319,22 +237,4 @@
 
 @utility grain-overlay {
 	background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
-}
-
-@utility status-dot {
-	display: inline-block;
-	width: 8px;
-	height: 8px;
-	border-radius: 9999px;
-}
-
-@utility link-underline {
-	text-decoration: none;
-	border-bottom: 1px solid currentColor;
-	padding-bottom: 1px;
-	transition: border-color 0.2s;
-
-	&:hover {
-		border-color: transparent;
-	}
 }
