@@ -1,6 +1,11 @@
 import { useState } from 'react'
 import { useAuthStore } from '../../stores/useAuthStore'
-import { useLinkPassword, useResendVerification } from '../../api/hooks/useAccount'
+import {
+	useLinkPassword,
+	useResendVerification,
+	useChangePassword,
+	useChangeEmail,
+} from '../../api/hooks/useAccount'
 import { Badge } from '../../components/ui/Badge'
 import { Input } from '../../components/ui/Input'
 import { Button } from '../../components/ui/Button'
@@ -9,14 +14,26 @@ import { toast } from 'react-hot-toast'
 
 export function SecurityPage() {
 	const user = useAuthStore((s) => s.user)
+	const setUser = useAuthStore((s) => s.setUser)
 	const linkPassword = useLinkPassword()
 	const resendVerification = useResendVerification()
+	const changePassword = useChangePassword()
+	const changeEmail = useChangeEmail()
 
 	const [showPasswordForm, setShowPasswordForm] = useState(false)
 	const [newPassword, setNewPassword] = useState('')
 	const [confirmPassword, setConfirmPassword] = useState('')
 
-	const hasPassword = user?.accounts?.some((a) => a.providerId === 'password') ?? true
+	const [showChangePasswordForm, setShowChangePasswordForm] = useState(false)
+	const [currentPassword, setCurrentPassword] = useState('')
+	const [changeNewPassword, setChangeNewPassword] = useState('')
+	const [changeConfirmPassword, setChangeConfirmPassword] = useState('')
+
+	const [showEmailForm, setShowEmailForm] = useState(false)
+	const [newEmail, setNewEmail] = useState('')
+	const [emailPassword, setEmailPassword] = useState('')
+
+	const hasPassword = user?.hasPassword ?? false
 
 	const handleSetPassword = async () => {
 		if (newPassword !== confirmPassword) {
@@ -31,7 +48,46 @@ export function SecurityPage() {
 		setShowPasswordForm(false)
 		setNewPassword('')
 		setConfirmPassword('')
+		if (user) setUser({ ...user, hasPassword: true })
 		toast.success('Palavra-passe definida com sucesso')
+	}
+
+	const handleChangePassword = async () => {
+		if (changeNewPassword !== changeConfirmPassword) {
+			toast.error('As palavras-passe não coincidem')
+			return
+		}
+		if (changeNewPassword.length < 8) {
+			toast.error('A nova palavra-passe deve ter no mínimo 8 caracteres')
+			return
+		}
+		if (currentPassword === changeNewPassword) {
+			toast.error('A nova palavra-passe deve ser diferente da atual')
+			return
+		}
+		await changePassword.mutateAsync({
+			currentPassword,
+			newPassword: changeNewPassword,
+		})
+		setShowChangePasswordForm(false)
+		setCurrentPassword('')
+		setChangeNewPassword('')
+		setChangeConfirmPassword('')
+	}
+
+	const handleChangeEmail = async () => {
+		if (!newEmail.includes('@')) {
+			toast.error('Insere um email válido')
+			return
+		}
+		if (!emailPassword) {
+			toast.error('Insere a tua palavra-passe para confirmar')
+			return
+		}
+		await changeEmail.mutateAsync({ newEmail, password: emailPassword })
+		setShowEmailForm(false)
+		setNewEmail('')
+		setEmailPassword('')
 	}
 
 	const handleResendVerification = async () => {
@@ -44,7 +100,9 @@ export function SecurityPage() {
 		<div className="max-w-3xl mx-auto space-y-8">
 			<div className="stagger-1">
 				<h1 className="font-display-alt font-700 text-3xl text-warm-text">Segurança</h1>
-				<p className="text-text-secondary text-sm">Gerir palavra-passe e verificação</p>
+				<p className="text-text-secondary text-sm">
+					Gerir palavra-passe, email e verificação
+				</p>
 			</div>
 
 			{/* Email Verification */}
@@ -72,17 +130,8 @@ export function SecurityPage() {
 									strokeLinecap="round"
 									strokeLinejoin="round"
 								>
-									{user?.emailVerified ? (
-										<>
-											<path d="M22 11.08V12a10 10 0 11-5.93-9.14" />
-											<polyline points="22 4 12 14.01 9 11.01" />
-										</>
-									) : (
-										<>
-											<path d="M22 11.08V12a10 10 0 11-5.93-9.14" />
-											<polyline points="22 4 12 14.01 9 11.01" />
-										</>
-									)}
+									<path d="M22 11.08V12a10 10 0 11-5.93-9.14" />
+									<polyline points="22 4 12 14.01 9 11.01" />
 								</svg>
 							</div>
 							<div>
@@ -96,7 +145,7 @@ export function SecurityPage() {
 								</p>
 							</div>
 						</div>
-						{!user?.emailVerified && (
+						{!user?.emailVerified ? (
 							<Button
 								variant="outline"
 								size="sm"
@@ -105,8 +154,7 @@ export function SecurityPage() {
 							>
 								Reenviar
 							</Button>
-						)}
-						{user?.emailVerified && (
+						) : (
 							<svg
 								width="24"
 								height="24"
@@ -158,17 +206,32 @@ export function SecurityPage() {
 								</p>
 							</div>
 						</div>
-						{!hasPassword && (
-							<Button
-								variant="outline"
-								size="sm"
-								onClick={() => setShowPasswordForm(!showPasswordForm)}
-							>
-								Definir
-							</Button>
-						)}
-						{hasPassword && <Badge variant="emerald">Ativa</Badge>}
+						<div className="flex items-center gap-2">
+							{hasPassword && (
+								<Button
+									variant="outline"
+									size="sm"
+									onClick={() =>
+										setShowChangePasswordForm(!showChangePasswordForm)
+									}
+								>
+									Alterar
+								</Button>
+							)}
+							{!hasPassword && (
+								<Button
+									variant="outline"
+									size="sm"
+									onClick={() => setShowPasswordForm(!showPasswordForm)}
+								>
+									Definir
+								</Button>
+							)}
+							{hasPassword && <Badge variant="emerald">Ativa</Badge>}
+						</div>
 					</div>
+
+					{/* Set password (for Google-only users) */}
 					{showPasswordForm && (
 						<div className="mt-4 p-4 rounded-xl bg-brand-soft border border-brand/20 slide-up">
 							<h4 className="font-heading font-600 text-sm text-warm-text mb-3">
@@ -202,6 +265,145 @@ export function SecurityPage() {
 											setShowPasswordForm(false)
 											setNewPassword('')
 											setConfirmPassword('')
+										}}
+									>
+										Cancelar
+									</Button>
+								</div>
+							</div>
+						</div>
+					)}
+
+					{/* Change password (for users with existing password) */}
+					{showChangePasswordForm && (
+						<div className="mt-4 p-4 rounded-xl bg-brand-soft border border-brand/20 slide-up">
+							<h4 className="font-heading font-600 text-sm text-warm-text mb-3">
+								Alterar Palavra-passe
+							</h4>
+							<div className="space-y-3 max-w-sm">
+								<Input
+									type="password"
+									placeholder="Palavra-passe atual"
+									value={currentPassword}
+									onChange={(e) => setCurrentPassword(e.target.value)}
+								/>
+								<Input
+									type="password"
+									placeholder="Nova palavra-passe (min. 8 caracteres)"
+									value={changeNewPassword}
+									onChange={(e) => setChangeNewPassword(e.target.value)}
+								/>
+								<Input
+									type="password"
+									placeholder="Confirmar nova palavra-passe"
+									value={changeConfirmPassword}
+									onChange={(e) => setChangeConfirmPassword(e.target.value)}
+								/>
+								<div className="flex gap-3">
+									<Button
+										onClick={handleChangePassword}
+										loading={changePassword.isPending}
+										size="sm"
+									>
+										Guardar
+									</Button>
+									<Button
+										variant="ghost"
+										size="sm"
+										onClick={() => {
+											setShowChangePasswordForm(false)
+											setCurrentPassword('')
+											setChangeNewPassword('')
+											setChangeConfirmPassword('')
+										}}
+									>
+										Cancelar
+									</Button>
+								</div>
+							</div>
+						</div>
+					)}
+				</div>
+			</div>
+
+			{/* Change Email */}
+			<div className="card-account stagger-4">
+				<div className="p-6 sm:p-8">
+					<h3 className="font-heading font-700 text-lg text-warm-text mb-4">Email</h3>
+					<div className="flex items-center justify-between p-4 rounded-xl bg-warm-bg border border-warm-border">
+						<div className="flex items-center gap-3">
+							<div className="w-12 h-12 rounded-xl bg-brand/10 flex items-center justify-center">
+								<svg
+									width="22"
+									height="22"
+									viewBox="0 0 24 24"
+									fill="none"
+									stroke="currentColor"
+									strokeWidth="1.5"
+									className="text-brand"
+								>
+									<rect x="2" y="4" width="20" height="16" rx="2" />
+									<path d="M22 7l-10 7L2 7" />
+								</svg>
+							</div>
+							<div>
+								<p className="text-sm font-heading font-600 text-warm-text">
+									{user?.email}
+								</p>
+								<p className="text-xs text-text-secondary">
+									{user?.emailVerified
+										? 'Email verificado'
+										: 'Email não verificado'}
+								</p>
+							</div>
+						</div>
+						<Button
+							variant="outline"
+							size="sm"
+							onClick={() => setShowEmailForm(!showEmailForm)}
+						>
+							Alterar
+						</Button>
+					</div>
+
+					{showEmailForm && (
+						<div className="mt-4 p-4 rounded-xl bg-brand-soft border border-brand/20 slide-up">
+							<h4 className="font-heading font-600 text-sm text-warm-text mb-3">
+								Alterar Email
+							</h4>
+							<p className="text-xs text-text-secondary mb-3">
+								Após alterar, receberás um link de verificação no novo email.
+							</p>
+							<div className="space-y-3 max-w-sm">
+								<Input
+									type="email"
+									placeholder="Novo email"
+									value={newEmail}
+									onChange={(e) => setNewEmail(e.target.value)}
+								/>
+								{hasPassword && (
+									<Input
+										type="password"
+										placeholder="Confirma com a tua palavra-passe"
+										value={emailPassword}
+										onChange={(e) => setEmailPassword(e.target.value)}
+									/>
+								)}
+								<div className="flex gap-3">
+									<Button
+										onClick={handleChangeEmail}
+										loading={changeEmail.isPending}
+										size="sm"
+									>
+										Guardar
+									</Button>
+									<Button
+										variant="ghost"
+										size="sm"
+										onClick={() => {
+											setShowEmailForm(false)
+											setNewEmail('')
+											setEmailPassword('')
 										}}
 									>
 										Cancelar

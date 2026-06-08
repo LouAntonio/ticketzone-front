@@ -16,6 +16,7 @@ export interface User {
 	phoneNumber?: string
 	createdAt: string
 	updatedAt?: string
+	hasPassword: boolean
 	accounts?: LinkedAccount[]
 }
 
@@ -97,6 +98,16 @@ export interface LinkGoogleData {
 }
 
 export interface LinkPasswordData {
+	password: string
+}
+
+export interface ChangePasswordData {
+	currentPassword: string
+	newPassword: string
+}
+
+export interface ChangeEmailData {
+	newEmail: string
 	password: string
 }
 

@@ -12,6 +12,8 @@ import type {
 	LinkGoogleData,
 	LinkPasswordData,
 	BecomePromoterData,
+	ChangePasswordData,
+	ChangeEmailData,
 } from '../../types/auth'
 
 export const authApi = {
@@ -49,4 +51,13 @@ export const authApi = {
 
 	becomePromoter: (data: BecomePromoterData) =>
 		api.post<never>('/auth/become-promoter', data).then((r) => r.data),
+
+	changePassword: (data: ChangePasswordData) =>
+		api.post<never>('/auth/change-password', data).then((r) => r.data),
+
+	changeEmail: (data: ChangeEmailData) =>
+		api.post<never>('/auth/change-email', data).then((r) => r.data),
+
+	updateProfile: (data: { name?: string; phoneNumber?: string }) =>
+		api.patch<never>('/auth/profile', data).then((r) => r.data),
 }

@@ -1,10 +1,15 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { api } from '../client'
 import { authApi } from '../endpoints/auth'
 import { ordersApi } from '../endpoints/orders'
 
 import { useAuthStore } from '../../stores/useAuthStore'
-import type { LinkGoogleData, LinkPasswordData, BecomePromoterData } from '../../types/auth'
+import type {
+	LinkGoogleData,
+	LinkPasswordData,
+	BecomePromoterData,
+	ChangePasswordData,
+	ChangeEmailData,
+} from '../../types/auth'
 import { toast } from 'react-hot-toast'
 
 export function useLinkGoogle() {
@@ -64,11 +69,41 @@ export function useResendVerification() {
 
 export function useUserProfile() {
 	const qc = useQueryClient()
+	const setUser = useAuthStore((s) => s.setUser)
+	const user = useAuthStore((s) => s.user)
 	return useMutation({
-		mutationFn: (data: { name?: string; phoneNumber?: string }) =>
-			api.patch('/users/profile', data).then((r) => r.data),
-		onSuccess: () => {
+		mutationFn: (data: { name?: string; phoneNumber?: string }) => authApi.updateProfile(data),
+		onSuccess: (_data, variables) => {
 			toast.success('Perfil atualizado com sucesso')
+			if (user) {
+				setUser({
+					...user,
+					...(variables.name !== undefined && { name: variables.name }),
+					...(variables.phoneNumber !== undefined && {
+						phoneNumber: variables.phoneNumber,
+					}),
+				})
+			}
+			qc.invalidateQueries({ queryKey: ['auth', 'me'] })
+		},
+	})
+}
+
+export function useChangePassword() {
+	return useMutation({
+		mutationFn: (data: ChangePasswordData) => authApi.changePassword(data),
+		onSuccess: () => {
+			toast.success('Palavra-passe atualizada com sucesso')
+		},
+	})
+}
+
+export function useChangeEmail() {
+	const qc = useQueryClient()
+	return useMutation({
+		mutationFn: (data: ChangeEmailData) => authApi.changeEmail(data),
+		onSuccess: () => {
+			toast.success('Email atualizado. Verifica a tua caixa de entrada para confirmar.')
 			qc.invalidateQueries({ queryKey: ['auth', 'me'] })
 		},
 	})

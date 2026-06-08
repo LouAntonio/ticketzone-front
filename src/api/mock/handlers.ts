@@ -88,6 +88,7 @@ export const handlers = [
 						role: user.role,
 						phoneNumber: user.phoneNumber,
 						createdAt: user.createdAt,
+						hasPassword: user.hasPassword ?? false,
 					},
 				},
 				'Login realizado com sucesso',
@@ -113,6 +114,7 @@ export const handlers = [
 			phoneNumber: '',
 			image: '',
 			role: 'USER' as const,
+			hasPassword: true,
 			createdAt: new Date().toISOString(),
 		}
 		db.users.push(user)
@@ -133,6 +135,7 @@ export const handlers = [
 			phoneNumber: '',
 			image: '',
 			role: 'USER' as const,
+			hasPassword: false,
 			createdAt: new Date().toISOString(),
 		}
 		db.users.push(mockGoogleUser)
@@ -183,6 +186,7 @@ export const handlers = [
 						role: user.role,
 						phoneNumber: user.phoneNumber ?? '',
 						createdAt: user.createdAt,
+						hasPassword: user.hasPassword ?? false,
 					},
 				},
 				'Token renovado com sucesso',
@@ -212,6 +216,7 @@ export const handlers = [
 					role: user.role,
 					phoneNumber: user.phoneNumber ?? '',
 					createdAt: user.createdAt,
+					hasPassword: user.hasPassword ?? false,
 					accounts: linkedAccounts,
 				},
 				'Dados do usuário',

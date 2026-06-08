@@ -37,6 +37,7 @@ export const db: MockDB = {
 			phoneNumber: '+244 923 456 789',
 			image: '',
 			role: 'USER',
+			hasPassword: true,
 			createdAt: '2025-01-15T10:00:00Z',
 		},
 		{
@@ -47,6 +48,7 @@ export const db: MockDB = {
 			phoneNumber: '+244 933 456 789',
 			image: '',
 			role: 'PROMOTER',
+			hasPassword: true,
 			createdAt: '2025-02-20T10:00:00Z',
 		},
 		{
@@ -57,6 +59,7 @@ export const db: MockDB = {
 			phoneNumber: '',
 			image: '',
 			role: 'USER',
+			hasPassword: true,
 			createdAt: '2025-03-10T10:00:00Z',
 		},
 		{
@@ -67,6 +70,7 @@ export const db: MockDB = {
 			phoneNumber: '+244 900 000 000',
 			image: '',
 			role: 'ADMIN',
+			hasPassword: true,
 			createdAt: '2025-01-01T08:00:00Z',
 		},
 		{
@@ -77,6 +81,7 @@ export const db: MockDB = {
 			phoneNumber: '+244 924 111 222',
 			image: '',
 			role: 'USER',
+			hasPassword: true,
 			createdAt: '2025-04-05T10:00:00Z',
 		},
 		{
@@ -87,6 +92,7 @@ export const db: MockDB = {
 			phoneNumber: '+244 925 333 444',
 			image: '',
 			role: 'PROMOTER',
+			hasPassword: true,
 			createdAt: '2025-04-12T10:00:00Z',
 		},
 		{
@@ -97,6 +103,7 @@ export const db: MockDB = {
 			phoneNumber: '',
 			image: '',
 			role: 'USER',
+			hasPassword: true,
 			createdAt: '2025-05-01T10:00:00Z',
 		},
 		{
@@ -107,6 +114,7 @@ export const db: MockDB = {
 			phoneNumber: '',
 			image: '',
 			role: 'USER',
+			hasPassword: true,
 			createdAt: '2025-05-15T10:00:00Z',
 		},
 	],

@@ -1,11 +1,6 @@
 import { useState } from 'react'
 import { useAuthStore } from '../../stores/useAuthStore'
-import {
-	useUserProfile,
-	useLinkGoogle,
-	useLinkPassword,
-	useResendVerification,
-} from '../../api/hooks/useAccount'
+import { useUserProfile, useLinkGoogle, useResendVerification } from '../../api/hooks/useAccount'
 import { useGoogleLogin } from '@react-oauth/google'
 import { Input } from '../../components/ui/Input'
 import { Button } from '../../components/ui/Button'
@@ -17,23 +12,18 @@ export function ProfilePage() {
 	const user = useAuthStore((s) => s.user)
 	const updateProfile = useUserProfile()
 	const linkGoogle = useLinkGoogle()
-	const linkPassword = useLinkPassword()
 	const resendVerification = useResendVerification()
 
 	const [editing, setEditing] = useState(false)
 	const [name, setName] = useState(user?.name ?? '')
 	const [phone, setPhone] = useState(user?.phoneNumber ?? '')
-	const [showPasswordForm, setShowPasswordForm] = useState(false)
-	const [newPassword, setNewPassword] = useState('')
-	const [confirmPassword, setConfirmPassword] = useState('')
 
-	const hasPassword = user?.accounts?.some((a) => a.providerId === 'password') ?? true
+	const hasPassword = user?.hasPassword ?? false
 	const hasGoogle = user?.accounts?.some((a) => a.providerId === 'google') ?? false
 
 	const handleSaveProfile = async () => {
 		await updateProfile.mutateAsync({ name, phoneNumber: phone })
 		setEditing(false)
-		toast.success('Perfil atualizado')
 	}
 
 	const handleGoogleLink = useGoogleLogin({
@@ -45,21 +35,6 @@ export function ProfilePage() {
 		},
 		onError: () => toast.error('Erro ao vincular conta Google'),
 	})
-
-	const handleSetPassword = async () => {
-		if (newPassword !== confirmPassword) {
-			toast.error('As palavras-passe não coincidem')
-			return
-		}
-		if (newPassword.length < 8) {
-			toast.error('A palavra-passe deve ter no mínimo 8 caracteres')
-			return
-		}
-		await linkPassword.mutateAsync({ password: newPassword })
-		setShowPasswordForm(false)
-		setNewPassword('')
-		setConfirmPassword('')
-	}
 
 	if (!user) return null
 
@@ -247,58 +222,8 @@ export function ProfilePage() {
 									</p>
 								</div>
 							</div>
-							{!hasPassword && (
-								<Button
-									variant="outline"
-									size="sm"
-									onClick={() => setShowPasswordForm(!showPasswordForm)}
-								>
-									Definir
-								</Button>
-							)}
+							{hasPassword && <Badge variant="emerald">Vinculada</Badge>}
 						</div>
-
-						{showPasswordForm && (
-							<div className="p-4 rounded-xl bg-brand-soft border border-brand/20 slide-up">
-								<h4 className="font-heading font-600 text-sm text-warm-text mb-3">
-									Definir Palavra-passe
-								</h4>
-								<div className="space-y-3">
-									<Input
-										type="password"
-										placeholder="Nova palavra-passe (min. 8 caracteres)"
-										value={newPassword}
-										onChange={(e) => setNewPassword(e.target.value)}
-									/>
-									<Input
-										type="password"
-										placeholder="Confirmar palavra-passe"
-										value={confirmPassword}
-										onChange={(e) => setConfirmPassword(e.target.value)}
-									/>
-									<div className="flex gap-3">
-										<Button
-											onClick={handleSetPassword}
-											loading={linkPassword.isPending}
-											size="sm"
-										>
-											Guardar
-										</Button>
-										<Button
-											variant="ghost"
-											size="sm"
-											onClick={() => {
-												setShowPasswordForm(false)
-												setNewPassword('')
-												setConfirmPassword('')
-											}}
-										>
-											Cancelar
-										</Button>
-									</div>
-								</div>
-							</div>
-						)}
 
 						{/* Google */}
 						<div className="flex items-center justify-between p-4 rounded-xl bg-warm-bg border border-warm-border">
