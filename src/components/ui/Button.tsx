@@ -14,6 +14,7 @@ export function Button({
 	children,
 	className = '',
 	disabled,
+	type = 'button',
 	...props
 }: ButtonProps) {
 	const sizes: Record<string, string> = {
@@ -27,6 +28,7 @@ export function Button({
 
 	return (
 		<button
+			type={type}
 			className={`${base} ${state} ${className}`}
 			disabled={disabled || loading}
 			{...props}

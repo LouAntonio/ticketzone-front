@@ -1,37 +1,75 @@
-import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { toast } from 'react-hot-toast'
+import { useGoogleLogin } from '@react-oauth/google'
 import { useAuthStore } from '../../stores/useAuthStore'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
+import { PasswordInput } from '../../components/ui/PasswordInput'
 import { authApi } from '../../api/endpoints/auth'
+import { USE_MOCK } from '../../lib/env'
 import type { AxiosError } from 'axios'
 
 export function LoginPage() {
 	const [email, setEmail] = useState('')
 	const [password, setPassword] = useState('')
-	const [error, setError] = useState('')
 	const [loading, setLoading] = useState(false)
+	const [googleLoading, setGoogleLoading] = useState(false)
 	const navigate = useNavigate()
+	const location = useLocation()
 	const setSession = useAuthStore((s) => s.setSession)
+
+	useEffect(() => {
+		if (location.state?.registered) {
+			toast.success('Conta criada! Verifica o teu email para ativar a conta.', {
+				duration: 6000,
+			})
+			window.history.replaceState({}, document.title)
+		}
+	}, [location.state])
+
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault()
-		setError('')
 		setLoading(true)
 		try {
-			const res = await authApi.login({ email, password })
-			setSession(res.token, res.user, res.organizerProfile)
+			const data = await authApi.login({ email, password })
+			setSession(data.accessToken, data.refreshToken, data.user)
 			toast.success('Login efetuado com sucesso')
-			navigate(res.user.role === 'admin' ? '/admin' : '/')
+			navigate(data.user.role === 'ADMIN' ? '/admin' : '/')
 		} catch (err) {
-			const axiosErr = err as AxiosError<{ error: string }>
-			const msg = axiosErr?.response?.data?.error ?? 'Erro ao fazer login'
-			setError(msg)
+			const axiosErr = err as AxiosError<{ msg?: string }>
+			const msg = axiosErr?.response?.data?.msg ?? axiosErr?.message ?? 'Erro ao fazer login'
 			toast.error(msg)
 		} finally {
 			setLoading(false)
 		}
 	}
+
+	const googleLogin = useGoogleLogin({
+		onSuccess: async (tokenResponse) => {
+			const accessToken = tokenResponse.access_token
+			setGoogleLoading(true)
+			try {
+				const data = await authApi.googleLogin(accessToken)
+				setSession(data.accessToken, data.refreshToken, data.user)
+				toast.success('Login efetuado com sucesso')
+				navigate(data.user.role === 'ADMIN' ? '/admin' : '/')
+			} catch (err) {
+				const axiosErr = err as AxiosError<{ msg?: string }>
+				const msg =
+					axiosErr?.response?.data?.msg ??
+					axiosErr?.message ??
+					'Erro ao fazer login com Google'
+				toast.error(msg)
+			} finally {
+				setGoogleLoading(false)
+			}
+		},
+		onError: () => {
+			toast.error('Autenticação Google cancelada ou falhou')
+		},
+		scope: 'openid profile email',
+	})
 
 	return (
 		<div
@@ -40,7 +78,6 @@ export function LoginPage() {
 				background: 'linear-gradient(135deg, #FFF0E8 0%, #FFFFFF 50%, #FFF0E8 100%)',
 			}}
 		>
-			{/* Left panel — branding */}
 			<div className="hidden lg:flex flex-col justify-between p-12 bg-brand relative overflow-hidden">
 				<div
 					className="absolute inset-0 opacity-10"
@@ -67,22 +104,12 @@ export function LoginPage() {
 						<br />
 						de Angola.
 					</h1>
-					<p className="text-white/70 text-lg max-w-md">
-						Compra e vende bilhetes com segurança. Multicaixa Express, PayPay e
-						referências multicaixa.
-					</p>
 				</div>
-				<div className="relative z-10 flex items-center gap-6 text-white/50 text-sm">
-					<span>Multicaixa Express</span>
-					<span>PayPay</span>
-					<span>Referências</span>
-				</div>
+				<div className="relative z-10 flex items-center gap-6 text-white/50 text-sm"></div>
 			</div>
 
-			{/* Right panel — form */}
 			<div className="flex items-center justify-center p-8">
 				<div className="w-full max-w-sm">
-					{/* Mobile logo */}
 					<Link to="/" className="flex lg:hidden items-center gap-2 mb-8 justify-center">
 						<div className="w-9 h-9 bg-brand rounded-lg flex items-center justify-center">
 							<span className="text-white font-display text-lg leading-none">T</span>
@@ -97,12 +124,6 @@ export function LoginPage() {
 						Acede à tua conta para comprar bilhetes
 					</p>
 
-					{error && (
-						<div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-600">
-							{error}
-						</div>
-					)}
-
 					<form onSubmit={handleSubmit} className="flex flex-col gap-4">
 						<Input
 							label="Email"
@@ -112,20 +133,26 @@ export function LoginPage() {
 							onChange={(e) => setEmail(e.target.value)}
 							required
 						/>
-						<Input
+						<PasswordInput
 							label="Senha"
-							type="password"
 							placeholder="••••••••"
 							value={password}
 							onChange={(e) => setPassword(e.target.value)}
 							required
 						/>
+						<div className="flex justify-end -mt-2">
+							<Link
+								to="/forgot-password"
+								className="text-xs text-brand font-heading font-600 hover:underline"
+							>
+								Esqueceu-se da senha?
+							</Link>
+						</div>
 						<Button type="submit" loading={loading} className="w-full mt-2">
 							Entrar
 						</Button>
 					</form>
 
-					{/* Google OAuth */}
 					<div className="relative my-6">
 						<div className="absolute inset-0 flex items-center">
 							<div className="w-full border-t border-border" />
@@ -135,7 +162,11 @@ export function LoginPage() {
 						</div>
 					</div>
 
-					<button className="w-full flex items-center justify-center gap-3 h-11 border-2 border-border rounded-xl text-sm font-heading font-600 hover:bg-gray-50 transition-colors">
+					<button
+						onClick={() => googleLogin()}
+						disabled={googleLoading}
+						className="w-full flex items-center justify-center gap-3 h-11 border-2 border-border rounded-xl text-sm font-heading font-600 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+					>
 						<svg width="20" height="20" viewBox="0 0 24 24">
 							<path
 								d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"
@@ -154,7 +185,7 @@ export function LoginPage() {
 								fill="#EA4335"
 							/>
 						</svg>
-						Continuar com Google
+						{googleLoading ? 'A entrar...' : 'Continuar com Google'}
 					</button>
 
 					<p className="mt-8 text-center text-sm text-text-secondary">
@@ -167,13 +198,14 @@ export function LoginPage() {
 						</Link>
 					</p>
 
-					{/* Demo hint */}
-					<div className="mt-6 p-3 bg-brand-soft/50 border border-brand/20 rounded-xl text-xs text-text-secondary">
-						<p className="font-heading font-600 text-brand mb-1">Demo:</p>
-						<p>Email: ana@email.com — Comprador</p>
-						<p>Email: carlos@email.com — Organizador</p>
-						<p>Email: admin@ticketzone.com — Admin</p>
-					</div>
+					{USE_MOCK && (
+						<div className="mt-6 p-3 bg-brand-soft/50 border border-brand/20 rounded-xl text-xs text-text-secondary">
+							<p className="font-heading font-600 text-brand mb-1">Demo:</p>
+							<p>Email: ana@email.com — Comprador</p>
+							<p>Email: carlos@email.com — Organizador</p>
+							<p>Email: admin@ticketzone.com — Admin</p>
+						</div>
+					)}
 				</div>
 			</div>
 		</div>

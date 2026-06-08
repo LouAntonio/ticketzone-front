@@ -22,7 +22,7 @@ export function OrganizerRoute() {
 		return <Navigate to="/login" replace />
 	}
 
-	if (user?.role !== 'organizer') {
+	if (user?.role !== 'PROMOTER') {
 		return <Navigate to="/" replace />
 	}
 

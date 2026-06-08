@@ -4,15 +4,15 @@ import { Skeleton, SkeletonTable } from '../../components/ui/Skeleton'
 import { formatDate } from '../../lib/format'
 
 const roleLabels: Record<string, string> = {
-	buyer: 'Comprador',
-	organizer: 'Organizador',
-	admin: 'Admin',
+	USER: 'Comprador',
+	PROMOTER: 'Organizador',
+	ADMIN: 'Admin',
 }
 
 const roleColors: Record<string, string> = {
-	buyer: 'bg-blue-500/20 text-blue-400',
-	organizer: 'bg-purple-500/20 text-purple-400',
-	admin: 'bg-brand/20 text-brand',
+	USER: 'bg-blue-500/20 text-blue-400',
+	PROMOTER: 'bg-purple-500/20 text-purple-400',
+	ADMIN: 'bg-brand/20 text-brand',
 }
 
 export function AdminUsers() {
@@ -66,9 +66,9 @@ export function AdminUsers() {
 
 	const tabs = [
 		{ key: 'all', label: 'Todos', count: users.length },
-		{ key: 'buyer', label: 'Compradores', count: counts.buyer ?? 0 },
-		{ key: 'organizer', label: 'Organizadores', count: counts.organizer ?? 0 },
-		{ key: 'admin', label: 'Admins', count: counts.admin ?? 0 },
+		{ key: 'USER', label: 'Compradores', count: counts.USER ?? 0 },
+		{ key: 'PROMOTER', label: 'Organizadores', count: counts.PROMOTER ?? 0 },
+		{ key: 'ADMIN', label: 'Admins', count: counts.ADMIN ?? 0 },
 	]
 
 	const handleRoleChange = (userId: string, newRole: string) => {
@@ -191,7 +191,7 @@ export function AdminUsers() {
 										{formatDate(user.createdAt)}
 									</td>
 									<td className="px-4 py-3 text-right">
-										{user.role !== 'admin' && (
+										{user.role !== 'ADMIN' && (
 											<select
 												value={user.role}
 												onChange={(e) =>
@@ -199,12 +199,12 @@ export function AdminUsers() {
 												}
 												className="bg-[#252525] border border-[#3a3a3a] rounded-lg text-xs text-gray-300 px-2 py-1.5 focus:border-brand focus:outline-none cursor-pointer"
 											>
-												<option value="buyer">Comprador</option>
-												<option value="organizer">Organizador</option>
-												<option value="admin">Admin</option>
+												<option value="USER">Comprador</option>
+												<option value="PROMOTER">Organizador</option>
+												<option value="ADMIN">Admin</option>
 											</select>
 										)}
-										{user.role === 'admin' && (
+										{user.role === 'ADMIN' && (
 											<span className="text-xs text-gray-600 italic">—</span>
 										)}
 									</td>

@@ -1,12 +1,20 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import type { User, OrganizerProfile, UserRole } from '../types/auth'
+import type { User, UserRole, OrganizerProfile } from '../types/auth'
 
 interface AuthState {
 	user: User | null
 	token: string | null
+	refreshToken: string | null
 	organizerProfile: OrganizerProfile | null
-	setSession: (token: string, user: User, organizerProfile?: OrganizerProfile) => void
+
+	setSession: (
+		accessToken: string,
+		refreshToken: string,
+		user: User,
+		organizerProfile?: OrganizerProfile,
+	) => void
+	setAccessToken: (accessToken: string) => void
 	clear: () => void
 	isAuthenticated: () => boolean
 	hasRole: (role: UserRole) => boolean
@@ -19,26 +27,36 @@ export const useAuthStore = create<AuthState>()(
 		(set, get) => ({
 			user: null,
 			token: null,
+			refreshToken: null,
 			organizerProfile: null,
 
-			setSession: (token, user, organizerProfile) =>
-				set({ token, user, organizerProfile: organizerProfile ?? null }),
+			setSession: (accessToken, refreshToken, user, organizerProfile) =>
+				set({
+					token: accessToken,
+					refreshToken,
+					user,
+					organizerProfile: organizerProfile ?? null,
+				}),
 
-			clear: () => set({ user: null, token: null, organizerProfile: null }),
+			setAccessToken: (accessToken) => set({ token: accessToken }),
+
+			clear: () =>
+				set({ user: null, token: null, refreshToken: null, organizerProfile: null }),
 
 			isAuthenticated: () => !!get().token && !!get().user,
 
 			hasRole: (role) => get().user?.role === role,
 
-			isOrganizer: () => get().user?.role === 'organizer',
+			isOrganizer: () => get().user?.role === 'PROMOTER',
 
-			isAdmin: () => get().user?.role === 'admin',
+			isAdmin: () => get().user?.role === 'ADMIN',
 		}),
 		{
 			name: '@ticketzone:auth',
 			partialize: (state) => ({
 				user: state.user,
 				token: state.token,
+				refreshToken: state.refreshToken,
 				organizerProfile: state.organizerProfile,
 			}),
 		},

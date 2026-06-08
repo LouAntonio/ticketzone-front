@@ -1,13 +1,87 @@
-export type UserRole = 'buyer' | 'organizer' | 'admin'
+export type UserRole = 'USER' | 'PROMOTER' | 'STAFF' | 'ADMIN'
 
 export interface User {
 	id: string
 	name: string
 	email: string
-	phone?: string
-	picture?: string
+	emailVerified: boolean
+	image?: string
 	role: UserRole
+	phoneNumber?: string
 	createdAt: string
+	accounts?: { providerId: string }[]
+}
+
+export interface AuthTokens {
+	accessToken: string
+	refreshToken: string
+}
+
+export interface AuthData {
+	accessToken: string
+	refreshToken: string
+	user: User
+}
+
+export interface ApiResponse<T = unknown> {
+	success: boolean
+	msg: string
+	data?: T
+}
+
+// --- DTOs ---
+
+export interface LoginCredentials {
+	email: string
+	password: string
+}
+
+export interface RegisterData {
+	name?: string
+	email: string
+	password: string
+	phone?: string
+}
+
+export interface GoogleLoginData {
+	idToken: string
+}
+
+export interface RefreshTokenData {
+	refreshToken: string
+}
+
+export interface ForgotPasswordData {
+	email: string
+}
+
+export interface ResetPasswordData {
+	token: string
+	password: string
+}
+
+export interface VerifyEmailData {
+	token: string
+}
+
+export interface ResendVerificationData {
+	email: string
+}
+
+export interface LinkGoogleData {
+	idToken: string
+}
+
+export interface LinkPasswordData {
+	password: string
+}
+
+export interface BecomePromoterData {
+	companyName: string
+	nif?: string
+	iban?: string
+	personalDocs?: string[]
+	enterpriseDocs?: string[]
 }
 
 export interface OrganizerProfile {
@@ -19,27 +93,6 @@ export interface OrganizerProfile {
 	bankAccount: string
 	bankHolder: string
 	balance: number
-}
-
-export interface LoginCredentials {
-	email: string
-	password: string
-}
-
-export interface RegisterData {
-	name: string
-	email: string
-	password: string
-	phone?: string
-	role: UserRole
-	companyName?: string
-	document?: string
-}
-
-export interface AuthResponse {
-	token: string
-	user: User
-	organizerProfile?: OrganizerProfile
 }
 
 export interface OrganizerRegisterData extends RegisterData {

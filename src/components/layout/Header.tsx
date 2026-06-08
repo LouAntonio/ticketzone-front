@@ -1,5 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../../stores/useAuthStore'
+import { authApi } from '../../api/endpoints/auth'
+import { toast } from 'react-hot-toast'
 import { useState } from 'react'
 
 export function Header() {
@@ -8,8 +10,17 @@ export function Header() {
 	const [menuOpen, setMenuOpen] = useState(false)
 	const [mobileOpen, setMobileOpen] = useState(false)
 
-	const handleLogout = () => {
+	const handleLogout = async () => {
+		try {
+			const refreshToken = useAuthStore.getState().refreshToken
+			if (refreshToken) {
+				await authApi.logout({ refreshToken })
+			}
+		} catch {
+			// remote logout optional — proceed with local cleanup
+		}
 		clear()
+		toast.success('Sessão encerrada')
 		navigate('/')
 	}
 

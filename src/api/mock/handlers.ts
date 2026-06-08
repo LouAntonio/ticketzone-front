@@ -47,6 +47,14 @@ function filterEvents(params: URLSearchParams): Event[] {
 	return list
 }
 
+function apiResponse<T>(data: T, msg = '') {
+	return { success: true, msg, data } as const
+}
+
+function apiError(msg: string, status: number) {
+	return HttpResponse.json({ success: false, msg }, { status })
+}
+
 export const handlers = [
 	// --- Auth ---
 	http.post(`${API}/auth/login`, async ({ request }) => {
@@ -54,90 +62,153 @@ export const handlers = [
 		const body = (await request.json()) as { email: string; password: string }
 		const user = findUserByEmail(body.email)
 		if (!user) {
-			return HttpResponse.json({ error: 'Credenciais inválidas' }, { status: 401 })
+			return apiError('Credenciais inválidas', 401)
 		}
-		const token = generateToken()
-		db.tokens.set(user.id, token)
-		const organizerProfile = db.organizers.find((o) => o.userId === user.id)
-		return HttpResponse.json({ token, user, organizerProfile })
+		const accessToken = generateToken()
+		const refreshToken = generateToken()
+		db.tokens.set(user.id, accessToken)
+		return HttpResponse.json(
+			apiResponse(
+				{
+					accessToken,
+					refreshToken,
+					user: {
+						id: user.id,
+						name: user.name,
+						email: user.email,
+						emailVerified: user.emailVerified ?? false,
+						image: user.image,
+						role: user.role,
+						phoneNumber: user.phoneNumber,
+						createdAt: user.createdAt,
+					},
+				},
+				'Login realizado com sucesso',
+			),
+		)
 	}),
 
 	http.post(`${API}/auth/register`, async ({ request }) => {
 		await delay(800)
 		const body = (await request.json()) as {
-			name: string
+			name?: string
 			email: string
 			password: string
-			phone?: string
-			role: string
-			companyName?: string
-			document?: string
 		}
 		if (findUserByEmail(body.email)) {
-			return HttpResponse.json({ error: 'Email já registado' }, { status: 409 })
+			return apiError('Este email já está registado', 409)
 		}
 		const user = {
 			id: `user-${Date.now()}`,
-			name: body.name,
+			name: body.name ?? '',
 			email: body.email,
-			phone: body.phone,
-			role: body.role as 'buyer' | 'organizer',
+			emailVerified: false,
+			phoneNumber: '',
+			image: '',
+			role: 'USER' as const,
 			createdAt: new Date().toISOString(),
 		}
 		db.users.push(user)
-		const token = generateToken()
-		db.tokens.set(user.id, token)
-
-		let organizerProfile = undefined
-		if (body.role === 'organizer') {
-			organizerProfile = {
-				id: `org-${Date.now()}`,
-				userId: user.id,
-				companyName: body.companyName,
-				document: body.document ?? '',
-				bankName: '',
-				bankAccount: '',
-				bankHolder: body.name,
-				balance: 0,
-			}
-			db.organizers.push(organizerProfile)
-		}
-
-		return HttpResponse.json({ token, user, organizerProfile })
+		return HttpResponse.json({ success: true, msg: 'Cadastro realizado com sucesso' })
 	}),
 
 	http.post(`${API}/auth/google`, async ({ request }) => {
 		await delay(600)
-		const body = (await request.json()) as { credential: string }
-		if (!body.credential) {
-			return HttpResponse.json({ error: 'Credencial inválida' }, { status: 401 })
+		const body = (await request.json()) as { idToken: string }
+		if (!body.idToken) {
+			return apiError('Autenticação falhou', 401)
 		}
 		const mockGoogleUser = {
 			id: `user-google-${Date.now()}`,
 			name: 'Utilizador Google',
 			email: `user${Date.now()}@gmail.com`,
-			picture: '',
-			role: 'buyer' as const,
+			emailVerified: true,
+			phoneNumber: '',
+			image: '',
+			role: 'USER' as const,
 			createdAt: new Date().toISOString(),
 		}
 		db.users.push(mockGoogleUser)
-		const token = generateToken()
-		db.tokens.set(mockGoogleUser.id, token)
-		return HttpResponse.json({ token, user: mockGoogleUser })
+		const accessToken = generateToken()
+		const refreshToken = generateToken()
+		db.tokens.set(mockGoogleUser.id, accessToken)
+		return HttpResponse.json(
+			apiResponse(
+				{
+					accessToken,
+					refreshToken,
+					user: { ...mockGoogleUser },
+				},
+				'Login realizado com sucesso',
+			),
+		)
+	}),
+
+	http.post(`${API}/auth/logout`, async () => {
+		await delay(200)
+		return HttpResponse.json({ success: true, msg: 'Sessão encerrada' })
+	}),
+
+	http.post(`${API}/auth/refresh`, async ({ request }) => {
+		await delay(300)
+		const body = (await request.json()) as { refreshToken: string }
+		if (!body.refreshToken) {
+			return apiError('Token inválido', 401)
+		}
+		const user = db.users.at(-1)
+		if (!user) {
+			return apiError('Sessão expirada', 401)
+		}
+		const accessToken = generateToken()
+		const refreshToken = generateToken()
+		db.tokens.set(user.id, accessToken)
+		return HttpResponse.json(
+			apiResponse(
+				{
+					accessToken,
+					refreshToken,
+					user: {
+						id: user.id,
+						name: user.name,
+						email: user.email,
+						emailVerified: user.emailVerified ?? false,
+						image: user.image ?? '',
+						role: user.role,
+						phoneNumber: user.phoneNumber ?? '',
+						createdAt: user.createdAt,
+					},
+				},
+				'Token renovado com sucesso',
+			),
+		)
 	}),
 
 	http.get(`${API}/auth/me`, async ({ request }) => {
 		await delay(300)
 		const userId = authHeader(request)
 		if (!userId) {
-			return HttpResponse.json({ error: 'Não autenticado' }, { status: 401 })
+			return apiError('Não autenticado', 401)
 		}
 		const user = db.users.find((u) => u.id === userId)
 		if (!user) {
-			return HttpResponse.json({ error: 'Utilizador não encontrado' }, { status: 404 })
+			return apiError('Utilizador não encontrado', 404)
 		}
-		const organizerProfile = db.organizers.find((o) => o.userId === userId)
-		return HttpResponse.json({ user, organizerProfile })
+		return HttpResponse.json(
+			apiResponse(
+				{
+					id: user.id,
+					name: user.name,
+					email: user.email,
+					emailVerified: user.emailVerified ?? false,
+					image: user.image,
+					role: user.role,
+					phoneNumber: user.phoneNumber ?? '',
+					createdAt: user.createdAt,
+					accounts: [],
+				},
+				'Dados do usuário',
+			),
+		)
 	}),
 
 	// --- Events ---
@@ -477,8 +548,7 @@ export const handlers = [
 		const userId = authHeader(request)
 		if (!userId) return HttpResponse.json({ error: 'Não autenticado' }, { status: 401 })
 		const user = db.users.find((u) => u.id === userId)
-		if (user?.role !== 'admin')
-			return HttpResponse.json({ error: 'Não autorizado' }, { status: 403 })
+		if (user?.role !== 'ADMIN') return apiError('Não autorizado', 403)
 
 		const totalOrders = db.orders.length
 		const confirmedOrders = db.orders.filter((o) => o.status === 'confirmed')
@@ -529,8 +599,7 @@ export const handlers = [
 		const userId = authHeader(request)
 		if (!userId) return HttpResponse.json({ error: 'Não autenticado' }, { status: 401 })
 		const user = db.users.find((u) => u.id === userId)
-		if (user?.role !== 'admin')
-			return HttpResponse.json({ error: 'Não autorizado' }, { status: 403 })
+		if (user?.role !== 'ADMIN') return apiError('Não autorizado', 403)
 
 		return HttpResponse.json({
 			users: db.users.map((u) => {
@@ -539,7 +608,7 @@ export const handlers = [
 					id: u.id,
 					name: u.name,
 					email: u.email,
-					phone: u.phone,
+					phone: u.phoneNumber,
 					role: u.role,
 					createdAt: u.createdAt,
 					organizerCompany: org?.companyName,
@@ -553,8 +622,7 @@ export const handlers = [
 		const userId = authHeader(request)
 		if (!userId) return HttpResponse.json({ error: 'Não autenticado' }, { status: 401 })
 		const user = db.users.find((u) => u.id === userId)
-		if (user?.role !== 'admin')
-			return HttpResponse.json({ error: 'Não autorizado' }, { status: 403 })
+		if (user?.role !== 'ADMIN') return apiError('Não autorizado', 403)
 
 		return HttpResponse.json({
 			events: db.events.map((e) => {
@@ -586,8 +654,7 @@ export const handlers = [
 		const userId = authHeader(request)
 		if (!userId) return HttpResponse.json({ error: 'Não autenticado' }, { status: 401 })
 		const user = db.users.find((u) => u.id === userId)
-		if (user?.role !== 'admin')
-			return HttpResponse.json({ error: 'Não autorizado' }, { status: 403 })
+		if (user?.role !== 'ADMIN') return apiError('Não autorizado', 403)
 
 		return HttpResponse.json({
 			orders: db.orders.map((o) => ({
@@ -608,8 +675,7 @@ export const handlers = [
 		const userId = authHeader(request)
 		if (!userId) return HttpResponse.json({ error: 'Não autenticado' }, { status: 401 })
 		const user = db.users.find((u) => u.id === userId)
-		if (user?.role !== 'admin')
-			return HttpResponse.json({ error: 'Não autorizado' }, { status: 403 })
+		if (user?.role !== 'ADMIN') return apiError('Não autorizado', 403)
 
 		return HttpResponse.json({
 			organizers: db.organizers.map((org) => {
@@ -641,8 +707,7 @@ export const handlers = [
 		const userId = authHeader(request)
 		if (!userId) return HttpResponse.json({ error: 'Não autenticado' }, { status: 401 })
 		const user = db.users.find((u) => u.id === userId)
-		if (user?.role !== 'admin')
-			return HttpResponse.json({ error: 'Não autorizado' }, { status: 403 })
+		if (user?.role !== 'ADMIN') return apiError('Não autorizado', 403)
 
 		const confirmedOrders = db.orders.filter((o) => o.status === 'confirmed')
 		const totalRevenue = confirmedOrders.reduce((s, o) => s + o.total, 0)
@@ -669,8 +734,7 @@ export const handlers = [
 		const userId = authHeader(request)
 		if (!userId) return HttpResponse.json({ error: 'Não autenticado' }, { status: 401 })
 		const user = db.users.find((u) => u.id === userId)
-		if (user?.role !== 'admin')
-			return HttpResponse.json({ error: 'Não autorizado' }, { status: 403 })
+		if (user?.role !== 'ADMIN') return apiError('Não autorizado', 403)
 
 		return HttpResponse.json({
 			cars: db.cars.map((c) => ({
@@ -693,8 +757,7 @@ export const handlers = [
 		const userId = authHeader(request)
 		if (!userId) return HttpResponse.json({ error: 'Não autenticado' }, { status: 401 })
 		const user = db.users.find((u) => u.id === userId)
-		if (user?.role !== 'admin')
-			return HttpResponse.json({ error: 'Não autorizado' }, { status: 403 })
+		if (user?.role !== 'ADMIN') return apiError('Não autorizado', 403)
 
 		const body = (await request.json()) as { status: string }
 		const idx = db.events.findIndex((e) => e.id === params.id)
@@ -709,14 +772,13 @@ export const handlers = [
 		const userId = authHeader(request)
 		if (!userId) return HttpResponse.json({ error: 'Não autenticado' }, { status: 401 })
 		const user = db.users.find((u) => u.id === userId)
-		if (user?.role !== 'admin')
-			return HttpResponse.json({ error: 'Não autorizado' }, { status: 403 })
+		if (user?.role !== 'ADMIN') return apiError('Não autorizado', 403)
 
 		const body = (await request.json()) as { role: string }
 		const idx = db.users.findIndex((u) => u.id === params.id)
 		if (idx === -1)
 			return HttpResponse.json({ error: 'Utilizador não encontrado' }, { status: 404 })
-		db.users[idx].role = body.role as 'buyer' | 'organizer' | 'admin'
+		db.users[idx].role = body.role as 'USER' | 'PROMOTER' | 'ADMIN'
 		return HttpResponse.json({ user: db.users[idx] })
 	}),
 

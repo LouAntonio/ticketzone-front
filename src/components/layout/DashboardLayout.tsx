@@ -40,7 +40,7 @@ const organizerLinks = [
 
 export function DashboardLayout() {
 	const user = useAuthStore((s) => s.user)
-	const isOrg = user?.role === 'organizer'
+	const isOrg = user?.role === 'PROMOTER'
 	const links = isOrg ? organizerLinks : buyerLinks
 
 	return (

@@ -4,7 +4,9 @@ export type {
 	OrganizerProfile,
 	LoginCredentials,
 	RegisterData,
-	AuthResponse,
+	AuthTokens,
+	AuthData,
+	ApiResponse,
 	OrganizerRegisterData,
 } from './auth'
 

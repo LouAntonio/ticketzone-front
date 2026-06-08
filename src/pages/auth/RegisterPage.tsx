@@ -1,48 +1,77 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { toast } from 'react-hot-toast'
-import { useAuthStore } from '../../stores/useAuthStore'
+import { useGoogleLogin } from '@react-oauth/google'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
+import { PasswordInput } from '../../components/ui/PasswordInput'
 import { authApi } from '../../api/endpoints/auth'
-import type { RegisterData } from '../../types/auth'
+import { useAuthStore } from '../../stores/useAuthStore'
+import type { AxiosError } from 'axios'
 
 export function RegisterPage() {
 	const [name, setName] = useState('')
 	const [email, setEmail] = useState('')
 	const [phone, setPhone] = useState('')
 	const [password, setPassword] = useState('')
-	const [role, setRole] = useState<'buyer' | 'organizer'>('buyer')
-	const [companyName, setCompanyName] = useState('')
-	const [document, setDocument] = useState('')
-	const [error, setError] = useState('')
+	const [confirmPassword, setConfirmPassword] = useState('')
 	const [loading, setLoading] = useState(false)
+	const [googleLoading, setGoogleLoading] = useState(false)
 	const navigate = useNavigate()
-	const setSession = useAuthStore((s) => s.setSession)
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault()
-		setError('')
+
+		if (password !== confirmPassword) {
+			toast.error('As senhas não coincidem')
+			return
+		}
+
+		if (password.length < 8) {
+			toast.error('A senha deve ter no mínimo 8 caracteres')
+			return
+		}
+
 		setLoading(true)
 		try {
-			const regData: RegisterData = { name, email, password, phone, role }
-			if (role === 'organizer') {
-				regData.companyName = companyName
-				regData.document = document
-			}
-			const res = await authApi.register(regData)
-			setSession(res.token, res.user, res.organizerProfile)
-			toast.success('Conta criada com sucesso!')
-			navigate('/')
+			await authApi.register({ name, email, password, phone: phone || undefined })
+			navigate('/login', {
+				state: { registered: true },
+			})
 		} catch (err) {
-			const axiosErr = err as { response?: { data?: { error?: string } } }
-			const msg = axiosErr?.response?.data?.error ?? 'Erro ao registar'
-			setError(msg)
+			const axiosErr = err as AxiosError<{ msg?: string }>
+			const msg = axiosErr?.response?.data?.msg ?? axiosErr?.message ?? 'Erro ao registar'
 			toast.error(msg)
 		} finally {
 			setLoading(false)
 		}
 	}
+
+	const googleLogin = useGoogleLogin({
+		onSuccess: async (tokenResponse) => {
+			const accessToken = tokenResponse.access_token
+			setGoogleLoading(true)
+			try {
+				const data = await authApi.googleLogin(accessToken)
+				useAuthStore.getState().setSession(data.accessToken, data.refreshToken, data.user)
+				toast.success('Conta criada com sucesso!')
+				navigate('/')
+			} catch (err) {
+				const axiosErr = err as AxiosError<{ msg?: string }>
+				const msg =
+					axiosErr?.response?.data?.msg ??
+					axiosErr?.message ??
+					'Erro ao registar com Google'
+				toast.error(msg)
+			} finally {
+				setGoogleLoading(false)
+			}
+		},
+		onError: () => {
+			toast.error('Autenticação Google cancelada ou falhou')
+		},
+		scope: 'openid profile email',
+	})
 
 	return (
 		<div
@@ -51,7 +80,6 @@ export function RegisterPage() {
 				background: 'linear-gradient(135deg, #FFF0E8 0%, #FFFFFF 50%, #FFF0E8 100%)',
 			}}
 		>
-			{/* Left panel — branding */}
 			<div className="hidden lg:flex flex-col justify-between p-12 bg-brand relative overflow-hidden">
 				<div
 					className="absolute inset-0 opacity-10"
@@ -78,22 +106,12 @@ export function RegisterPage() {
 						<br />
 						de Angola.
 					</h1>
-					<p className="text-white/70 text-lg max-w-md">
-						Compra e vende bilhetes com segurança. Multicaixa Express, PayPay e
-						referências multicaixa.
-					</p>
 				</div>
-				<div className="relative z-10 flex items-center gap-6 text-white/50 text-sm">
-					<span>Multicaixa Express</span>
-					<span>PayPay</span>
-					<span>Referências</span>
-				</div>
+				<div className="relative z-10 flex items-center gap-6 text-white/50 text-sm"></div>
 			</div>
 
-			{/* Right panel — form */}
 			<div className="flex items-center justify-center p-8">
 				<div className="w-full max-w-sm">
-					{/* Mobile logo */}
 					<Link to="/" className="flex lg:hidden items-center gap-2 mb-8 justify-center">
 						<div className="w-9 h-9 bg-brand rounded-lg flex items-center justify-center">
 							<span className="text-white font-display text-lg leading-none">T</span>
@@ -104,39 +122,7 @@ export function RegisterPage() {
 					</Link>
 
 					<h2 className="font-heading font-700 text-2xl mb-1">Criar Conta</h2>
-					<p className="text-text-secondary text-sm mb-6">Junta-te à TicketZone</p>
-
-					{error && (
-						<div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-600">
-							{error}
-						</div>
-					)}
-
-					{/* Role selector */}
-					<div className="flex gap-2 mb-6 p-1 bg-gray-100 rounded-xl">
-						<button
-							type="button"
-							onClick={() => setRole('buyer')}
-							className={`flex-1 py-2.5 px-4 rounded-lg text-sm font-heading font-600 transition-all ${
-								role === 'buyer'
-									? 'bg-white text-text shadow-sm'
-									: 'text-text-secondary hover:text-text'
-							}`}
-						>
-							Comprador
-						</button>
-						<button
-							type="button"
-							onClick={() => setRole('organizer')}
-							className={`flex-1 py-2.5 px-4 rounded-lg text-sm font-heading font-600 transition-all ${
-								role === 'organizer'
-									? 'bg-white text-text shadow-sm'
-									: 'text-text-secondary hover:text-text'
-							}`}
-						>
-							Promotor
-						</button>
-					</div>
+					<p className="text-text-secondary text-sm mb-6">Junta-te à TicketZone </p>
 
 					<form onSubmit={handleSubmit} className="flex flex-col gap-4">
 						<Input
@@ -144,7 +130,6 @@ export function RegisterPage() {
 							placeholder="O teu nome"
 							value={name}
 							onChange={(e) => setName(e.target.value)}
-							required
 						/>
 						<Input
 							label="Email"
@@ -161,34 +146,21 @@ export function RegisterPage() {
 							value={phone}
 							onChange={(e) => setPhone(e.target.value)}
 						/>
-						<Input
+						<PasswordInput
 							label="Senha"
-							type="password"
-							placeholder="Mínimo 6 caracteres"
+							placeholder="Mínimo 8 caracteres"
 							value={password}
 							onChange={(e) => setPassword(e.target.value)}
 							required
-							minLength={6}
+							minLength={8}
 						/>
-
-						{role === 'organizer' && (
-							<>
-								<Input
-									label="Nome da Empresa (opcional)"
-									placeholder="A tua empresa"
-									value={companyName}
-									onChange={(e) => setCompanyName(e.target.value)}
-								/>
-								<Input
-									label="NIF/Bi"
-									placeholder="Número de identificação"
-									value={document}
-									onChange={(e) => setDocument(e.target.value)}
-									required
-								/>
-							</>
-						)}
-
+						<PasswordInput
+							label="Confirmar senha"
+							placeholder="Repete a senha"
+							value={confirmPassword}
+							onChange={(e) => setConfirmPassword(e.target.value)}
+							required
+						/>
 						<Button type="submit" loading={loading} className="w-full mt-2">
 							Criar Conta
 						</Button>
@@ -203,7 +175,11 @@ export function RegisterPage() {
 						</div>
 					</div>
 
-					<button className="w-full flex items-center justify-center gap-3 h-11 border-2 border-border rounded-xl text-sm font-heading font-600 hover:bg-gray-50 transition-colors">
+					<button
+						onClick={() => googleLogin()}
+						disabled={googleLoading}
+						className="w-full flex items-center justify-center gap-3 h-11 border-2 border-border rounded-xl text-sm font-heading font-600 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+					>
 						<svg width="20" height="20" viewBox="0 0 24 24">
 							<path
 								d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"
@@ -222,7 +198,7 @@ export function RegisterPage() {
 								fill="#EA4335"
 							/>
 						</svg>
-						Continuar com Google
+						{googleLoading ? 'A criar conta...' : 'Continuar com Google'}
 					</button>
 
 					<p className="mt-8 text-center text-sm text-text-secondary">
@@ -234,12 +210,6 @@ export function RegisterPage() {
 							Entrar
 						</Link>
 					</p>
-
-					<div className="mt-6 p-3 bg-brand-soft/50 border border-brand/20 rounded-xl text-xs text-text-secondary">
-						<p className="font-heading font-600 text-brand mb-1">Demo:</p>
-						<p>Email: ana@email.com — Senha: qualquer</p>
-						<p>Email: carlos@email.com — Organizador</p>
-					</div>
 				</div>
 			</div>
 		</div>

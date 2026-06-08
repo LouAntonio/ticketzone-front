@@ -10,22 +10,22 @@ export function useLogin() {
 
 	return useMutation({
 		mutationFn: (data: LoginCredentials) => authApi.login(data),
-		onSuccess: (res) => {
-			setSession(res.token, res.user, res.organizerProfile)
-			navigate('/')
+		onSuccess: (data) => {
+			setSession(data.accessToken, data.refreshToken, data.user)
+			navigate(data.user.role === 'ADMIN' ? '/admin' : '/')
 		},
 	})
 }
 
 export function useRegister() {
-	const setSession = useAuthStore((s) => s.setSession)
 	const navigate = useNavigate()
 
 	return useMutation({
 		mutationFn: (data: RegisterData) => authApi.register(data),
-		onSuccess: (res) => {
-			setSession(res.token, res.user, res.organizerProfile)
-			navigate('/')
+		onSuccess: () => {
+			navigate('/login', {
+				state: { registered: true },
+			})
 		},
 	})
 }
@@ -35,10 +35,37 @@ export function useGoogleLogin() {
 	const navigate = useNavigate()
 
 	return useMutation({
-		mutationFn: (credential: string) => authApi.googleLogin(credential),
-		onSuccess: (res) => {
-			setSession(res.token, res.user, res.organizerProfile)
-			navigate('/')
+		mutationFn: (idToken: string) => authApi.googleLogin(idToken),
+		onSuccess: (data) => {
+			setSession(data.accessToken, data.refreshToken, data.user)
+			navigate(data.user.role === 'ADMIN' ? '/admin' : '/')
+		},
+	})
+}
+
+export function useLogout() {
+	const clear = useAuthStore((s) => s.clear)
+	const refreshToken = useAuthStore((s) => s.refreshToken)
+
+	return useMutation({
+		mutationFn: () => authApi.logout({ refreshToken: refreshToken ?? '' }),
+		onSettled: () => {
+			clear()
+		},
+	})
+}
+
+export function useRefreshToken() {
+	const setAccessToken = useAuthStore((s) => s.setAccessToken)
+	const currentRefreshToken = useAuthStore((s) => s.refreshToken)
+
+	return useMutation({
+		mutationFn: () => authApi.refresh({ refreshToken: currentRefreshToken ?? '' }),
+		onSuccess: (data) => {
+			setAccessToken(data.accessToken)
+			if (data.refreshToken) {
+				useAuthStore.getState().setSession(data.accessToken, data.refreshToken, data.user)
+			}
 		},
 	})
 }

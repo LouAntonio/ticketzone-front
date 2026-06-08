@@ -21,6 +21,9 @@ import { Contacto } from '../pages/public/Contacto'
 // Auth
 import { LoginPage } from '../pages/auth/LoginPage'
 import { RegisterPage } from '../pages/auth/RegisterPage'
+import { ForgotPasswordPage } from '../pages/auth/ForgotPasswordPage'
+import { ResetPasswordPage } from '../pages/auth/ResetPasswordPage'
+import { VerifyEmailPage } from '../pages/auth/VerifyEmailPage'
 
 // Buyer
 import { BuyerDashboard } from '../pages/buyer/Dashboard'
@@ -73,6 +76,9 @@ export const router = createBrowserRouter([
 			// Auth routes (no layout)
 			{ path: '/login', element: <LoginPage /> },
 			{ path: '/register', element: <RegisterPage /> },
+			{ path: '/forgot-password', element: <ForgotPasswordPage /> },
+			{ path: '/resetar-senha', element: <ResetPasswordPage /> },
+			{ path: '/verificar-email', element: <VerifyEmailPage /> },
 
 			// Buyer routes
 			{
