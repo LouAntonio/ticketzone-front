@@ -150,7 +150,9 @@ export function ProfilePage() {
 													Membro desde
 												</span>
 												<p className="font-heading font-600 text-warm-text">
-													{user.createdAt ? formatDate(user.createdAt) : '—'}
+													{user.createdAt
+														? formatDate(user.createdAt)
+														: '—'}
 												</p>
 											</div>
 											<div>

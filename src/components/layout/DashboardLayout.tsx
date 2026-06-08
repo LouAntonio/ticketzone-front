@@ -70,9 +70,12 @@ export function DashboardLayout() {
 
 	useEffect(() => {
 		if (!user?.emailVerified && user?.id) {
-			authApi.me().then((fullUser) => {
-				if (fullUser) setUser(fullUser)
-			}).catch(() => {})
+			authApi
+				.me()
+				.then((fullUser) => {
+					if (fullUser) setUser(fullUser)
+				})
+				.catch(() => {})
 		}
 	}, [user?.id, user?.emailVerified, setUser])
 

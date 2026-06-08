@@ -30,19 +30,13 @@ export function BecomePromoterPage() {
 	const personalInputRef = useRef<HTMLInputElement>(null)
 	const enterpriseInputRef = useRef<HTMLInputElement>(null)
 
-	const addFiles = (
-		category: 'personal' | 'enterprise',
-		files: FileList | null,
-	) => {
+	const addFiles = (category: 'personal' | 'enterprise', files: FileList | null) => {
 		if (!files) return
 		const setter = category === 'personal' ? setPersonalFiles : setEnterpriseFiles
 		setter((prev) => [...prev, ...Array.from(files)])
 	}
 
-	const removeFile = (
-		category: 'personal' | 'enterprise',
-		index: number,
-	) => {
+	const removeFile = (category: 'personal' | 'enterprise', index: number) => {
 		const setter = category === 'personal' ? setPersonalFiles : setEnterpriseFiles
 		setter((prev) => prev.filter((_, i) => i !== index))
 	}

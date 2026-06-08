@@ -70,10 +70,7 @@ export function useCloudinaryUpload() {
 						}
 					}
 					xhr.onerror = () => reject(new Error('Erro de rede no upload'))
-					xhr.open(
-						'POST',
-						`https://api.cloudinary.com/v1_1/${sig.cloudName}/auto/upload`,
-					)
+					xhr.open('POST', `https://api.cloudinary.com/v1_1/${sig.cloudName}/auto/upload`)
 					xhr.send(formData)
 				},
 			)
