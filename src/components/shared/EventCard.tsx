@@ -17,7 +17,8 @@ const categoryColors: Record<string, string> = {
 }
 
 export function EventCard({ event }: EventCardProps) {
-	const minPrice = Math.min(...event.ticketTypes.map((t) => t.price))
+	const tickets = event.ticketTypes ?? []
+	const minPrice = tickets.length > 0 ? Math.min(...tickets.map((t) => t.price)) : 0
 
 	return (
 		<Link
@@ -101,7 +102,7 @@ export function EventCard({ event }: EventCardProps) {
 						</p>
 					</div>
 					<span className="text-xs text-text-secondary">
-						{event.ticketTypes.reduce((s, t) => s + t.available, 0)} lugares
+						{tickets.reduce((s, t) => s + t.available, 0)} lugares
 					</span>
 				</div>
 			</div>

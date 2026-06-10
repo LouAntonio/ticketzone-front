@@ -66,10 +66,11 @@ export function EventDetail() {
 	}
 
 	const event = data.event
+	const tickets = event.ticketTypes ?? []
 
 	const totalSelected = Object.values(selectedTickets).reduce((sum, q) => sum + q, 0)
 
-	const totalPrice = event.ticketTypes.reduce(
+	const totalPrice = tickets.reduce(
 		(sum, tt) => sum + (selectedTickets[tt.id] ?? 0) * tt.price,
 		0,
 	)
@@ -82,7 +83,7 @@ export function EventDetail() {
 
 		setEvent(event.id, event.title)
 
-		for (const tt of event.ticketTypes) {
+		for (const tt of tickets) {
 			const qty = selectedTickets[tt.id] ?? 0
 			if (qty > 0) {
 				addItem({
@@ -233,7 +234,7 @@ export function EventDetail() {
 						<div className="card p-6 space-y-5">
 							<h3 className="font-heading font-700 text-lg">Bilhetes</h3>
 
-							{event.ticketTypes.map((tt) => (
+							{tickets.length > 0 ? tickets.map((tt) => (
 								<div
 									key={tt.id}
 									className="pb-4 border-b border-border last:border-0"
@@ -310,7 +311,11 @@ export function EventDetail() {
 										</span>
 									</div>
 								</div>
-							))}
+							)) : (
+								<p className="text-sm text-text-secondary text-center py-8">
+									Nenhum bilhete disponível neste momento.
+								</p>
+							)}
 
 							{/* Summary */}
 							<div className="pt-2">
