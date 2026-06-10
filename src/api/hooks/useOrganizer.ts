@@ -71,8 +71,7 @@ export function useCreateOrganizerEvent() {
 export function useUpdateOrganizerEvent(id: string) {
 	const qc = useQueryClient()
 	return useMutation({
-		mutationFn: (data: Partial<EventFormData>) =>
-			organizerApi.updateEvent(id, data),
+		mutationFn: (data: Partial<EventFormData>) => organizerApi.updateEvent(id, data),
 		onSuccess: () => {
 			toast.success('Evento atualizado com sucesso')
 			qc.invalidateQueries({ queryKey: ['organizer', 'events'] })
@@ -161,5 +160,68 @@ export function useOrganizerEventBatches(eventId: string) {
 		queryKey: ['organizer', 'events', eventId, 'batches'],
 		queryFn: () => organizerApi.listBatches(eventId),
 		enabled: !!eventId,
+	})
+}
+
+export function useCreateBatch(eventId: string) {
+	const qc = useQueryClient()
+	return useMutation({
+		mutationFn: (data: {
+			name: string
+			price: number
+			capacity: number
+			isGroupTicket?: boolean
+			groupSize?: number
+		}) => organizerApi.createBatch(eventId, data),
+		onSuccess: () => {
+			toast.success('Lote adicionado com sucesso')
+			qc.invalidateQueries({ queryKey: ['organizer', 'events', eventId, 'batches'] })
+			qc.invalidateQueries({ queryKey: ['organizer', 'events', eventId] })
+			qc.invalidateQueries({ queryKey: ['organizer', 'events'] })
+		},
+		onError: (err: Error) => {
+			toast.error(err.message || 'Erro ao adicionar lote')
+		},
+	})
+}
+
+export function useUpdateBatch(eventId: string) {
+	const qc = useQueryClient()
+	return useMutation({
+		mutationFn: ({
+			batchId,
+			...data
+		}: {
+			batchId: string
+			name?: string
+			price?: number
+			capacity?: number
+			isGroupTicket?: boolean
+			groupSize?: number
+		}) => organizerApi.updateBatch(eventId, batchId, data),
+		onSuccess: () => {
+			toast.success('Lote atualizado com sucesso')
+			qc.invalidateQueries({ queryKey: ['organizer', 'events', eventId, 'batches'] })
+			qc.invalidateQueries({ queryKey: ['organizer', 'events', eventId] })
+		},
+		onError: (err: Error) => {
+			toast.error(err.message || 'Erro ao atualizar lote')
+		},
+	})
+}
+
+export function useRemoveBatch(eventId: string) {
+	const qc = useQueryClient()
+	return useMutation({
+		mutationFn: (batchId: string) => organizerApi.removeBatch(eventId, batchId),
+		onSuccess: () => {
+			toast.success('Lote removido com sucesso')
+			qc.invalidateQueries({ queryKey: ['organizer', 'events', eventId, 'batches'] })
+			qc.invalidateQueries({ queryKey: ['organizer', 'events', eventId] })
+			qc.invalidateQueries({ queryKey: ['organizer', 'events'] })
+		},
+		onError: (err: Error) => {
+			toast.error(err.message || 'Erro ao remover lote')
+		},
 	})
 }

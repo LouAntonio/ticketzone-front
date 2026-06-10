@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'react-hot-toast'
 import { adminApi } from '../endpoints/admin'
+import { categoriesApi } from '../endpoints/categories'
 
 // ==================== Stats ====================
 
@@ -374,5 +375,60 @@ export function useAdminAuditLogs(params?: {
 	return useQuery({
 		queryKey: ['admin', 'audit-logs', params],
 		queryFn: () => adminApi.getAuditLogs(params),
+	})
+}
+
+// ==================== Categories ====================
+
+export function useAdminCategories(params?: { page?: number; limit?: number }) {
+	return useQuery({
+		queryKey: ['admin', 'categories', params],
+		queryFn: () => categoriesApi.list(params),
+	})
+}
+
+export function useCreateCategory() {
+	const qc = useQueryClient()
+	return useMutation({
+		mutationFn: (data: { name: string; slug: string; image?: string; cloudinaryId?: string }) =>
+			categoriesApi.create(data),
+		onSuccess: () => {
+			toast.success('Categoria criada com sucesso')
+			qc.invalidateQueries({ queryKey: ['admin', 'categories'] })
+		},
+		onError: () => toast.error('Erro ao criar categoria'),
+	})
+}
+
+export function useUpdateCategory() {
+	const qc = useQueryClient()
+	return useMutation({
+		mutationFn: ({
+			id,
+			...data
+		}: {
+			id: string
+			name?: string
+			slug?: string
+			image?: string
+			cloudinaryId?: string
+		}) => categoriesApi.update(id, data),
+		onSuccess: () => {
+			toast.success('Categoria atualizada com sucesso')
+			qc.invalidateQueries({ queryKey: ['admin', 'categories'] })
+		},
+		onError: () => toast.error('Erro ao atualizar categoria'),
+	})
+}
+
+export function useDeleteCategory() {
+	const qc = useQueryClient()
+	return useMutation({
+		mutationFn: (id: string) => categoriesApi.remove(id),
+		onSuccess: () => {
+			toast.success('Categoria eliminada com sucesso')
+			qc.invalidateQueries({ queryKey: ['admin', 'categories'] })
+		},
+		onError: () => toast.error('Erro ao eliminar categoria'),
 	})
 }

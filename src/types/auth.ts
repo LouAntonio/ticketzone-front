@@ -34,9 +34,6 @@ export interface PromoterRequest {
 	personalDocs?: DocFile[]
 	enterpriseDocs?: DocFile[]
 	createdAt?: string
-	bankName?: string | null
-	bankAccount?: string | null
-	bankHolder?: string | null
 	balance?: number
 }
 

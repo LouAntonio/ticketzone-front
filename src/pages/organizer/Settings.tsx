@@ -1,9 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useAuthStore } from '../../stores/useAuthStore'
-import {
-	useOrganizerSettings,
-	useUpdateOrganizerSettings,
-} from '../../api/hooks/useOrganizer'
+import { useOrganizerSettings, useUpdateOrganizerSettings } from '../../api/hooks/useOrganizer'
 import { Card } from '../../components/ui/Card'
 import { Input } from '../../components/ui/Input'
 import { Button } from '../../components/ui/Button'
@@ -17,25 +14,19 @@ export function OrgSettings() {
 
 	const [editing, setEditing] = useState(false)
 	const [companyName, setCompanyName] = useState('')
-	const [bankName, setBankName] = useState('')
-	const [bankAccount, setBankAccount] = useState('')
-	const [bankHolder, setBankHolder] = useState('')
+	const [iban, setIban] = useState('')
 
 	useEffect(() => {
 		if (settings) {
 			setCompanyName(settings.companyName ?? '')
-			setBankName(settings.bankName ?? '')
-			setBankAccount(settings.bankAccount ?? '')
-			setBankHolder(settings.bankHolder ?? '')
+			setIban(settings.iban ?? '')
 		}
 	}, [settings])
 
 	const handleSave = async () => {
 		await updateSettings.mutateAsync({
 			companyName: companyName || undefined,
-			bankName: bankName || undefined,
-			bankAccount: bankAccount || undefined,
-			bankHolder: bankHolder || undefined,
+			iban: iban || undefined,
 		})
 		setEditing(false)
 	}
@@ -116,28 +107,13 @@ export function OrgSettings() {
 								onChange={(e) => setCompanyName(e.target.value)}
 							/>
 							<Input
-								label="Nome do Banco"
-								placeholder="Ex: Banco Angolano de Investimentos"
-								value={bankName}
-								onChange={(e) => setBankName(e.target.value)}
-							/>
-							<Input
-								label="Número da Conta"
-								placeholder="Ex: 123456789"
-								value={bankAccount}
-								onChange={(e) => setBankAccount(e.target.value)}
-							/>
-							<Input
-								label="Titular da Conta"
-								placeholder="Nome do titular"
-								value={bankHolder}
-								onChange={(e) => setBankHolder(e.target.value)}
+								label="IBAN"
+								placeholder="AO06012345678901234567890"
+								value={iban}
+								onChange={(e) => setIban(e.target.value)}
 							/>
 							<div className="flex gap-3">
-								<Button
-									onClick={handleSave}
-									loading={updateSettings.isPending}
-								>
+								<Button onClick={handleSave} loading={updateSettings.isPending}>
 									Guardar
 								</Button>
 								<Button
@@ -146,9 +122,7 @@ export function OrgSettings() {
 										setEditing(false)
 										if (settings) {
 											setCompanyName(settings.companyName ?? '')
-											setBankName(settings.bankName ?? '')
-											setBankAccount(settings.bankAccount ?? '')
-											setBankHolder(settings.bankHolder ?? '')
+											setIban(settings.iban ?? '')
 										}
 									}}
 								>
@@ -165,21 +139,9 @@ export function OrgSettings() {
 								</p>
 							</div>
 							<div>
-								<span className="text-xs text-text-secondary">Banco</span>
+								<span className="text-xs text-text-secondary">IBAN</span>
 								<p className="text-sm font-heading font-600">
-									{settings?.bankName || '—'}
-								</p>
-							</div>
-							<div>
-								<span className="text-xs text-text-secondary">Nº de Conta</span>
-								<p className="text-sm font-heading font-600">
-									{settings?.bankAccount || '—'}
-								</p>
-							</div>
-							<div>
-								<span className="text-xs text-text-secondary">Titular</span>
-								<p className="text-sm font-heading font-600">
-									{settings?.bankHolder || '—'}
+									{settings?.iban || '—'}
 								</p>
 							</div>
 						</div>

@@ -37,7 +37,8 @@ export function StaffList() {
 	}
 
 	const handleRemove = (targetUserId: string, name: string | null) => {
-		if (!window.confirm(`Tens a certeza que desejas remover "${name ?? 'este validador'}"?`)) return
+		if (!window.confirm(`Tens a certeza que desejas remover "${name ?? 'este validador'}"?`))
+			return
 		removeStaff.mutate(targetUserId)
 	}
 
@@ -133,7 +134,9 @@ export function StaffList() {
 											<Button
 												variant="ghost"
 												size="sm"
-												onClick={() => handleRemove(member.userId, member.name)}
+												onClick={() =>
+													handleRemove(member.userId, member.name)
+												}
 												loading={removeStaff.isPending}
 												className="text-red-500 hover:text-red-700"
 											>

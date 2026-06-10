@@ -12,8 +12,7 @@ import type {
 export const organizerApi = {
 	sales: () => api.get<SalesData>('/organizer/sales').then((r) => r.data),
 
-	attendees: () =>
-		api.get<AttendeesData>('/organizer/attendees').then((r) => r.data),
+	attendees: () => api.get<AttendeesData>('/organizer/attendees').then((r) => r.data),
 
 	settings: () =>
 		api
@@ -30,68 +29,40 @@ export const organizerApi = {
 				verificationStatus: string
 				status: string
 				balance: number
-				bankName: string | null
-				bankAccount: string | null
-				bankHolder: string | null
 				createdAt: string
 			}>('/organizer/settings')
 			.then((r) => r.data),
 
-	updateSettings: (data: {
-		companyName?: string
-		bankName?: string
-		bankAccount?: string
-		bankHolder?: string
-		iban?: string
-	}) => api.patch('/organizer/settings', data).then((r) => r.data),
+	updateSettings: (data: { companyName?: string; iban?: string }) =>
+		api.patch('/organizer/settings', data).then((r) => r.data),
 
-	events: () =>
-		api
-			.get<{ events: Event[] }>('/organizer/events')
-			.then((r) => r.data),
+	events: () => api.get<{ events: Event[] }>('/organizer/events').then((r) => r.data),
 
 	createEvent: (data: EventFormData) =>
-		api
-			.post<{ event: Event }>('/organizer/events', data)
-			.then((r) => r.data),
+		api.post<{ event: Event }>('/organizer/events', data).then((r) => r.data),
 
 	getEvent: (id: string) =>
-		api
-			.get<{ event: Event }>(`/organizer/events/${id}`)
-			.then((r) => r.data),
+		api.get<{ event: Event }>(`/organizer/events/${id}`).then((r) => r.data),
 
 	updateEvent: (id: string, data: Partial<EventFormData>) =>
-		api
-			.patch<{ event: Event }>(`/organizer/events/${id}`, data)
-			.then((r) => r.data),
+		api.patch<{ event: Event }>(`/organizer/events/${id}`, data).then((r) => r.data),
 
-	deleteEvent: (id: string) =>
-		api.delete(`/organizer/events/${id}`).then((r) => r.data),
+	deleteEvent: (id: string) => api.delete(`/organizer/events/${id}`).then((r) => r.data),
 
 	eventSales: (id: string) =>
-		api
-			.get<EventSalesData>(`/organizer/events/${id}/sales`)
-			.then((r) => r.data),
+		api.get<EventSalesData>(`/organizer/events/${id}/sales`).then((r) => r.data),
 
 	listStaff: (eventId: string) =>
-		api
-			.get<{ staff: StaffMember[] }>(`/organizer/events/${eventId}/staff`)
-			.then((r) => r.data),
+		api.get<{ staff: StaffMember[] }>(`/organizer/events/${eventId}/staff`).then((r) => r.data),
 
 	addStaff: (eventId: string, userId: string) =>
-		api
-			.post(`/organizer/events/${eventId}/staff`, { userId })
-			.then((r) => r.data),
+		api.post(`/organizer/events/${eventId}/staff`, { userId }).then((r) => r.data),
 
 	removeStaff: (eventId: string, userId: string) =>
-		api
-			.delete(`/organizer/events/${eventId}/staff/${userId}`)
-			.then((r) => r.data),
+		api.delete(`/organizer/events/${eventId}/staff/${userId}`).then((r) => r.data),
 
 	pauseSales: (eventId: string) =>
-		api
-			.post(`/organizer/events/${eventId}/pause-sales`)
-			.then((r) => r.data),
+		api.post(`/organizer/events/${eventId}/pause-sales`).then((r) => r.data),
 
 	listBatches: (eventId: string) =>
 		api
@@ -107,10 +78,7 @@ export const organizerApi = {
 			isGroupTicket?: boolean
 			groupSize?: number
 		},
-	) =>
-		api
-			.post(`/organizer/events/${eventId}/batches`, data)
-			.then((r) => r.data),
+	) => api.post(`/organizer/events/${eventId}/batches`, data).then((r) => r.data),
 
 	updateBatch: (
 		eventId: string,
@@ -122,13 +90,8 @@ export const organizerApi = {
 			isGroupTicket?: boolean
 			groupSize?: number
 		},
-	) =>
-		api
-			.patch(`/organizer/events/${eventId}/batches/${batchId}`, data)
-			.then((r) => r.data),
+	) => api.patch(`/organizer/events/${eventId}/batches/${batchId}`, data).then((r) => r.data),
 
 	removeBatch: (eventId: string, batchId: string) =>
-		api
-			.delete(`/organizer/events/${eventId}/batches/${batchId}`)
-			.then((r) => r.data),
+		api.delete(`/organizer/events/${eventId}/batches/${batchId}`).then((r) => r.data),
 }

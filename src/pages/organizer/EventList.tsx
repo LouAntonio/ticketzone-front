@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { useOrganizerEvents } from '../../api/hooks/useOrganizer'
+import { useOrganizerEvents, usePauseSales } from '../../api/hooks/useOrganizer'
 import { Card } from '../../components/ui/Card'
 import { Badge } from '../../components/ui/Badge'
 import { Button } from '../../components/ui/Button'
@@ -17,6 +17,7 @@ const statusConfig: Record<
 
 export function EventList() {
 	const { data, isLoading } = useOrganizerEvents()
+	const pauseSales = usePauseSales()
 
 	const events = data?.events ?? []
 
@@ -111,16 +112,19 @@ export function EventList() {
 													<Badge variant={statusInfo.variant}>
 														{statusInfo.label}
 													</Badge>
-													{event.categories && (
-														<Badge>{event.categories.name}</Badge>
+													{event.salesPaused && (
+														<Badge variant="red">Vendas Pausadas</Badge>
 													)}
+													{event.eventCategories?.map((ec) => (
+														<Badge key={ec.category.id}>
+															{ec.category.name}
+														</Badge>
+													))}
 												</div>
 											</div>
 											<div className="text-right shrink-0">
 												<p className="text-sm font-heading font-600 text-brand">
-													{minPrice > 0
-														? formatKwanza(minPrice)
-														: '—'}
+													{minPrice > 0 ? formatKwanza(minPrice) : '—'}
 												</p>
 												<p className="text-xs text-text-secondary">
 													{event.batches?.length ?? 0} lote
@@ -147,6 +151,22 @@ export function EventList() {
 											>
 												Validadores
 											</Link>
+											{event.status === 'PUBLISHED' && (
+												<button
+													type="button"
+													onClick={() => pauseSales.mutate(event.id)}
+													disabled={pauseSales.isPending}
+													className={`btn-ghost h-8 px-3 text-xs rounded-lg ${
+														event.salesPaused
+															? 'text-emerald-500 hover:text-emerald-600'
+															: 'text-amber-500 hover:text-amber-600'
+													}`}
+												>
+													{event.salesPaused
+														? 'Retomar Vendas'
+														: 'Pausar Vendas'}
+												</button>
+											)}
 										</div>
 									</div>
 								</div>

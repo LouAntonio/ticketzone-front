@@ -1,7 +1,14 @@
 import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { toast } from 'react-hot-toast'
-import { useOrganizerEvent, useCreateOrganizerEvent, useUpdateOrganizerEvent } from '../../api/hooks/useOrganizer'
+import {
+	useOrganizerEvent,
+	useCreateOrganizerEvent,
+	useUpdateOrganizerEvent,
+	useCreateBatch,
+	useUpdateBatch,
+	useRemoveBatch,
+} from '../../api/hooks/useOrganizer'
 import { useCloudinaryUpload } from '../../api/hooks/useCloudinaryUpload'
 import { api } from '../../api/client'
 import { Button } from '../../components/ui/Button'
@@ -9,7 +16,7 @@ import { Input } from '../../components/ui/Input'
 import { Card } from '../../components/ui/Card'
 import { Skeleton } from '../../components/ui/Skeleton'
 import { PROVINCES } from '../../lib/constants'
-import type { EventFormData } from '../../types/event'
+import type { EventFormData, DocFile } from '../../types/event'
 
 interface Category {
 	id: string
@@ -36,6 +43,19 @@ export function EventForm() {
 
 	const cloudinary = useCloudinaryUpload()
 	const bannerInputRef = useRef<HTMLInputElement>(null)
+	const galleryInputRef = useRef<HTMLInputElement>(null)
+
+	const originalBatchesRef = useRef<
+		Array<{
+			id: string
+			name: string
+			price: number
+			capacity: number
+			sold: number
+			isGroupTicket: boolean
+			groupSize: number
+		}>
+	>([])
 
 	const [categories, setCategories] = useState<Category[]>([])
 	const [form, setForm] = useState<EventFormData>({
@@ -45,19 +65,30 @@ export function EventForm() {
 		location: '',
 		bannerUrl: '',
 		cloudinaryId: '',
-		categoryId: '',
+		gallery: [],
+		categoryIds: [],
 		startDate: '',
 		endDate: '',
 		batches: [{ ...emptyBatch }],
 	})
 
+	const [bannerFile, setBannerFile] = useState<File | null>(null)
 	const [bannerPreview, setBannerPreview] = useState<string | null>(null)
+	const [galleryItems, setGalleryItems] = useState<
+		Array<{ url: string; idcloudinary?: string; file?: File }>
+	>([])
+
+	const createBatch = useCreateBatch(id ?? '')
+	const updateBatch = useUpdateBatch(id ?? '')
+	const removeBatch = useRemoveBatch(id ?? '')
 
 	useEffect(() => {
-		api.get('/categories').then((r) => {
-			const data = r.data as { categories: Category[] }
-			setCategories(data.categories ?? [])
-		}).catch(() => {})
+		api.get('/categories')
+			.then((r) => {
+				const data = r.data as { categories: Category[] }
+				setCategories(data.categories ?? [])
+			})
+			.catch(() => {})
 	}, [])
 
 	useEffect(() => {
@@ -70,7 +101,8 @@ export function EventForm() {
 				location: ev.location,
 				bannerUrl: ev.bannerUrl ?? '',
 				cloudinaryId: ev.cloudinaryId ?? '',
-				categoryId: ev.categoryId,
+				gallery: ev.gallery ?? [],
+				categoryIds: ev.eventCategories?.map((ec) => ec.categoryId) ?? [],
 				startDate: ev.startDate ? ev.startDate.slice(0, 16) : '',
 				endDate: ev.endDate ? ev.endDate.slice(0, 16) : '',
 				batches: ev.batches?.length
@@ -84,14 +116,39 @@ export function EventForm() {
 					: [{ ...emptyBatch }],
 			})
 			if (ev.bannerUrl) setBannerPreview(ev.bannerUrl)
+			if (ev.gallery?.length) {
+				setGalleryItems(
+					ev.gallery.map((g) => ({ url: g.url, idcloudinary: g.idcloudinary })),
+				)
+			}
+			originalBatchesRef.current = ev.batches?.length
+				? ev.batches.map((b) => ({
+						id: b.id,
+						name: b.name,
+						price: b.price,
+						capacity: b.capacity,
+						sold: b.sold,
+						isGroupTicket: b.isGroupTicket,
+						groupSize: b.groupSize,
+					}))
+				: []
 		}
 	}, [isEdit, eventData, form.title])
 
-	const updateField = (key: keyof EventFormData, value: string | number | boolean) => {
+	const updateField = (key: keyof EventFormData, value: string | number | boolean | string[]) => {
 		setForm((prev) => ({ ...prev, [key]: value }))
 	}
 
-	const updateBatch = (index: number, key: string, value: string | number | boolean) => {
+	const toggleCategory = (catId: string) => {
+		setForm((prev) => ({
+			...prev,
+			categoryIds: prev.categoryIds.includes(catId)
+				? prev.categoryIds.filter((id) => id !== catId)
+				: [...prev.categoryIds, catId],
+		}))
+	}
+
+	const updateFormBatch = (index: number, key: string, value: string | number | boolean) => {
 		setForm((prev) => {
 			const batches = [...prev.batches]
 			batches[index] = { ...batches[index], [key]: value }
@@ -106,14 +163,14 @@ export function EventForm() {
 		}))
 	}
 
-	const removeBatch = (index: number) => {
+	const removeFormBatch = (index: number) => {
 		setForm((prev) => ({
 			...prev,
 			batches: prev.batches.filter((_, i) => i !== index),
 		}))
 	}
 
-	const handleBannerUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+	const handleGallerySelect = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const file = e.target.files?.[0]
 		if (!file) return
 
@@ -122,17 +179,39 @@ export function EventForm() {
 			return
 		}
 
-		try {
-			const result = await cloudinary.upload(file, 'eventos/banners')
-			setForm((prev) => ({
-				...prev,
-				bannerUrl: result.url,
-				cloudinaryId: result.idcloudinary,
-			}))
-			setBannerPreview(result.url)
-		} catch {
-			toast.error('Erro ao fazer upload do banner')
+		setGalleryItems((prev) => [...prev, { url: URL.createObjectURL(file), file }])
+	}
+
+	const removeGalleryItem = (index: number) => {
+		setGalleryItems((prev) => {
+			const item = prev[index]
+			if (item.file) URL.revokeObjectURL(item.url)
+			return prev.filter((_, i) => i !== index)
+		})
+	}
+
+	const handleBannerSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+		const file = e.target.files?.[0]
+		if (!file) return
+
+		if (!file.type.startsWith('image/')) {
+			toast.error('Seleciona uma imagem válida')
+			return
 		}
+
+		setBannerFile(file)
+		setBannerPreview(URL.createObjectURL(file))
+	}
+
+	const clearBanner = () => {
+		if (bannerPreview) URL.revokeObjectURL(bannerPreview)
+		setBannerFile(null)
+		setBannerPreview(null)
+		setForm((prev) => ({
+			...prev,
+			bannerUrl: '',
+			cloudinaryId: '',
+		}))
 	}
 
 	const handleSubmit = async (e: React.FormEvent) => {
@@ -143,8 +222,8 @@ export function EventForm() {
 			return
 		}
 
-		if (!form.categoryId) {
-			toast.error('Seleciona uma categoria')
+		if (form.categoryIds.length === 0) {
+			toast.error('Seleciona pelo menos uma categoria')
 			return
 		}
 
@@ -153,16 +232,86 @@ export function EventForm() {
 			return
 		}
 
-		const payload = {
-			...form,
-			startDate: new Date(form.startDate).toISOString(),
-			endDate: new Date(form.endDate).toISOString(),
-			batches: form.batches.filter((b) => b.name.trim()),
-		}
+		let bannerUrl = form.bannerUrl
+		let cloudinaryId = form.cloudinaryId
+		let gallery: DocFile[] = []
 
 		try {
+			if (bannerFile) {
+				const result = await cloudinary.upload(bannerFile, 'eventos/banners')
+				bannerUrl = result.url
+				cloudinaryId = result.idcloudinary
+			}
+
+			const newItems = galleryItems.filter((g) => g.file)
+			const existingItems = galleryItems.filter((g) => !g.file)
+
+			if (newItems.length > 0) {
+				const uploaded = await Promise.all(
+					newItems.map((g) => cloudinary.upload(g.file!, 'eventos/galeria')),
+				)
+				gallery = [
+					...existingItems.map((g) => ({ url: g.url, idcloudinary: g.idcloudinary! })),
+					...uploaded,
+				]
+			} else {
+				gallery = existingItems.map((g) => ({ url: g.url, idcloudinary: g.idcloudinary! }))
+			}
+
+			const validBatches = form.batches.filter((b) => b.name.trim())
+			const payload = {
+				...form,
+				bannerUrl,
+				cloudinaryId,
+				gallery,
+				startDate: new Date(form.startDate).toISOString(),
+				endDate: new Date(form.endDate).toISOString(),
+				batches: validBatches,
+			}
+
 			if (isEdit) {
 				await updateEvent.mutateAsync(payload)
+
+				const originals = originalBatchesRef.current
+				const originalsByName = new Map(originals.map((b) => [b.name, b]))
+
+				const toDelete: string[] = []
+				const toUpdate: Array<{
+					batchId: string
+					name: string
+					price: number
+					capacity: number
+					isGroupTicket: boolean
+					groupSize: number
+				}> = []
+				const toCreate: typeof validBatches = []
+
+				for (const batch of validBatches) {
+					const orig = originalsByName.get(batch.name)
+					if (orig) {
+						if (
+							orig.price !== batch.price ||
+							orig.capacity !== batch.capacity ||
+							orig.isGroupTicket !== batch.isGroupTicket ||
+							orig.groupSize !== batch.groupSize
+						) {
+							toUpdate.push({ batchId: orig.id, ...batch })
+						}
+						originalsByName.delete(batch.name)
+					} else {
+						toCreate.push(batch)
+					}
+				}
+
+				for (const [, orig] of originalsByName) {
+					if (orig.sold === 0) toDelete.push(orig.id)
+				}
+
+				await Promise.all([
+					...toDelete.map((batchId) => removeBatch.mutateAsync(batchId)),
+					...toUpdate.map((data) => updateBatch.mutateAsync(data)),
+					...toCreate.map((data) => createBatch.mutateAsync(data)),
+				])
 			} else {
 				await createEvent.mutateAsync(payload)
 			}
@@ -192,7 +341,13 @@ export function EventForm() {
 		)
 	}
 
-	const isPending = createEvent.isPending || updateEvent.isPending
+	const isPending =
+		createEvent.isPending ||
+		updateEvent.isPending ||
+		createBatch.isPending ||
+		updateBatch.isPending ||
+		removeBatch.isPending ||
+		cloudinary.uploading
 
 	return (
 		<div className="max-w-3xl">
@@ -233,7 +388,7 @@ export function EventForm() {
 						type="file"
 						accept=".png,.jpg,.jpeg,.webp"
 						className="hidden"
-						onChange={handleBannerUpload}
+						onChange={handleBannerSelect}
 					/>
 					{bannerPreview ? (
 						<div className="relative mb-3">
@@ -244,14 +399,18 @@ export function EventForm() {
 							/>
 							<button
 								type="button"
-								onClick={() => {
-									setBannerPreview(null)
-									setForm((prev) => ({ ...prev, bannerUrl: '', cloudinaryId: '' }))
-								}}
+								onClick={clearBanner}
 								disabled={cloudinary.uploading}
 								className="absolute top-2 right-2 w-7 h-7 rounded-full bg-red-500 text-white flex items-center justify-center hover:bg-red-600 transition-colors"
 							>
-								<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+								<svg
+									width="14"
+									height="14"
+									viewBox="0 0 24 24"
+									fill="none"
+									stroke="currentColor"
+									strokeWidth="3"
+								>
 									<line x1="18" y1="6" x2="6" y2="18" />
 									<line x1="6" y1="6" x2="18" y2="18" />
 								</svg>
@@ -269,12 +428,79 @@ export function EventForm() {
 							disabled={cloudinary.uploading}
 							className="w-full h-32 rounded-xl border-2 border-dashed border-border flex flex-col items-center justify-center gap-2 text-text-secondary hover:border-brand hover:text-brand transition-all"
 						>
-							<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+							<svg
+								width="24"
+								height="24"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								strokeWidth="2"
+							>
 								<path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" />
 							</svg>
-							<span className="text-sm">{cloudinary.uploading ? 'A enviar...' : 'Carregar Banner'}</span>
+							<span className="text-sm">
+								{cloudinary.uploading ? 'A enviar...' : 'Carregar Banner'}
+							</span>
 						</button>
 					)}
+				</Card>
+
+				<Card>
+					<h3 className="font-heading font-600 text-base mb-4">Galeria de Imagens</h3>
+					<input
+						ref={galleryInputRef}
+						type="file"
+						accept=".png,.jpg,.jpeg,.webp"
+						className="hidden"
+						onChange={handleGallerySelect}
+					/>
+					{galleryItems.length > 0 && (
+						<div className="grid grid-cols-3 gap-2 mb-3">
+							{galleryItems.map((item, i) => (
+								<div key={i} className="relative group">
+									<img
+										src={item.url}
+										alt={`Galeria ${i + 1}`}
+										className="w-full h-24 object-cover rounded-lg border border-border"
+									/>
+									<button
+										type="button"
+										onClick={() => removeGalleryItem(i)}
+										className="absolute top-1 right-1 w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+									>
+										<svg
+											width="12"
+											height="12"
+											viewBox="0 0 24 24"
+											fill="none"
+											stroke="currentColor"
+											strokeWidth="3"
+										>
+											<line x1="18" y1="6" x2="6" y2="18" />
+											<line x1="6" y1="6" x2="18" y2="18" />
+										</svg>
+									</button>
+								</div>
+							))}
+						</div>
+					)}
+					<button
+						type="button"
+						onClick={() => galleryInputRef.current?.click()}
+						className="w-full h-20 rounded-xl border-2 border-dashed border-border flex items-center justify-center gap-2 text-text-secondary hover:border-brand hover:text-brand transition-all"
+					>
+						<svg
+							width="20"
+							height="20"
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							strokeWidth="2"
+						>
+							<path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" />
+						</svg>
+						<span className="text-sm">Adicionar Imagem</span>
+					</button>
 				</Card>
 
 				<Card>
@@ -294,19 +520,35 @@ export function EventForm() {
 							onChange={(e) => updateField('endDate', e.target.value)}
 							required
 						/>
-						<select
-							value={form.categoryId}
-							onChange={(e) => updateField('categoryId', e.target.value)}
-							className="input-field"
-							required
-						>
-							<option value="">Selecionar Categoria</option>
-							{categories.map((c) => (
-								<option key={c.id} value={c.id}>
-									{c.name}
-								</option>
-							))}
-						</select>
+						<div className="sm:col-span-2">
+							<label className="text-sm font-heading font-600 text-text-secondary block mb-2">
+								Categorias
+							</label>
+							<div className="flex flex-wrap gap-2">
+								{categories.map((c) => {
+									const selected = form.categoryIds.includes(c.id)
+									return (
+										<button
+											key={c.id}
+											type="button"
+											onClick={() => toggleCategory(c.id)}
+											className={`px-3 py-1.5 text-sm font-heading font-600 rounded-lg border transition-all ${
+												selected
+													? 'bg-brand text-white border-brand'
+													: 'bg-transparent text-text-secondary border-border hover:border-brand hover:text-brand'
+											}`}
+										>
+											{c.name}
+										</button>
+									)
+								})}
+								{categories.length === 0 && (
+									<p className="text-xs text-text-secondary">
+										A carregar categorias...
+									</p>
+								)}
+							</div>
+						</div>
 						<select
 							value={form.province}
 							onChange={(e) => updateField('province', e.target.value)}
@@ -333,7 +575,15 @@ export function EventForm() {
 					<div className="flex items-center justify-between mb-4">
 						<h3 className="font-heading font-600 text-base">Lotes de Bilhetes</h3>
 						<Button type="button" variant="outline" size="sm" onClick={addBatch}>
-							<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+							<svg
+								width="14"
+								height="14"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								strokeWidth="2"
+								strokeLinecap="round"
+							>
 								<path d="M12 5v14M5 12h14" />
 							</svg>
 							Adicionar
@@ -346,10 +596,17 @@ export function EventForm() {
 								{form.batches.length > 1 && (
 									<button
 										type="button"
-										onClick={() => removeBatch(i)}
+										onClick={() => removeFormBatch(i)}
 										className="absolute top-3 right-3 text-red-500 hover:text-red-700"
 									>
-										<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+										<svg
+											width="16"
+											height="16"
+											viewBox="0 0 24 24"
+											fill="none"
+											stroke="currentColor"
+											strokeWidth="2"
+										>
 											<path d="M18 6L6 18M6 6l12 12" />
 										</svg>
 									</button>
@@ -359,7 +616,7 @@ export function EventForm() {
 										label="Nome"
 										placeholder="Ex: VIP"
 										value={batch.name}
-										onChange={(e) => updateBatch(i, 'name', e.target.value)}
+										onChange={(e) => updateFormBatch(i, 'name', e.target.value)}
 										required
 									/>
 									<Input
@@ -367,7 +624,9 @@ export function EventForm() {
 										type="number"
 										min="0"
 										value={batch.price || ''}
-										onChange={(e) => updateBatch(i, 'price', Number(e.target.value))}
+										onChange={(e) =>
+											updateFormBatch(i, 'price', Number(e.target.value))
+										}
 										required
 									/>
 									<Input
@@ -375,14 +634,22 @@ export function EventForm() {
 										type="number"
 										min="1"
 										value={batch.capacity || ''}
-										onChange={(e) => updateBatch(i, 'capacity', Number(e.target.value))}
+										onChange={(e) =>
+											updateFormBatch(i, 'capacity', Number(e.target.value))
+										}
 										required
 									/>
 									<label className="flex items-center gap-2 text-sm">
 										<input
 											type="checkbox"
 											checked={batch.isGroupTicket}
-											onChange={(e) => updateBatch(i, 'isGroupTicket', e.target.checked)}
+											onChange={(e) =>
+												updateFormBatch(
+													i,
+													'isGroupTicket',
+													e.target.checked,
+												)
+											}
 											className="rounded border-border"
 										/>
 										<span className="font-heading font-600 text-text-secondary">
@@ -395,7 +662,13 @@ export function EventForm() {
 											type="number"
 											min="2"
 											value={batch.groupSize}
-											onChange={(e) => updateBatch(i, 'groupSize', Number(e.target.value))}
+											onChange={(e) =>
+												updateFormBatch(
+													i,
+													'groupSize',
+													Number(e.target.value),
+												)
+											}
 										/>
 									)}
 								</div>
@@ -405,10 +678,14 @@ export function EventForm() {
 				</Card>
 
 				<div className="flex items-center gap-3">
-					<Button type="submit" loading={isPending || cloudinary.uploading}>
+					<Button type="submit" loading={isPending}>
 						{isEdit ? 'Guardar Alterações' : 'Criar Evento'}
 					</Button>
-					<Button type="button" variant="ghost" onClick={() => navigate('/organizer/events')}>
+					<Button
+						type="button"
+						variant="ghost"
+						onClick={() => navigate('/organizer/events')}
+					>
 						Cancelar
 					</Button>
 				</div>

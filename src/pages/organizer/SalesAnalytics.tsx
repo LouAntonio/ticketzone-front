@@ -1,7 +1,12 @@
 import { useParams } from 'react-router-dom'
-import { useOrganizerEvent, useOrganizerEventSales } from '../../api/hooks/useOrganizer'
+import {
+	useOrganizerEvent,
+	useOrganizerEventSales,
+	usePauseSales,
+} from '../../api/hooks/useOrganizer'
 import { Card } from '../../components/ui/Card'
 import { Badge } from '../../components/ui/Badge'
+import { Button } from '../../components/ui/Button'
 import { Skeleton, SkeletonTable } from '../../components/ui/Skeleton'
 import { formatKwanza, formatDate } from '../../lib/format'
 import type { SalesOrder } from '../../types/event'
@@ -10,6 +15,7 @@ export function SalesAnalytics() {
 	const { id } = useParams<{ id: string }>()
 	const { data: eventData } = useOrganizerEvent(id ?? '')
 	const { data: salesData, isLoading } = useOrganizerEventSales(id ?? '')
+	const pauseSales = usePauseSales()
 
 	if (isLoading) {
 		return (
@@ -39,9 +45,22 @@ export function SalesAnalytics() {
 
 	return (
 		<div className="space-y-6">
-			<div>
-				<h1 className="font-heading font-700 text-2xl">Vendas</h1>
-				<p className="text-text-secondary text-sm">{event?.title}</p>
+			<div className="flex items-start justify-between">
+				<div>
+					<h1 className="font-heading font-700 text-2xl">Vendas</h1>
+					<p className="text-text-secondary text-sm">{event?.title}</p>
+				</div>
+				{event?.status === 'PUBLISHED' && (
+					<Button
+						variant="outline"
+						size="sm"
+						onClick={() => pauseSales.mutate(id!)}
+						loading={pauseSales.isPending}
+						className={event.salesPaused ? 'text-emerald-500' : 'text-amber-500'}
+					>
+						{event.salesPaused ? 'Retomar Vendas' : 'Pausar Vendas'}
+					</Button>
+				)}
 			</div>
 
 			<div className="grid sm:grid-cols-3 gap-4">

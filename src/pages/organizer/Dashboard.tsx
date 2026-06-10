@@ -18,9 +18,7 @@ function StatCard({
 	return (
 		<Card>
 			<p className="text-xs text-text-secondary mb-1">{label}</p>
-			<p className={`font-heading font-700 text-2xl ${className ?? ''}`}>
-				{value}
-			</p>
+			<p className={`font-heading font-700 text-2xl ${className ?? ''}`}>{value}</p>
 		</Card>
 	)
 }
@@ -58,9 +56,7 @@ export function OrganizerDashboard() {
 				<h1 className="font-heading font-700 text-2xl">Painel do Organizador</h1>
 				<Card className="text-center py-12">
 					<p className="text-red-500">Erro ao carregar dados</p>
-					<p className="text-text-secondary text-sm mt-1">
-						{(error as Error).message}
-					</p>
+					<p className="text-text-secondary text-sm mt-1">{(error as Error).message}</p>
 				</Card>
 			</div>
 		)

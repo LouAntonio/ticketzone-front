@@ -57,6 +57,7 @@ import { AdminOrders } from '../pages/admin/Orders'
 import { AdminOrganizers } from '../pages/admin/Organizers'
 import { AdminFinancial } from '../pages/admin/Financial'
 import { AdminFleet } from '../pages/admin/Fleet'
+import { AdminCategories } from '../pages/admin/Categories'
 
 // Rentals
 import { CarCatalog } from '../pages/public/CarCatalog'
@@ -153,6 +154,7 @@ export const router = createBrowserRouter([
 							{ path: '/admin/organizers', element: <AdminOrganizers /> },
 							{ path: '/admin/financial', element: <AdminFinancial /> },
 							{ path: '/admin/fleet', element: <AdminFleet /> },
+							{ path: '/admin/categories', element: <AdminCategories /> },
 						],
 					},
 				],

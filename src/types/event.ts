@@ -37,6 +37,12 @@ export interface CategoryInfo {
 	slug: string
 }
 
+export interface EventCategoryRelation {
+	eventId: string
+	categoryId: string
+	category: CategoryInfo
+}
+
 export interface Event {
 	id: string
 	title: string
@@ -53,8 +59,7 @@ export interface Event {
 	status: EventStatus
 	salesPaused: boolean
 	promoterId: string
-	categoryId: string
-	categories?: CategoryInfo
+	eventCategories: EventCategoryRelation[]
 	batches: TicketBatch[]
 	createdAt: string
 	promoter?: {
@@ -84,7 +89,8 @@ export interface EventFormData {
 	location: string
 	bannerUrl: string
 	cloudinaryId: string
-	categoryId: string
+	gallery?: DocFile[]
+	categoryIds: string[]
 	startDate: string
 	endDate: string
 	batches: Array<{

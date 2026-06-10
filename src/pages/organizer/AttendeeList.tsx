@@ -86,14 +86,16 @@ export function AttendeeList() {
 										<td className="px-4 py-3">
 											<Badge
 												variant={
-													order.status === 'confirmed' || order.status === 'paid'
+													order.status === 'confirmed' ||
+													order.status === 'paid'
 														? 'emerald'
 														: order.status === 'pending'
 															? 'amber'
 															: 'red'
 												}
 											>
-												{order.status === 'confirmed' || order.status === 'paid'
+												{order.status === 'confirmed' ||
+												order.status === 'paid'
 													? 'Confirmado'
 													: order.status === 'pending'
 														? 'Pendente'
