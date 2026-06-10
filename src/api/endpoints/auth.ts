@@ -58,6 +58,8 @@ export const authApi = {
 	changeEmail: (data: ChangeEmailData) =>
 		api.post<never>('/auth/change-email', data).then((r) => r.data),
 
-	updateProfile: (data: { name?: string; phoneNumber?: string }) =>
+	updateProfile: (data: { name?: string; phoneNumber?: string; image?: string }) =>
 		api.patch<never>('/auth/profile', data).then((r) => r.data),
+
+	unlinkGoogle: () => api.post<never>('/auth/unlink/google').then((r) => r.data),
 }

@@ -69,9 +69,11 @@ export function AdminLayout() {
 						Ver Site
 					</Link>
 					<div className="flex items-center gap-3 pl-4 border-l-2 border-[#3d3028]">
-						<div className="w-8 h-8 rounded-full bg-brand/20 flex items-center justify-center text-brand font-heading font-700 text-xs ring-2 ring-brand/30">
-							{user?.name?.charAt(0)?.toUpperCase() ?? 'A'}
-						</div>
+						<img
+							src={user?.image || '/user.png'}
+							alt={user?.name ?? 'Admin'}
+							className="w-8 h-8 rounded-full object-cover ring-2 ring-brand/30"
+						/>
 						<div className="hidden sm:block">
 							<p className="text-sm text-[#d4c5b8] font-heading font-600 leading-tight">
 								{user?.name}

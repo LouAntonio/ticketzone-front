@@ -1,7 +1,7 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../../stores/useAuthStore'
-import { useBecomePromoter } from '../../api/hooks/useAccount'
+import { useBecomePromoter, useMe } from '../../api/hooks/useAccount'
 import { useCloudinaryUpload } from '../../api/hooks/useCloudinaryUpload'
 import { Input } from '../../components/ui/Input'
 import { Button } from '../../components/ui/Button'
@@ -12,14 +12,16 @@ export function BecomePromoterPage() {
 	const user = useAuthStore((s) => s.user)
 	const navigate = useNavigate()
 	const becomePromoter = useBecomePromoter()
+	useMe()
 
-	const [hasPendingRequest, setHasPendingRequest] = useState(false)
+	const [hasPendingRequest, setHasPendingRequest] = useState(!!user?.promoter?.verificationStatus)
 	const [pendingStatus, setPendingStatus] = useState<'PENDING' | 'VERIFIED' | 'REJECTED' | null>(
-		null,
+		user?.promoter?.verificationStatus ?? null,
 	)
+
 	const [form, setForm] = useState({
 		companyName: '',
-		promoterType: '' as 'PESSOAL' | 'EMPRESARIAL' | '',
+		promoterType: 'PESSOAL' as 'PESSOAL' | 'EMPRESARIAL',
 		nif: '',
 		iban: '',
 	})
@@ -36,22 +38,6 @@ export function BecomePromoterPage() {
 	const enterpriseInputRef = useRef<HTMLInputElement>(null)
 	const logoInputRef = useRef<HTMLInputElement>(null)
 	const bannerInputRef = useRef<HTMLInputElement>(null)
-
-	useEffect(() => {
-		console.log(
-			'[personalFiles] changed, length:',
-			personalFiles.length,
-			personalFiles.map((f) => f.name),
-		)
-	}, [personalFiles])
-
-	useEffect(() => {
-		console.log(
-			'[enterpriseFiles] changed, length:',
-			enterpriseFiles.length,
-			enterpriseFiles.map((f) => f.name),
-		)
-	}, [enterpriseFiles])
 
 	const addFiles = (category: 'personal' | 'enterprise', files: FileList | null) => {
 		console.log('[addFiles] called:', category, 'files?.length:', files?.length ?? 0)
@@ -321,6 +307,18 @@ export function BecomePromoterPage() {
 								onClick={() => {
 									setHasPendingRequest(false)
 									setPendingStatus(null)
+									setForm({
+										companyName: '',
+										promoterType: 'PESSOAL',
+										nif: '',
+										iban: '',
+									})
+									setPersonalFiles([])
+									setEnterpriseFiles([])
+									setLogoFile(null)
+									setBannerFile(null)
+									setLogoPreview(null)
+									setBannerPreview(null)
 								}}
 							>
 								Tentar Novamente

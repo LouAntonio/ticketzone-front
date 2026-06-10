@@ -31,14 +31,6 @@ export function AccountDashboard() {
 
 	const isPromoter = user?.role === 'PROMOTER'
 	const isStaff = user?.role === 'STAFF' || user?.role === 'ADMIN'
-	const initials =
-		user?.name
-			?.split(' ')
-			.map((n) => n[0])
-			.join('')
-			.toUpperCase()
-			.slice(0, 2) ?? '??'
-
 	return (
 		<div className="max-w-4xl mx-auto space-y-8">
 			{/* Email Verification Banner */}
@@ -48,11 +40,11 @@ export function AccountDashboard() {
 			<div className="flex items-start justify-between stagger-1">
 				<div>
 					<div className="flex items-center gap-4 mb-2">
-						<div className="w-14 h-14 rounded-full bg-gradient-to-br from-brand to-terracotta flex items-center justify-center shadow-lg shadow-brand/20">
-							<span className="font-heading font-700 text-xl text-white">
-								{initials}
-							</span>
-						</div>
+						<img
+							src={user?.image || '/user.png'}
+							alt={user?.name ?? 'Avatar'}
+							className="w-14 h-14 rounded-full object-cover shadow-lg shadow-brand/20"
+						/>
 						<div>
 							<h1 className="font-display-alt text-3xl font-700 text-warm-text leading-tight">
 								Olá, {user?.name?.split(' ')[0]}

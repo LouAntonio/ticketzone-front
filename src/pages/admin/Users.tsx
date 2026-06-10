@@ -198,9 +198,11 @@ export function AdminUsers() {
 									>
 										<td className="px-4 py-3">
 											<div className="flex items-center gap-3">
-												<div className="w-8 h-8 bg-brand/20 flex items-center justify-center text-brand font-heading font-700 text-xs shrink-0">
-													{user.name.charAt(0).toUpperCase()}
-												</div>
+												<img
+													src={user.image || '/user.png'}
+													alt={user.name}
+													className="w-8 h-8 rounded-full object-cover shrink-0"
+												/>
 												<div>
 													<p className="text-sm font-heading font-500 text-[#d4c5b8]">
 														{user.name}

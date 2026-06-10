@@ -195,7 +195,7 @@ export interface PaginatedAuditLogs {
 
 export const adminApi = {
 	// Stats
-	stats: () => api.get<{ stats: AdminStats }>('/api/admin/stats').then((r) => r.data.stats),
+	stats: () => api.get<{ stats: AdminStats }>('/admin/stats').then((r) => r.data.stats),
 
 	// Users
 	listUsers: (params?: {
@@ -204,21 +204,20 @@ export const adminApi = {
 		search?: string
 		role?: string
 		status?: string
-	}) => api.get<PaginatedUsers>('/api/admin/users', { params }).then((r) => r.data),
+	}) => api.get<PaginatedUsers>('/admin/users', { params }).then((r) => r.data),
 
-	getUser: (id: string) =>
-		api.get<{ data: unknown }>(`/api/admin/users/${id}`).then((r) => r.data),
+	getUser: (id: string) => api.get<{ data: unknown }>(`/admin/users/${id}`).then((r) => r.data),
 
 	updateUserRole: (id: string, role: string) =>
-		api.patch<{ msg: string }>(`/api/admin/users/${id}/role`, { role }).then((r) => r.data),
+		api.patch<{ msg: string }>(`/admin/users/${id}/role`, { role }).then((r) => r.data),
 
 	banUser: (id: string, motive: string, bannedUntil?: string) =>
 		api
-			.post<{ msg: string }>(`/api/admin/users/${id}/ban`, { motive, bannedUntil })
+			.post<{ msg: string }>(`/admin/users/${id}/ban`, { motive, bannedUntil })
 			.then((r) => r.data),
 
 	unbanUser: (id: string) =>
-		api.post<{ msg: string }>(`/api/admin/users/${id}/unban`).then((r) => r.data),
+		api.post<{ msg: string }>(`/admin/users/${id}/unban`).then((r) => r.data),
 
 	// Events
 	listEvents: (params?: {
@@ -227,25 +226,24 @@ export const adminApi = {
 		search?: string
 		categoryId?: string
 		province?: string
-	}) => api.get<PaginatedEvents>('/api/admin/events', { params }).then((r) => r.data),
+	}) => api.get<PaginatedEvents>('/admin/events', { params }).then((r) => r.data),
 
 	listPendingEvents: (params?: { page?: number; limit?: number }) =>
-		api.get<PaginatedEvents>('/api/admin/events/pending', { params }).then((r) => r.data),
+		api.get<PaginatedEvents>('/admin/events/pending', { params }).then((r) => r.data),
 
-	getEvent: (id: string) =>
-		api.get<{ data: unknown }>(`/api/admin/events/${id}`).then((r) => r.data),
+	getEvent: (id: string) => api.get<{ data: unknown }>(`/admin/events/${id}`).then((r) => r.data),
 
 	updateEvent: (id: string, data: Record<string, unknown>) =>
-		api.patch<{ msg: string }>(`/api/admin/events/${id}`, data).then((r) => r.data),
+		api.patch<{ msg: string }>(`/admin/events/${id}`, data).then((r) => r.data),
 
 	approveEvent: (id: string) =>
-		api.post<{ msg: string }>(`/api/admin/events/${id}/approve`).then((r) => r.data),
+		api.post<{ msg: string }>(`/admin/events/${id}/approve`).then((r) => r.data),
 
 	rejectEvent: (id: string, motive: string) =>
-		api.post<{ msg: string }>(`/api/admin/events/${id}/reject`, { motive }).then((r) => r.data),
+		api.post<{ msg: string }>(`/admin/events/${id}/reject`, { motive }).then((r) => r.data),
 
 	cancelEvent: (id: string) =>
-		api.post<{ msg: string }>(`/api/admin/events/${id}/cancel`).then((r) => r.data),
+		api.post<{ msg: string }>(`/admin/events/${id}/cancel`).then((r) => r.data),
 
 	// Promoters
 	listPromoters: (params?: {
@@ -254,45 +252,43 @@ export const adminApi = {
 		search?: string
 		status?: string
 		verificationStatus?: string
-	}) => api.get<PaginatedPromoters>('/api/admin/promoters', { params }).then((r) => r.data),
+	}) => api.get<PaginatedPromoters>('/admin/promoters', { params }).then((r) => r.data),
 
 	verificationRequests: (params?: { page?: number; limit?: number }) =>
 		api
-			.get<PaginatedPromoters>('/api/admin/promoters/verification-requests', { params })
+			.get<PaginatedPromoters>('/admin/promoters/verification-requests', { params })
 			.then((r) => r.data),
 
 	getPromoter: (id: string) =>
-		api.get<{ data: unknown }>(`/api/admin/promoters/${id}`).then((r) => r.data),
+		api.get<{ data: unknown }>(`/admin/promoters/${id}`).then((r) => r.data),
 
 	approvePromoter: (id: string) =>
-		api.post<{ msg: string }>(`/api/admin/promoters/${id}/approve`).then((r) => r.data),
+		api.post<{ msg: string }>(`/admin/promoters/${id}/approve`).then((r) => r.data),
 
 	rejectPromoter: (id: string, motive: string) =>
-		api
-			.post<{ msg: string }>(`/api/admin/promoters/${id}/reject`, { motive })
-			.then((r) => r.data),
+		api.post<{ msg: string }>(`/admin/promoters/${id}/reject`, { motive }).then((r) => r.data),
 
 	banPromoter: (id: string, motive: string, bannedUntil?: string) =>
 		api
-			.post<{ msg: string }>(`/api/admin/promoters/${id}/ban`, { motive, bannedUntil })
+			.post<{ msg: string }>(`/admin/promoters/${id}/ban`, { motive, bannedUntil })
 			.then((r) => r.data),
 
 	unbanPromoter: (id: string) =>
-		api.post<{ msg: string }>(`/api/admin/promoters/${id}/unban`).then((r) => r.data),
+		api.post<{ msg: string }>(`/admin/promoters/${id}/unban`).then((r) => r.data),
 
 	// Orders
 	listOrders: (params?: { page?: number; limit?: number; search?: string; status?: string }) =>
-		api.get<PaginatedOrders>('/api/admin/orders', { params }).then((r) => r.data),
+		api.get<PaginatedOrders>('/admin/orders', { params }).then((r) => r.data),
 
 	refundOrder: (id: string) =>
-		api.post<{ msg: string }>(`/api/admin/orders/${id}/refund`).then((r) => r.data),
+		api.post<{ msg: string }>(`/admin/orders/${id}/refund`).then((r) => r.data),
 
 	// Financial
-	getFinancial: () => api.get<AdminFinancial>('/api/admin/financial').then((r) => r.data),
+	getFinancial: () => api.get<AdminFinancial>('/admin/financial').then((r) => r.data),
 
 	// Fleet
 	listFleet: (params?: { page?: number; limit?: number; search?: string; status?: string }) =>
-		api.get<PaginatedVehicles>('/api/admin/fleet', { params }).then((r) => r.data),
+		api.get<PaginatedVehicles>('/admin/fleet', { params }).then((r) => r.data),
 
 	createVehicle: (data: {
 		make: string
@@ -300,18 +296,18 @@ export const adminApi = {
 		plate: string
 		year?: number
 		price: number
-	}) => api.post<{ msg: string }>('/api/admin/fleet', data).then((r) => r.data),
+	}) => api.post<{ msg: string }>('/admin/fleet', data).then((r) => r.data),
 
 	updateVehicle: (id: string, data: Record<string, unknown>) =>
-		api.patch<{ msg: string }>(`/api/admin/fleet/${id}`, data).then((r) => r.data),
+		api.patch<{ msg: string }>(`/admin/fleet/${id}`, data).then((r) => r.data),
 
 	deleteVehicle: (id: string) =>
-		api.delete<{ msg: string }>(`/api/admin/fleet/${id}`).then((r) => r.data),
+		api.delete<{ msg: string }>(`/admin/fleet/${id}`).then((r) => r.data),
 
 	updateVehicleStatus: (id: string, status: string) =>
-		api.patch<{ msg: string }>(`/api/admin/fleet/${id}/status`, { status }).then((r) => r.data),
+		api.patch<{ msg: string }>(`/admin/fleet/${id}/status`, { status }).then((r) => r.data),
 
 	// Audit Logs
 	getAuditLogs: (params?: { page?: number; limit?: number; action?: string; entity?: string }) =>
-		api.get<PaginatedAuditLogs>('/api/admin/audit-logs', { params }).then((r) => r.data),
+		api.get<PaginatedAuditLogs>('/admin/audit-logs', { params }).then((r) => r.data),
 }

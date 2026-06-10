@@ -1,6 +1,12 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useAuthStore } from '../../stores/useAuthStore'
-import { useUserProfile, useLinkGoogle, useResendVerification } from '../../api/hooks/useAccount'
+import {
+	useUserProfile,
+	useLinkGoogle,
+	useResendVerification,
+	useUnlinkGoogle,
+} from '../../api/hooks/useAccount'
+import { useCloudinaryUpload } from '../../api/hooks/useCloudinaryUpload'
 import { useGoogleLogin } from '@react-oauth/google'
 import { Input } from '../../components/ui/Input'
 import { Button } from '../../components/ui/Button'
@@ -12,7 +18,11 @@ export function ProfilePage() {
 	const user = useAuthStore((s) => s.user)
 	const updateProfile = useUserProfile()
 	const linkGoogle = useLinkGoogle()
+	const unlinkGoogle = useUnlinkGoogle()
 	const resendVerification = useResendVerification()
+	const cloudinary = useCloudinaryUpload()
+
+	const fileInputRef = useRef<HTMLInputElement>(null)
 
 	const [editing, setEditing] = useState(false)
 	const [name, setName] = useState(user?.name ?? '')
@@ -36,15 +46,33 @@ export function ProfilePage() {
 		onError: () => toast.error('Erro ao vincular conta Google'),
 	})
 
-	if (!user) return null
+	const handleUnlinkGoogle = () => {
+		if (!hasPassword) {
+			toast.error('Defina uma palavra-passe antes de desvincular a conta Google.')
+			return
+		}
+		if (!window.confirm('Tens a certeza que desejas desvincular a conta Google?')) return
+		unlinkGoogle.mutate()
+	}
 
-	const initials =
-		user.name
-			?.split(' ')
-			.map((n) => n[0])
-			.join('')
-			.toUpperCase()
-			.slice(0, 2) ?? '??'
+	const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+		const file = e.target.files?.[0]
+		if (!file) return
+
+		if (!file.type.startsWith('image/')) {
+			toast.error('Seleciona uma imagem válida')
+			return
+		}
+
+		try {
+			const result = await cloudinary.upload(file, 'avatars')
+			await updateProfile.mutateAsync({ image: result.url })
+		} catch {
+			toast.error('Erro ao atualizar avatar')
+		}
+	}
+
+	if (!user) return null
 
 	return (
 		<div className="max-w-3xl mx-auto space-y-8">
@@ -57,10 +85,44 @@ export function ProfilePage() {
 			<div className="card-account stagger-2">
 				<div className="p-6 sm:p-8">
 					<div className="flex items-start gap-5 mb-6">
-						<div className="w-16 h-16 rounded-full bg-gradient-to-br from-brand to-terracotta flex items-center justify-center shadow-lg shrink-0">
-							<span className="font-heading font-700 text-2xl text-white">
-								{initials}
-							</span>
+						<div className="relative shrink-0">
+							<img
+								src={user.image || '/user.png'}
+								alt={user.name ?? 'Avatar'}
+								className="w-16 h-16 rounded-full object-cover shadow-lg"
+							/>
+							<button
+								type="button"
+								onClick={() => fileInputRef.current?.click()}
+								disabled={cloudinary.uploading}
+								className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-brand text-white flex items-center justify-center shadow-md hover:bg-brand-dark transition-colors disabled:opacity-50"
+							>
+								<svg
+									width="12"
+									height="12"
+									viewBox="0 0 24 24"
+									fill="none"
+									stroke="currentColor"
+									strokeWidth="2.5"
+									strokeLinecap="round"
+									strokeLinejoin="round"
+								>
+									<path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+									<circle cx="12" cy="13" r="4" />
+								</svg>
+							</button>
+							{cloudinary.uploading && (
+								<div className="absolute inset-0 rounded-full bg-black/40 flex items-center justify-center">
+									<div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+								</div>
+							)}
+							<input
+								ref={fileInputRef}
+								type="file"
+								accept="image/*"
+								className="hidden"
+								onChange={handleAvatarChange}
+							/>
 						</div>
 						<div className="flex-1">
 							{editing ? (
@@ -267,7 +329,20 @@ export function ProfilePage() {
 									Vincular
 								</Button>
 							)}
-							{hasGoogle && <Badge variant="emerald">Vinculada</Badge>}
+							{hasGoogle && (
+								<div className="flex items-center gap-2">
+									<Badge variant="emerald">Vinculada</Badge>
+									<Button
+										variant="ghost"
+										size="sm"
+										onClick={handleUnlinkGoogle}
+										loading={unlinkGoogle.isPending}
+										className="text-red-500 hover:text-red-700"
+									>
+										Desvincular
+									</Button>
+								</div>
+							)}
 						</div>
 					</div>
 				</div>

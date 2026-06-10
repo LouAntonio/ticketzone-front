@@ -18,6 +18,7 @@ export interface User {
 	updatedAt?: string
 	hasPassword: boolean
 	accounts?: LinkedAccount[]
+	promoter?: PromoterRequest
 }
 
 export interface PromoterRequest {

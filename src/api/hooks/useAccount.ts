@@ -12,12 +12,38 @@ import type {
 } from '../../types/auth'
 import { toast } from 'react-hot-toast'
 
+export function useMe() {
+	const setUser = useAuthStore((s) => s.setUser)
+	const user = useAuthStore((s) => s.user)
+	return useQuery({
+		queryKey: ['auth', 'me'],
+		queryFn: async () => {
+			const data = await authApi.me()
+			setUser(data)
+			return data
+		},
+		enabled: !!user,
+		staleTime: 5 * 60 * 1000,
+	})
+}
+
 export function useLinkGoogle() {
 	const qc = useQueryClient()
 	return useMutation({
 		mutationFn: (data: LinkGoogleData) => authApi.linkGoogle(data),
 		onSuccess: () => {
 			toast.success('Conta Google vinculada com sucesso')
+			qc.invalidateQueries({ queryKey: ['auth', 'me'] })
+		},
+	})
+}
+
+export function useUnlinkGoogle() {
+	const qc = useQueryClient()
+	return useMutation({
+		mutationFn: () => authApi.unlinkGoogle(),
+		onSuccess: () => {
+			toast.success('Conta Google desvinculada com sucesso')
 			qc.invalidateQueries({ queryKey: ['auth', 'me'] })
 		},
 	})
@@ -75,7 +101,8 @@ export function useUserProfile() {
 	const setUser = useAuthStore((s) => s.setUser)
 	const user = useAuthStore((s) => s.user)
 	return useMutation({
-		mutationFn: (data: { name?: string; phoneNumber?: string }) => authApi.updateProfile(data),
+		mutationFn: (data: { name?: string; phoneNumber?: string; image?: string }) =>
+			authApi.updateProfile(data),
 		onSuccess: (_data, variables) => {
 			toast.success('Perfil atualizado com sucesso')
 			if (user) {
@@ -85,6 +112,7 @@ export function useUserProfile() {
 					...(variables.phoneNumber !== undefined && {
 						phoneNumber: variables.phoneNumber,
 					}),
+					...(variables.image !== undefined && { image: variables.image }),
 				})
 			}
 			qc.invalidateQueries({ queryKey: ['auth', 'me'] })

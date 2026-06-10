@@ -89,11 +89,11 @@ export function Header() {
 										onClick={() => setMenuOpen(!menuOpen)}
 										className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-100 transition-colors"
 									>
-										<div className="w-8 h-8 rounded-full bg-brand-soft flex items-center justify-center">
-											<span className="text-sm font-heading font-700 text-brand">
-												{user.name.charAt(0).toUpperCase()}
-											</span>
-										</div>
+										<img
+											src={user.image || '/user.png'}
+											alt={user.name}
+											className="w-8 h-8 rounded-full object-cover"
+										/>
 										<span className="hidden sm:block text-sm font-heading font-500">
 											{user.name.split(' ')[0]}
 										</span>

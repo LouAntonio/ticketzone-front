@@ -46,11 +46,11 @@ export function OrgSettings() {
 				<h3 className="font-heading font-600 text-base mb-4">Perfil</h3>
 				<div className="flex flex-col gap-4">
 					<div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
-						<div className="w-10 h-10 rounded-full bg-brand-soft flex items-center justify-center">
-							<span className="font-heading font-700 text-brand">
-								{user?.name?.charAt(0) ?? '?'}
-							</span>
-						</div>
+						<img
+							src={user?.image || '/user.png'}
+							alt={user?.name ?? 'Avatar'}
+							className="w-10 h-10 rounded-full object-cover"
+						/>
 						<div>
 							<p className="text-sm font-heading font-600">{user?.name}</p>
 							<p className="text-xs text-text-secondary">{user?.email}</p>

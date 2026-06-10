@@ -205,6 +205,7 @@ export const handlers = [
 			return apiError('Utilizador não encontrado', 404)
 		}
 		const linkedAccounts = db.linkedAccounts.get(userId) ?? []
+		const promoterRequest = db.promoterRequests.find((r) => r.id === userId)
 		return HttpResponse.json(
 			apiResponse(
 				{
@@ -218,6 +219,7 @@ export const handlers = [
 					createdAt: user.createdAt,
 					hasPassword: user.hasPassword ?? false,
 					accounts: linkedAccounts,
+					promoter: promoterRequest ?? undefined,
 				},
 				'Dados do usuário',
 			),
