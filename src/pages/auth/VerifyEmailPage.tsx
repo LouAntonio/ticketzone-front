@@ -57,12 +57,7 @@ export function VerifyEmailPage() {
 			<div className="absolute inset-0 opacity-10" style={{ backgroundImage: DIAMOND_BG }} />
 			<div className="relative z-10">
 				<Link to="/" className="flex items-center gap-3">
-					<div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center">
-						<span className="font-display text-3xl text-brand leading-none">T</span>
-					</div>
-					<span className="font-display text-3xl tracking-wide text-white">
-						TicketZone
-					</span>
+					<img src="/logoWhite.png" alt="TicketZone" className="h-9 w-auto" />
 				</Link>
 			</div>
 			<div className="relative z-10">
@@ -80,10 +75,7 @@ export function VerifyEmailPage() {
 
 	const mobileLogo = (
 		<Link to="/" className="flex lg:hidden items-center gap-2 mb-8 justify-center">
-			<div className="w-9 h-9 bg-brand rounded-lg flex items-center justify-center">
-				<span className="text-white font-display text-lg leading-none">T</span>
-			</div>
-			<span className="font-display text-2xl tracking-wide text-text">TicketZone</span>
+			<img src="/logoWhite.png" alt="TicketZone" className="h-9 w-auto" />
 		</Link>
 	)
 

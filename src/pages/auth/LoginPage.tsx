@@ -113,12 +113,7 @@ export function LoginPage() {
 				/>
 				<div className="relative z-10">
 					<Link to="/" className="flex items-center gap-3">
-						<div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center">
-							<span className="font-display text-3xl text-brand leading-none">T</span>
-						</div>
-						<span className="font-display text-3xl tracking-wide text-white">
-							TicketZone
-						</span>
+						<img src="/logoWhite.png" alt="TicketZone" className="h-9 w-auto" />
 					</Link>
 				</div>
 				<div className="relative z-10">
@@ -136,12 +131,7 @@ export function LoginPage() {
 			<div className="flex items-center justify-center p-8">
 				<div className="w-full max-w-sm">
 					<Link to="/" className="flex lg:hidden items-center gap-2 mb-8 justify-center">
-						<div className="w-9 h-9 bg-brand rounded-lg flex items-center justify-center">
-							<span className="text-white font-display text-lg leading-none">T</span>
-						</div>
-						<span className="font-display text-2xl tracking-wide text-text">
-							TicketZone
-						</span>
+						<img src="/logoWhite.png" alt="TicketZone" className="h-9 w-auto" />
 					</Link>
 
 					<h2 className="font-heading font-700 text-2xl mb-1">Entrar</h2>
