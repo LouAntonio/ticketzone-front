@@ -40,6 +40,9 @@ export function useBecomePromoter() {
 			toast.success('Pedido de promotor enviado com sucesso')
 			qc.invalidateQueries({ queryKey: ['auth', 'me'] })
 		},
+		onError: (err: Error) => {
+			toast.error(err.message || 'Erro ao enviar pedido de promotor')
+		},
 	})
 }
 

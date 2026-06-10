@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../../stores/useAuthStore'
 import { useBecomePromoter } from '../../api/hooks/useAccount'
@@ -37,10 +37,40 @@ export function BecomePromoterPage() {
 	const logoInputRef = useRef<HTMLInputElement>(null)
 	const bannerInputRef = useRef<HTMLInputElement>(null)
 
+	useEffect(() => {
+		console.log(
+			'[personalFiles] changed, length:',
+			personalFiles.length,
+			personalFiles.map((f) => f.name),
+		)
+	}, [personalFiles])
+
+	useEffect(() => {
+		console.log(
+			'[enterpriseFiles] changed, length:',
+			enterpriseFiles.length,
+			enterpriseFiles.map((f) => f.name),
+		)
+	}, [enterpriseFiles])
+
 	const addFiles = (category: 'personal' | 'enterprise', files: FileList | null) => {
-		if (!files) return
+		console.log('[addFiles] called:', category, 'files?.length:', files?.length ?? 0)
+		if (!files) {
+			console.log('[addFiles] files is null/undefined, returning early')
+			return
+		}
 		const setter = category === 'personal' ? setPersonalFiles : setEnterpriseFiles
-		setter((prev) => [...prev, ...Array.from(files)])
+		const fileArray = Array.from(files)
+		console.log(
+			'[addFiles] fileArray:',
+			fileArray.length,
+			fileArray.map((f) => f.name),
+		)
+		setter((prev) => {
+			const next = [...prev, ...fileArray]
+			console.log('[addFiles] prev:', prev.length, 'next:', next.length)
+			return next
+		})
 	}
 
 	const removeFile = (category: 'personal' | 'enterprise', index: number) => {
@@ -123,6 +153,16 @@ export function BecomePromoterPage() {
 			return
 		}
 
+		if (form.promoterType === 'PESSOAL' && personalFiles.length === 0) {
+			toast.error('Adiciona pelo menos um documento pessoal (BI, Passaporte)')
+			return
+		}
+
+		if (form.promoterType === 'EMPRESARIAL' && enterpriseFiles.length === 0) {
+			toast.error('Adiciona pelo menos um documento da empresa (NIF, Alvará)')
+			return
+		}
+
 		setUploading(true)
 		setUploadProgress(0)
 
@@ -134,6 +174,9 @@ export function BecomePromoterPage() {
 
 			const filesToUpload: { file: File; folder: string; dest: DocFile[] | null }[] = []
 			let totalFiles = 0
+
+			console.log('[BecomePromoter] personalFiles:', personalFiles.length)
+			console.log('[BecomePromoter] enterpriseFiles:', enterpriseFiles.length)
 
 			if (form.promoterType === 'PESSOAL') {
 				for (const f of personalFiles) {
@@ -161,10 +204,15 @@ export function BecomePromoterPage() {
 			}
 
 			totalFiles = filesToUpload.length
+			console.log('[BecomePromoter] filesToUpload:', totalFiles)
 
 			for (let i = 0; i < filesToUpload.length; i++) {
 				const { file, folder, dest } = filesToUpload[i]
+				console.log(
+					`[BecomePromoter] uploading ${i + 1}/${totalFiles}: ${file.name} -> ${folder}`,
+				)
 				const doc = await cloudinaryUpload.upload(file, folder)
+				console.log(`[BecomePromoter] upload result:`, doc)
 				if (dest) {
 					dest.push(doc)
 				} else if (folder === 'promotores/logo') {
@@ -175,6 +223,11 @@ export function BecomePromoterPage() {
 				setUploadProgress(Math.round(((i + 1) / totalFiles) * 100))
 			}
 
+			console.log(
+				'[BecomePromoter] personalDocs final:',
+				personalDocs.length,
+				enterpriseDocs.length,
+			)
 			await becomePromoter.mutateAsync({
 				companyName: form.companyName,
 				promoterType: form.promoterType,
@@ -187,8 +240,10 @@ export function BecomePromoterPage() {
 			})
 			setHasPendingRequest(true)
 			setPendingStatus('PENDING')
-		} catch {
-			// Error already handled by toast in hook
+		} catch (err) {
+			const message = err instanceof Error ? err.message : 'Erro ao enviar pedido de promotor'
+			console.error('[BecomePromoter] handleSubmit error:', err)
+			toast.error(message)
 		} finally {
 			setUploading(false)
 			setUploadProgress(0)
@@ -499,10 +554,11 @@ export function BecomePromoterPage() {
 							{form.promoterType === 'PESSOAL' && (
 								<div>
 									<label className="block text-sm font-heading font-600 text-warm-text mb-2">
-										Documentos Pessoais
+										Documentos Pessoais *
 									</label>
 									<p className="text-xs text-text-secondary mb-3">
 										BI, Passaporte ou outro documento de identificação
+										(obrigatório)
 									</p>
 									<input
 										ref={personalInputRef}
@@ -511,6 +567,11 @@ export function BecomePromoterPage() {
 										className="hidden"
 										multiple
 										onChange={(e) => {
+											console.log(
+												'[FileInput-personal] onChange fired, files:',
+												e.target.files?.length ?? 0,
+												e.target.files?.[0]?.name,
+											)
 											addFiles('personal', e.target.files)
 											e.target.value = ''
 										}}
@@ -580,10 +641,10 @@ export function BecomePromoterPage() {
 							{form.promoterType === 'EMPRESARIAL' && (
 								<div>
 									<label className="block text-sm font-heading font-600 text-warm-text mb-2">
-										Documentos da Empresa
+										Documentos da Empresa *
 									</label>
 									<p className="text-xs text-text-secondary mb-3">
-										NIF, Alvará ou outro documento comercial
+										NIF, Alvará ou outro documento comercial (obrigatório)
 									</p>
 									<input
 										ref={enterpriseInputRef}
@@ -592,6 +653,11 @@ export function BecomePromoterPage() {
 										className="hidden"
 										multiple
 										onChange={(e) => {
+											console.log(
+												'[FileInput-enterprise] onChange fired, files:',
+												e.target.files?.length ?? 0,
+												e.target.files?.[0]?.name,
+											)
 											addFiles('enterprise', e.target.files)
 											e.target.value = ''
 										}}
