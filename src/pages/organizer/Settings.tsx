@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useAuthStore } from '../../stores/useAuthStore'
 import { useOrganizerSettings, useUpdateOrganizerSettings } from '../../api/hooks/useOrganizer'
 import { Card } from '../../components/ui/Card'
@@ -13,15 +13,15 @@ export function OrgSettings() {
 	const updateSettings = useUpdateOrganizerSettings()
 
 	const [editing, setEditing] = useState(false)
+	const [initialized, setInitialized] = useState(false)
 	const [companyName, setCompanyName] = useState('')
 	const [iban, setIban] = useState('')
 
-	useEffect(() => {
-		if (settings) {
-			setCompanyName(settings.companyName ?? '')
-			setIban(settings.iban ?? '')
-		}
-	}, [settings])
+	if (settings && !initialized) {
+		setInitialized(true)
+		setCompanyName(settings.companyName ?? '')
+		setIban(settings.iban ?? '')
+	}
 
 	const handleSave = async () => {
 		await updateSettings.mutateAsync({

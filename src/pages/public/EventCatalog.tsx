@@ -1,28 +1,55 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useEvents } from '../../api/hooks/useEvents'
+import { useCategories } from '../../api/hooks/useCategories'
 import { EventCard } from '../../components/shared/EventCard'
 import { CategoryNav } from '../../components/shared/CategoryNav'
 import { SkeletonCard } from '../../components/ui/Skeleton'
 import { PROVINCES, PERIODS } from '../../lib/constants'
-import type { EventFilters, EventCategory, EventPeriod } from '../../types/event'
+import type { EventFilters, EventPeriod } from '../../types/event'
 
 export function EventCatalog() {
 	const [searchParams, setSearchParams] = useSearchParams()
-	const [filters, setFilters] = useState<EventFilters>({
-		category: (searchParams.get('category') as EventCategory) ?? undefined,
+	const { data: categoriesData } = useCategories()
+
+	const slugToId = useMemo(() => {
+		const map: Record<string, string> = {}
+		for (const c of categoriesData?.categories ?? []) {
+			map[c.slug] = c.id
+		}
+		return map
+	}, [categoriesData])
+
+	const categorySlug = searchParams.get('category') ?? undefined
+	const categoryId = categorySlug ? slugToId[categorySlug] : undefined
+
+	const [filters, setFilters] = useState<EventFilters>(() => ({
+		categoryId,
 		province: searchParams.get('province') ?? undefined,
 		period: (searchParams.get('period') as EventPeriod) ?? undefined,
 		search: searchParams.get('search') ?? undefined,
-	})
+	}))
 
 	const { data, isLoading } = useEvents(filters)
 
 	const updateFilter = (key: keyof EventFilters, value: string) => {
-		const next = { ...filters, [key]: value || undefined }
+		const next: EventFilters = { ...filters }
+
+		if (key === 'category') {
+			const slug = value || undefined
+			next.categoryId = slug ? slugToId[slug] : undefined
+		} else {
+			;(next as Record<string, unknown>)[key] = value || undefined
+		}
+
 		setFilters(next)
 		const params = new URLSearchParams()
-		Object.entries(next).forEach(([k, v]) => v && params.set(k, v))
+		if (key === 'category' && value) params.set('category', value)
+		else if (key === 'category' && !value) params.delete('category')
+		else
+			Object.entries(next).forEach(([k, v]) => {
+				if (v && k !== 'categoryId') params.set(k, String(v))
+			})
 		setSearchParams(params, { replace: true })
 	}
 
@@ -37,7 +64,7 @@ export function EventCatalog() {
 			{/* Category nav */}
 			<div className="mb-6">
 				<CategoryNav
-					active={filters.category ?? ''}
+					active={categorySlug ?? ''}
 					onChange={(cat) => updateFilter('category', cat)}
 				/>
 			</div>

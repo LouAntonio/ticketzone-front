@@ -133,6 +133,10 @@ export interface OrganizerProfile {
 	companyName?: string
 	nif?: string | null
 	iban?: string | null
+	document?: string
+	bankName?: string
+	bankAccount?: string
+	bankHolder?: string
 	promoterType?: string
 	logo?: DocFile | null
 	banner?: DocFile | null

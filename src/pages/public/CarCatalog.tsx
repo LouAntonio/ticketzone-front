@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useCars } from '../../api/hooks/useRentals'
+import { toast } from 'react-hot-toast'
+import { useCars, useCreateBooking } from '../../api/hooks/useRentals'
 import { Card } from '../../components/ui/Card'
 import { Badge } from '../../components/ui/Badge'
 import { Button } from '../../components/ui/Button'
@@ -10,6 +11,7 @@ import { formatKwanza } from '../../lib/format'
 
 export function CarCatalog() {
 	const { data, isLoading } = useCars()
+	const createBooking = useCreateBooking()
 	const user = useAuthStore((s) => s.user)
 	const navigate = useNavigate()
 	const [selectedCar, setSelectedCar] = useState<string | null>(null)
@@ -24,6 +26,32 @@ export function CarCatalog() {
 			return
 		}
 		setSelectedCar(carId)
+		setStartDate('')
+		setEndDate('')
+	}
+
+	const handleReserve = async () => {
+		if (!selectedCar || !startDate || !endDate) {
+			toast.error('Seleciona as datas de início e fim')
+			return
+		}
+		if (new Date(endDate) <= new Date(startDate)) {
+			toast.error('A data de fim deve ser posterior à data de início')
+			return
+		}
+		try {
+			await createBooking.mutateAsync({
+				carId: selectedCar,
+				startDate,
+				endDate,
+			})
+			toast.success('Viatura reservada com sucesso!')
+			setSelectedCar(null)
+			setStartDate('')
+			setEndDate('')
+		} catch {
+			toast.error('Erro ao reservar. Tenta novamente.')
+		}
 	}
 
 	return (
@@ -57,7 +85,7 @@ export function CarCatalog() {
 						>
 							<div className="aspect-[16/10] overflow-hidden">
 								<img
-									src={car.photos[0]}
+									src={car.photos[0] ?? ''}
 									alt={`${car.make} ${car.model}`}
 									className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
 									loading="lazy"
@@ -168,7 +196,12 @@ export function CarCatalog() {
 											</div>
 										</div>
 										<div className="flex gap-2">
-											<Button size="sm" className="flex-1">
+											<Button
+												size="sm"
+												className="flex-1"
+												onClick={handleReserve}
+												loading={createBooking.isPending}
+											>
 												Reservar Agora
 											</Button>
 											<Button

@@ -1,11 +1,56 @@
 import { api } from '../client'
-import type { Car, CarBooking, CreateBookingData } from '../../types/rental'
+import { mapVehicle } from '../../lib/mappers'
+import type { RawVehicle } from '../../lib/mappers'
+import type { CarBooking, CreateBookingData } from '../../types/rental'
+
+interface RentalResponse {
+	order: {
+		id: string
+		userId: string
+		totalAmount: number
+		status: string
+		paymentStatus: string
+	}
+	rental: {
+		id: string
+		vehicleId: string
+		orderId: string
+		startDate: string
+		endDate: string
+		totalDays: number
+		totalPrice: number
+		vehicle: { make: string; model: string; plate: string; price: number }
+	}
+}
 
 export const rentalsApi = {
-	listCars: () => api.get<{ cars: Car[] }>('/rentals/cars').then((r) => r.data),
+	listCars: () =>
+		api
+			.get<{ vehicles: RawVehicle[] }>('/vehicles')
+			.then((r) => ({ cars: (r.data.vehicles ?? []).map(mapVehicle) })),
 
-	getCar: (id: string) => api.get<{ car: Car }>(`/rentals/cars/${id}`).then((r) => r.data),
+	getCar: (id: string) =>
+		api.get<RawVehicle>(`/vehicles/${id}`).then((r) => ({ car: mapVehicle(r.data) })),
 
 	createBooking: (data: CreateBookingData) =>
-		api.post<{ booking: CarBooking }>('/rentals/bookings', data).then((r) => r.data),
+		api
+			.post<RentalResponse>(`/vehicles/${data.carId}/rent`, {
+				startDate: data.startDate,
+				endDate: data.endDate,
+			})
+			.then((r) => {
+				const { order, rental } = r.data
+				const booking: CarBooking = {
+					id: rental.id,
+					carId: rental.vehicleId,
+					userId: order.userId,
+					startDate: rental.startDate,
+					endDate: rental.endDate,
+					totalDays: rental.totalDays,
+					totalPrice: rental.totalPrice,
+					status: 'pending',
+					orderId: order.id,
+				}
+				return { booking }
+			}),
 }

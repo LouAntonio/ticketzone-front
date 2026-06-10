@@ -57,7 +57,7 @@ export function EventDetail() {
 		)
 	}
 
-	if (!data?.event) {
+	if (!data) {
 		return (
 			<div className="text-center py-32">
 				<h2 className="font-heading font-700 text-xl mb-2">Evento não encontrado</h2>
@@ -66,7 +66,7 @@ export function EventDetail() {
 		)
 	}
 
-	const event = data.event
+	const event = data
 	const tickets = event.ticketTypes ?? []
 	const addons = event.addons ?? []
 
@@ -160,7 +160,7 @@ export function EventDetail() {
 											: 'blue'
 						}
 					>
-						{getCategoryLabel(event.category)}
+						{getCategoryLabel(event.category ?? '')}
 					</Badge>
 					<h1 className="font-display text-3xl sm:text-4xl lg:text-5xl text-white mt-2">
 						{event.title}
@@ -178,12 +178,12 @@ export function EventDetail() {
 								{
 									icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6',
 									label: 'Data',
-									value: formatDate(event.date),
+									value: formatDate(event.date ?? ''),
 								},
 								{
 									icon: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z',
 									label: 'Horário',
-									value: `${event.time} · ${getPeriodLabel(event.period)}`,
+									value: `${event.time ?? ''} · ${getPeriodLabel(event.period ?? 'morning')}`,
 								},
 								{
 									icon: 'M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z',

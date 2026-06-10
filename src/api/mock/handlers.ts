@@ -1,6 +1,6 @@
 import { http, HttpResponse, delay } from 'msw'
 import { db } from './db'
-import type { Event } from '../../types/event'
+import type { Addon, Event } from '../../types/event'
 
 const API = 'http://localhost:3000/api'
 
@@ -34,7 +34,7 @@ function findUserByToken(token: string): string | null {
 }
 
 function filterEvents(params: URLSearchParams): Event[] {
-	let list = db.events.filter((e) => e.status === 'published')
+	let list = db.events.filter((e) => e.status === 'PUBLISHED')
 	const category = params.get('category')
 	const province = params.get('province')
 	const period = params.get('period')
@@ -48,7 +48,7 @@ function filterEvents(params: URLSearchParams): Event[] {
 			(e) =>
 				e.title.toLowerCase().includes(q) ||
 				e.description.toLowerCase().includes(q) ||
-				e.venue.toLowerCase().includes(q),
+				(e.venue ?? '').toLowerCase().includes(q),
 		)
 	}
 	return list
@@ -237,7 +237,7 @@ export const handlers = [
 	http.get(`${API}/events/featured`, async () => {
 		await delay(300)
 		return HttpResponse.json({
-			events: db.events.filter((e) => e.featured && e.status === 'published'),
+			events: db.events.filter((e) => e.featured && e.status === 'PUBLISHED'),
 		})
 	}),
 
@@ -283,6 +283,19 @@ export const handlers = [
 			coverImage: body.coverImage ?? '',
 			category: body.category ?? 'conference',
 			province: body.province ?? '',
+			location: body.location ?? body.venue ?? '',
+			bannerUrl: body.bannerUrl ?? body.coverImage ?? null,
+			cloudinaryId: body.cloudinaryId ?? null,
+			gallery: body.gallery ?? [],
+			startDate: body.startDate ?? body.date ?? '',
+			endDate: body.endDate ?? body.startDate ?? body.date ?? '',
+			isApproved: false,
+			salesPaused: false,
+			promoterId: userId,
+			featured: body.featured ?? false,
+			eventCategories: body.eventCategories ?? [],
+			batches: body.batches ?? [],
+			addons: body.addons ?? [],
 			date: body.date ?? '',
 			time: body.time ?? '',
 			period: body.period ?? 'night',
@@ -291,7 +304,7 @@ export const handlers = [
 			organizerId: userId,
 			organizerName: '',
 			ticketTypes: body.ticketTypes ?? [],
-			status: 'draft',
+			status: 'DRAFT',
 			createdAt: new Date().toISOString(),
 		}
 		const user = db.users.find((u) => u.id === userId)
@@ -406,8 +419,8 @@ export const handlers = [
 					orderId: `ord-${++orderCounter}`,
 					eventId: event.id,
 					eventTitle: event.title,
-					eventDate: event.date,
-					eventImage: event.coverImage,
+					eventDate: event.date ?? '',
+					eventImage: event.coverImage ?? '',
 					ticketTypeName: item.ticketTypeName,
 					buyerName: user?.name ?? '',
 					qrCode: `TICKET-${event.id.toUpperCase()}-${String(ticketCounter).padStart(3, '0')}`,
@@ -415,7 +428,7 @@ export const handlers = [
 					status: 'active',
 					used: 0,
 					validateUntil: new Date(
-						new Date(event.date).getTime() + 86400000,
+						new Date(event.date ?? Date.now()).getTime() + 86400000,
 					).toISOString(),
 				})
 			}
@@ -427,9 +440,9 @@ export const handlers = [
 			id: `ord-${orderCounter}`,
 			eventId: event.id,
 			eventTitle: event.title,
-			eventSlug: event.slug,
-			eventDate: event.date,
-			eventImage: event.coverImage,
+			eventSlug: event.slug ?? '',
+			eventDate: event.date ?? '',
+			eventImage: event.coverImage ?? '',
 			buyerId: userId,
 			buyerName: user?.name ?? '',
 			items: body.items,
@@ -778,7 +791,7 @@ export const handlers = [
 		const idx = db.events.findIndex((e) => e.id === params.id)
 		if (idx === -1)
 			return HttpResponse.json({ error: 'Evento não encontrado' }, { status: 404 })
-		db.events[idx].status = body.status as 'draft' | 'published' | 'cancelled' | 'completed'
+		db.events[idx].status = body.status as 'DRAFT' | 'PUBLISHED' | 'CANCELLED' | 'COMPLETED'
 		return HttpResponse.json({ event: db.events[idx] })
 	}),
 
@@ -1044,7 +1057,7 @@ export const handlers = [
 		}
 
 		if (!db.events[eventIdx].addons) db.events[eventIdx].addons = []
-		db.events[eventIdx].addons.push(newAddon as any)
+		db.events[eventIdx].addons.push(newAddon)
 		return HttpResponse.json(apiResponse({ ...newAddon }, 'Add-on criado com sucesso'))
 	}),
 
@@ -1056,7 +1069,7 @@ export const handlers = [
 		const eventIdx = db.events.findIndex((e) => e.id === params.eventId)
 		if (eventIdx === -1) return apiError('Evento não encontrado', 404)
 
-		const addonIdx = db.events[eventIdx].addons.findIndex((a: any) => a.id === params.addonId)
+		const addonIdx = db.events[eventIdx].addons.findIndex((a: Addon) => a.id === params.addonId)
 		if (addonIdx === -1) return apiError('Add-on não encontrado', 404)
 
 		const body = (await request.json()) as Partial<{
@@ -1078,7 +1091,7 @@ export const handlers = [
 		const eventIdx = db.events.findIndex((e) => e.id === params.eventId)
 		if (eventIdx === -1) return apiError('Evento não encontrado', 404)
 
-		const addonIdx = db.events[eventIdx].addons.findIndex((a: any) => a.id === params.addonId)
+		const addonIdx = db.events[eventIdx].addons.findIndex((a: Addon) => a.id === params.addonId)
 		if (addonIdx === -1) return apiError('Add-on não encontrado', 404)
 
 		db.events[eventIdx].addons.splice(addonIdx, 1)

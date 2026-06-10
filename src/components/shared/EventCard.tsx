@@ -36,7 +36,7 @@ export function EventCard({ event }: EventCardProps) {
 				<div className="absolute top-3 left-3">
 					<Badge
 						variant={
-							categoryColors[event.category] as
+							categoryColors[event.category ?? 'festival'] as
 								| 'brand'
 								| 'emerald'
 								| 'amber'
@@ -47,7 +47,7 @@ export function EventCard({ event }: EventCardProps) {
 								| 'pink'
 						}
 					>
-						{getCategoryLabel(event.category)}
+						{getCategoryLabel(event.category ?? '')}
 					</Badge>
 				</div>
 			</div>
@@ -74,7 +74,7 @@ export function EventCard({ event }: EventCardProps) {
 							<line x1="8" y1="2" x2="8" y2="6" />
 							<line x1="3" y1="10" x2="21" y2="10" />
 						</svg>
-						{formatDate(event.date)}
+						{formatDate(event.date ?? '')}
 					</div>
 					<div className="flex items-center gap-2">
 						<svg

@@ -10,7 +10,7 @@ import { Card } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
 import { Modal } from '../../components/ui/Modal'
-import { Skeleton, SkeletonTable } from '../../components/ui/Skeleton'
+import { SkeletonTable } from '../../components/ui/Skeleton'
 import { formatDate } from '../../lib/format'
 import { toast } from 'react-hot-toast'
 

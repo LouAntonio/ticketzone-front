@@ -76,6 +76,7 @@ export function EventForm() {
 		startDate: '',
 		endDate: '',
 		batches: [{ ...emptyBatch }],
+		addons: [],
 	})
 
 	const [bannerFile, setBannerFile] = useState<File | null>(null)
@@ -105,38 +106,43 @@ export function EventForm() {
 			.catch(() => {})
 	}, [])
 
-	useEffect(() => {
-		if (isEdit && eventData?.event && !form.title) {
-			const ev = eventData.event
-			setForm({
-				title: ev.title,
-				description: ev.description,
-				province: ev.province,
-				location: ev.location,
-				bannerUrl: ev.bannerUrl ?? '',
-				cloudinaryId: ev.cloudinaryId ?? '',
-				gallery: ev.gallery ?? [],
-				categoryIds: ev.eventCategories?.map((ec) => ec.categoryId) ?? [],
-				startDate: ev.startDate ? ev.startDate.slice(0, 16) : '',
-				endDate: ev.endDate ? ev.endDate.slice(0, 16) : '',
-				batches: ev.batches?.length
-					? ev.batches.map((b) => ({
-							name: b.name,
-							price: b.price,
-							capacity: b.capacity,
-							isGroupTicket: b.isGroupTicket,
-							groupSize: b.groupSize,
-						}))
-					: [{ ...emptyBatch }],
-			})
-			if (ev.bannerUrl) setBannerPreview(ev.bannerUrl)
-			if (ev.gallery?.length) {
-				setGalleryItems(
-					ev.gallery.map((g) => ({ url: g.url, idcloudinary: g.idcloudinary })),
-				)
-			}
-			originalBatchesRef.current = ev.batches?.length
+	const [initialized, setInitialized] = useState(false)
+
+	if (isEdit && eventData?.event && !initialized) {
+		setInitialized(true)
+		const ev = eventData.event
+		setForm({
+			title: ev.title,
+			description: ev.description,
+			province: ev.province,
+			location: ev.location,
+			bannerUrl: ev.bannerUrl ?? '',
+			cloudinaryId: ev.cloudinaryId ?? '',
+			gallery: ev.gallery ?? [],
+			categoryIds: ev.eventCategories?.map((ec) => ec.categoryId) ?? [],
+			startDate: ev.startDate ? ev.startDate.slice(0, 16) : '',
+			endDate: ev.endDate ? ev.endDate.slice(0, 16) : '',
+			batches: ev.batches?.length
 				? ev.batches.map((b) => ({
+						name: b.name,
+						price: b.price,
+						capacity: b.capacity,
+						isGroupTicket: b.isGroupTicket,
+						groupSize: b.groupSize,
+					}))
+				: [{ ...emptyBatch }],
+			addons: ev.addons ?? [],
+		})
+		if (ev.bannerUrl) setBannerPreview(ev.bannerUrl)
+		if (ev.gallery?.length) {
+			setGalleryItems(ev.gallery.map((g) => ({ url: g.url, idcloudinary: g.idcloudinary })))
+		}
+	}
+
+	useEffect(() => {
+		if (isEdit && eventData?.event) {
+			originalBatchesRef.current = eventData.event.batches?.length
+				? eventData.event.batches.map((b) => ({
 						id: b.id,
 						name: b.name,
 						price: b.price,
@@ -147,7 +153,7 @@ export function EventForm() {
 					}))
 				: []
 		}
-	}, [isEdit, eventData, form.title])
+	}, [isEdit, eventData])
 
 	const updateField = (key: keyof EventFormData, value: string | number | boolean | string[]) => {
 		setForm((prev) => ({ ...prev, [key]: value }))
@@ -310,7 +316,7 @@ export function EventForm() {
 
 		let bannerUrl = form.bannerUrl
 		let cloudinaryId = form.cloudinaryId
-		let gallery: DocFile[] = []
+		let gallery: DocFile[]
 
 		try {
 			if (bannerFile) {
@@ -346,7 +352,9 @@ export function EventForm() {
 			}
 
 			if (isEdit) {
-				const { batches: _, addons: _a, ...eventPayload } = payload
+				const { batches, addons, ...eventPayload } = payload
+				void batches
+				void addons
 				await updateEvent.mutateAsync(eventPayload)
 
 				const originals = originalBatchesRef.current

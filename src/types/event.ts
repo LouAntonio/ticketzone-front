@@ -1,4 +1,4 @@
-export type EventStatus = 'PUBLISHED' | 'HIDDEN' | 'CANCELLED'
+export type EventStatus = 'DRAFT' | 'PUBLISHED' | 'HIDDEN' | 'CANCELLED' | 'COMPLETED'
 
 export type EventCategory = 'conference' | 'workshop' | 'theatre' | 'festival' | 'family' | 'party'
 
@@ -71,6 +71,8 @@ export interface Event {
 	status: EventStatus
 	salesPaused: boolean
 	promoterId: string
+	featured?: boolean
+	shortDescription?: string
 	eventCategories: EventCategoryRelation[]
 	batches: TicketBatch[]
 	addons: Addon[]

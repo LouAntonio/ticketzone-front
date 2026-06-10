@@ -129,6 +129,9 @@ export const db: MockDB = {
 			bankAccount: '123456789',
 			bankHolder: 'Carlos Mendes',
 			balance: 1250000,
+			isVerified: true,
+			verificationStatus: 'VERIFIED',
+			status: 'ACTIVE',
 		},
 		{
 			id: 'org-2',
@@ -139,11 +142,15 @@ export const db: MockDB = {
 			bankAccount: '987654321',
 			bankHolder: 'Helena dos Santos',
 			balance: 450000,
+			isVerified: true,
+			verificationStatus: 'VERIFIED',
+			status: 'ACTIVE',
 		},
 	],
 
 	events: [
 		{
+			// pre-seeded events use legacy format; mapped via mapEvent() at the API layer
 			id: 'evt-1',
 			title: 'Festival da Musica Angolana',
 			slug: createSlug('Festival da Musica Angolana'),
@@ -211,7 +218,7 @@ export const db: MockDB = {
 				},
 			],
 			featured: true,
-			status: 'published',
+			status: 'PUBLISHED',
 			createdAt: '2025-04-01T10:00:00Z',
 		},
 		{
@@ -254,7 +261,7 @@ export const db: MockDB = {
 				},
 			],
 			featured: true,
-			status: 'published',
+			status: 'PUBLISHED',
 			createdAt: '2025-04-05T10:00:00Z',
 		},
 		{
@@ -287,7 +294,7 @@ export const db: MockDB = {
 				},
 			],
 			featured: false,
-			status: 'published',
+			status: 'PUBLISHED',
 			createdAt: '2025-04-10T10:00:00Z',
 		},
 		{
@@ -330,7 +337,7 @@ export const db: MockDB = {
 				},
 			],
 			featured: false,
-			status: 'published',
+			status: 'PUBLISHED',
 			createdAt: '2025-04-15T10:00:00Z',
 		},
 		{
@@ -383,10 +390,10 @@ export const db: MockDB = {
 				},
 			],
 			featured: true,
-			status: 'published',
+			status: 'PUBLISHED',
 			createdAt: '2025-04-20T10:00:00Z',
 		},
-	],
+	] as Event[],
 
 	orders: [
 		{
