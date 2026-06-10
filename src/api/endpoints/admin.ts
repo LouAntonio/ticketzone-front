@@ -191,6 +191,159 @@ export interface PaginatedAuditLogs {
 	totalPages: number
 }
 
+// ==================== Detail Types ====================
+
+export interface AdminUserDetail {
+	id: string
+	name: string
+	email: string
+	role: string
+	status: string
+	bannedUntil: string | null
+	banMotive: string | null
+	emailVerified: boolean
+	phoneNumber: string | null
+	image: string | null
+	createdAt: string
+	promoter: {
+		id: string
+		companyName: string
+		nif: string | null
+		iban: string | null
+		promoterType: string
+		isVerified: boolean
+		verificationStatus: string
+		status: string
+		bannedUntil: string | null
+		banMotive: string | null
+		balance: number
+		_count: { events: number }
+	} | null
+	_count: { orders: number; tickets: number }
+}
+
+export interface AdminEventDetail {
+	id: string
+	title: string
+	description: string
+	province: string
+	location: string
+	bannerUrl: string | null
+	startDate: string
+	endDate: string
+	isApproved: boolean
+	denialReason: string | null
+	status: string
+	salesPaused: boolean
+	createdAt: string
+	categories: { id: string; name: string; slug: string } | null
+	batches: {
+		id: string
+		name: string
+		price: number
+		capacity: number
+		sold: number
+		isGroupTicket: boolean
+		groupSize: number | null
+	}[]
+	promoter: {
+		companyName: string
+		nif: string | null
+		iban: string | null
+		user: { id: string; name: string; email: string; phoneNumber: string | null }
+	}
+	_count: { tickets: number }
+}
+
+export interface AdminPromoterDetail {
+	id: string
+	userId: string
+	companyName: string
+	nif: string | null
+	iban: string | null
+	promoterType: string
+	logo: unknown
+	banner: unknown
+	isVerified: boolean
+	verificationStatus: string
+	status: string
+	bannedUntil: string | null
+	banMotive: string | null
+	balance: number
+	createdAt: string
+	user: {
+		id: string
+		name: string
+		email: string
+		image: string | null
+		role: string
+		phoneNumber: string | null
+		emailVerified: boolean
+		status: string
+		bannedUntil: string | null
+		banMotive: string | null
+		createdAt: string
+	}
+	_count: { events: number }
+	docs: {
+		id: string
+		personal: { url: string; idcloudinary: string }[]
+		enterprise: { url: string; idcloudinary: string }[]
+		uploadedAt: string
+	}[]
+	payouts: {
+		id: string
+		amount: number
+		status: string
+		createdAt: string
+	}[]
+}
+
+export interface AdminOrderDetail {
+	id: string
+	totalAmount: number
+	status: string
+	paymentMethod: string | null
+	paymentStatus: string
+	multicaixaReference: string | null
+	paypayReference: string | null
+	createdAt: string
+	user: { id: string; name: string; email: string; phoneNumber: string | null }
+	tickets: {
+		id: string
+		status: string
+		entriesUsed: number
+		entriesAllowed: number
+		batch: { id: string; name: string; price: number }
+		event: { id: string; title: string }
+		owner: { id: string; name: string; email: string }
+	}[]
+	rentals: {
+		id: string
+		vehicle: { id: string; make: string; model: string; plate: string }
+		event: { id: string; title: string }
+	}[]
+}
+
+export interface AdminVehicleDetail {
+	id: string
+	make: string
+	model: string
+	plate: string
+	year: number | null
+	price: number
+	status: string
+	createdAt: string
+	owner: { id: string; name: string; email: string }
+	_count: { rentals: number }
+	rentals: {
+		id: string
+		event: { id: string; title: string } | null
+		order: { id: string; status: string; totalAmount: number } | null
+		createdAt: string
+	}[]
+}
+
 // ==================== API Calls ====================
 
 export const adminApi = {
@@ -206,7 +359,7 @@ export const adminApi = {
 		status?: string
 	}) => api.get<PaginatedUsers>('/admin/users', { params }).then((r) => r.data),
 
-	getUser: (id: string) => api.get<{ data: unknown }>(`/admin/users/${id}`).then((r) => r.data),
+	getUser: (id: string) => api.get<AdminUserDetail>(`/admin/users/${id}`).then((r) => r.data),
 
 	updateUserRole: (id: string, role: string) =>
 		api.patch<{ msg: string }>(`/admin/users/${id}/role`, { role }).then((r) => r.data),
@@ -231,7 +384,7 @@ export const adminApi = {
 	listPendingEvents: (params?: { page?: number; limit?: number }) =>
 		api.get<PaginatedEvents>('/admin/events/pending', { params }).then((r) => r.data),
 
-	getEvent: (id: string) => api.get<{ data: unknown }>(`/admin/events/${id}`).then((r) => r.data),
+	getEvent: (id: string) => api.get<AdminEventDetail>(`/admin/events/${id}`).then((r) => r.data),
 
 	updateEvent: (id: string, data: Record<string, unknown>) =>
 		api.patch<{ msg: string }>(`/admin/events/${id}`, data).then((r) => r.data),
@@ -260,7 +413,7 @@ export const adminApi = {
 			.then((r) => r.data),
 
 	getPromoter: (id: string) =>
-		api.get<{ data: unknown }>(`/admin/promoters/${id}`).then((r) => r.data),
+		api.get<AdminPromoterDetail>(`/admin/promoters/${id}`).then((r) => r.data),
 
 	approvePromoter: (id: string) =>
 		api.post<{ msg: string }>(`/admin/promoters/${id}/approve`).then((r) => r.data),
@@ -280,6 +433,8 @@ export const adminApi = {
 	listOrders: (params?: { page?: number; limit?: number; search?: string; status?: string }) =>
 		api.get<PaginatedOrders>('/admin/orders', { params }).then((r) => r.data),
 
+	getOrder: (id: string) => api.get<AdminOrderDetail>(`/admin/orders/${id}`).then((r) => r.data),
+
 	refundOrder: (id: string) =>
 		api.post<{ msg: string }>(`/admin/orders/${id}/refund`).then((r) => r.data),
 
@@ -289,6 +444,9 @@ export const adminApi = {
 	// Fleet
 	listFleet: (params?: { page?: number; limit?: number; search?: string; status?: string }) =>
 		api.get<PaginatedVehicles>('/admin/fleet', { params }).then((r) => r.data),
+
+	getVehicle: (id: string) =>
+		api.get<AdminVehicleDetail>(`/admin/fleet/${id}`).then((r) => r.data),
 
 	createVehicle: (data: {
 		make: string

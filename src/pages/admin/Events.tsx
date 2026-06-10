@@ -2,13 +2,14 @@ import { useState } from 'react'
 import {
 	useAdminEvents,
 	useAdminPendingEvents,
+	useAdminEventDetail,
 	useApproveEvent,
 	useRejectEvent,
 	useCancelEvent,
 } from '../../api/hooks/useAdmin'
 import { Skeleton } from '../../components/ui/Skeleton'
 import { Modal } from '../../components/ui/Modal'
-import { formatDate } from '../../lib/format'
+import { formatDate, formatKwanza } from '../../lib/format'
 
 const statusColors: Record<string, string> = {
 	draft: 'border-gray-500/40 text-gray-400',
@@ -48,6 +49,9 @@ export function AdminEvents() {
 	const approveEvent = useApproveEvent()
 	const rejectEvent = useRejectEvent()
 	const cancelEvent = useCancelEvent()
+
+	const [detailTarget, setDetailTarget] = useState<string | null>(null)
+	const { data: eventDetail, isLoading: detailLoading } = useAdminEventDetail(detailTarget)
 
 	const [rejectTarget, setRejectTarget] = useState<{ id: string; title: string } | null>(null)
 	const [rejectMotive, setRejectMotive] = useState('')
@@ -231,6 +235,12 @@ export function AdminEvents() {
 										</td>
 										<td className="px-4 py-3 text-right">
 											<div className="flex items-center justify-end gap-1.5 flex-wrap">
+												<button
+													onClick={() => setDetailTarget(event.id)}
+													className="border-brand/40 text-brand text-[11px] px-2 py-1 border-2 font-heading font-500 hover:bg-brand/10 transition-colors"
+												>
+													Detalhes
+												</button>
 												{!event.isApproved &&
 													event.status !== 'cancelled' && (
 														<>
@@ -314,6 +324,214 @@ export function AdminEvents() {
 					</div>
 				</div>
 			)}
+
+			{/* Detail Modal */}
+			<Modal
+				open={!!detailTarget}
+				onClose={() => setDetailTarget(null)}
+				title="Detalhes do Evento"
+			>
+				{detailLoading ? (
+					<div className="space-y-3">
+						<Skeleton variant="dark" className="h-5 w-40" />
+						<Skeleton variant="dark" className="h-4 w-60" />
+						<Skeleton variant="dark" className="h-4 w-full" />
+						<Skeleton variant="dark" className="h-4 w-3/4" />
+					</div>
+				) : eventDetail ? (
+					<div className="space-y-5">
+						{eventDetail.bannerUrl && (
+							<img
+								src={eventDetail.bannerUrl}
+								alt={eventDetail.title}
+								className="w-full h-32 object-cover rounded"
+							/>
+						)}
+						<div>
+							<p className="font-heading font-600 text-lg text-[#d4c5b8]">
+								{eventDetail.title}
+							</p>
+							<p className="text-xs text-[#8a7a6e] mt-1">
+								{eventDetail.province}
+								{eventDetail.location ? ` · ${eventDetail.location}` : ''}
+								{eventDetail.categories ? ` · ${eventDetail.categories.name}` : ''}
+							</p>
+						</div>
+
+						{eventDetail.description && (
+							<p className="text-sm text-[#8a7a6e] font-heading leading-relaxed">
+								{eventDetail.description}
+							</p>
+						)}
+
+						<div className="grid grid-cols-2 gap-4 text-sm">
+							<div>
+								<p className="text-[10px] font-heading font-600 text-[#6a5a4e] uppercase tracking-wider mb-1">
+									Estado
+								</p>
+								<span
+									className={`badge-admin text-[11px] ${eventDetail.status === 'PUBLISHED' ? 'border-emerald-500/40 text-emerald-400' : eventDetail.status === 'CANCELLED' ? 'border-red-500/40 text-red-400' : eventDetail.status === 'DRAFT' ? 'border-gray-500/40 text-gray-400' : 'border-amber-500/40 text-amber-400'}`}
+								>
+									{eventDetail.status === 'PUBLISHED'
+										? 'Publicado'
+										: eventDetail.status === 'CANCELLED'
+											? 'Cancelado'
+											: eventDetail.status === 'DRAFT'
+												? 'Rascunho'
+												: eventDetail.status === 'HIDDEN'
+													? 'Oculto'
+													: eventDetail.status}
+								</span>
+							</div>
+							<div>
+								<p className="text-[10px] font-heading font-600 text-[#6a5a4e] uppercase tracking-wider mb-1">
+									Aprovado
+								</p>
+								<p className="text-[#d4c5b8] font-heading">
+									{eventDetail.isApproved ? 'Sim' : 'Não'}
+								</p>
+							</div>
+							{eventDetail.denialReason && (
+								<div className="col-span-2">
+									<p className="text-[10px] font-heading font-600 text-[#6a5a4e] uppercase tracking-wider mb-1">
+										Motivo de Rejeição
+									</p>
+									<p className="text-red-400 font-heading">
+										{eventDetail.denialReason}
+									</p>
+								</div>
+							)}
+							<div>
+								<p className="text-[10px] font-heading font-600 text-[#6a5a4e] uppercase tracking-wider mb-1">
+									Início
+								</p>
+								<p className="text-[#d4c5b8] font-heading">
+									{formatDate(eventDetail.startDate)}
+								</p>
+							</div>
+							<div>
+								<p className="text-[10px] font-heading font-600 text-[#6a5a4e] uppercase tracking-wider mb-1">
+									Fim
+								</p>
+								<p className="text-[#d4c5b8] font-heading">
+									{formatDate(eventDetail.endDate)}
+								</p>
+							</div>
+							<div>
+								<p className="text-[10px] font-heading font-600 text-[#6a5a4e] uppercase tracking-wider mb-1">
+									Vendas Pausadas
+								</p>
+								<p className="text-[#d4c5b8] font-heading">
+									{eventDetail.salesPaused ? 'Sim' : 'Não'}
+								</p>
+							</div>
+							<div>
+								<p className="text-[10px] font-heading font-600 text-[#6a5a4e] uppercase tracking-wider mb-1">
+									Total Bilhetes
+								</p>
+								<p className="text-[#d4c5b8] font-heading">
+									{eventDetail._count.tickets}
+								</p>
+							</div>
+						</div>
+
+						<div className="pt-4 border-t border-[#3d3028]">
+							<p className="text-xs font-heading font-600 text-[#6a5a4e] uppercase tracking-wider mb-3">
+								Organizador
+							</p>
+							<div className="grid grid-cols-2 gap-4 text-sm">
+								<div>
+									<p className="text-[10px] font-heading font-600 text-[#6a5a4e] uppercase tracking-wider mb-1">
+										Empresa
+									</p>
+									<p className="text-[#d4c5b8] font-heading">
+										{eventDetail.promoter.companyName}
+									</p>
+								</div>
+								<div>
+									<p className="text-[10px] font-heading font-600 text-[#6a5a4e] uppercase tracking-wider mb-1">
+										Contacto
+									</p>
+									<p className="text-[#d4c5b8] font-heading">
+										{eventDetail.promoter.user.name} (
+										{eventDetail.promoter.user.email})
+									</p>
+								</div>
+								<div>
+									<p className="text-[10px] font-heading font-600 text-[#6a5a4e] uppercase tracking-wider mb-1">
+										NIF
+									</p>
+									<p className="text-[#d4c5b8] font-heading">
+										{eventDetail.promoter.nif || '—'}
+									</p>
+								</div>
+								<div>
+									<p className="text-[10px] font-heading font-600 text-[#6a5a4e] uppercase tracking-wider mb-1">
+										IBAN
+									</p>
+									<p className="text-[#d4c5b8] font-heading font-mono text-xs">
+										{eventDetail.promoter.iban || '—'}
+									</p>
+								</div>
+							</div>
+						</div>
+
+						{eventDetail.batches.length > 0 && (
+							<div className="pt-4 border-t border-[#3d3028]">
+								<p className="text-xs font-heading font-600 text-[#6a5a4e] uppercase tracking-wider mb-3">
+									Lotes de Bilhetes
+								</p>
+								<div className="overflow-x-auto">
+									<table className="w-full text-sm">
+										<thead>
+											<tr className="border-b border-[#3d3028]">
+												<th className="text-left py-2 text-[10px] font-heading font-600 text-[#6a5a4e] uppercase tracking-wider">
+													Nome
+												</th>
+												<th className="text-right py-2 text-[10px] font-heading font-600 text-[#6a5a4e] uppercase tracking-wider">
+													Preço
+												</th>
+												<th className="text-right py-2 text-[10px] font-heading font-600 text-[#6a5a4e] uppercase tracking-wider">
+													Capacidade
+												</th>
+												<th className="text-right py-2 text-[10px] font-heading font-600 text-[#6a5a4e] uppercase tracking-wider">
+													Vendidos
+												</th>
+											</tr>
+										</thead>
+										<tbody>
+											{eventDetail.batches.map((b) => (
+												<tr
+													key={b.id}
+													className="border-b border-[#3d3028] last:border-0"
+												>
+													<td className="py-2 text-[#d4c5b8] font-heading">
+														{b.name}
+														{b.isGroupTicket && (
+															<span className="text-[10px] text-[#6a5a4e] ml-1">
+																(grupo de {b.groupSize})
+															</span>
+														)}
+													</td>
+													<td className="py-2 text-right text-white font-heading font-600">
+														{formatKwanza(Number(b.price))}
+													</td>
+													<td className="py-2 text-right text-[#8a7a6e] font-heading">
+														{b.capacity}
+													</td>
+													<td className="py-2 text-right text-[#d4c5b8] font-heading">
+														{b.sold}
+													</td>
+												</tr>
+											))}
+										</tbody>
+									</table>
+								</div>
+							</div>
+						)}
+					</div>
+				) : null}
+			</Modal>
 
 			{/* Reject Modal */}
 			<Modal open={!!rejectTarget} onClose={() => setRejectTarget(null)}>

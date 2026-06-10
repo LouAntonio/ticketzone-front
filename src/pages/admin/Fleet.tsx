@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import {
 	useAdminFleet,
+	useAdminVehicleDetail,
 	useCreateVehicle,
 	useUpdateVehicle,
 	useDeleteVehicle,
@@ -8,7 +9,7 @@ import {
 } from '../../api/hooks/useAdmin'
 import { Skeleton } from '../../components/ui/Skeleton'
 import { Modal } from '../../components/ui/Modal'
-import { formatKwanza } from '../../lib/format'
+import { formatDate, formatKwanza } from '../../lib/format'
 
 const statusColors: Record<string, string> = {
 	AVAILABLE: 'text-emerald-400',
@@ -48,6 +49,9 @@ export function AdminFleet() {
 	const updateVehicle = useUpdateVehicle()
 	const deleteVehicle = useDeleteVehicle()
 	const updateStatus = useUpdateVehicleStatus()
+
+	const [detailTarget, setDetailTarget] = useState<string | null>(null)
+	const { data: vehicleDetail, isLoading: detailLoading } = useAdminVehicleDetail(detailTarget)
 
 	const [showForm, setShowForm] = useState(false)
 	const [editTarget, setEditTarget] = useState<({ id: string } & VehicleForm) | null>(null)
@@ -331,6 +335,12 @@ export function AdminFleet() {
 													</button>
 												)}
 												<button
+													onClick={() => setDetailTarget(v.id)}
+													className="border-brand/40 text-brand text-[11px] px-2 py-1 border-2 font-heading font-500 hover:bg-brand/10 transition-colors"
+												>
+													Detalhes
+												</button>
+												<button
 													onClick={() => handleEdit(v)}
 													className="border-brand/40 text-brand text-[11px] px-2 py-1 border-2 font-heading font-500 hover:bg-brand/10 transition-colors"
 												>
@@ -388,6 +398,156 @@ export function AdminFleet() {
 					</div>
 				</div>
 			)}
+
+			{/* Detail Modal */}
+			<Modal
+				open={!!detailTarget}
+				onClose={() => setDetailTarget(null)}
+				title="Detalhes da Viatura"
+			>
+				{detailLoading ? (
+					<div className="space-y-3">
+						<Skeleton variant="dark" className="h-5 w-40" />
+						<Skeleton variant="dark" className="h-4 w-60" />
+						<Skeleton variant="dark" className="h-4 w-full" />
+						<Skeleton variant="dark" className="h-4 w-3/4" />
+					</div>
+				) : vehicleDetail ? (
+					<div className="space-y-5">
+						<div className="pb-4 border-b border-[#3d3028]">
+							<p className="font-heading font-600 text-lg text-[#d4c5b8]">
+								{vehicleDetail.make} {vehicleDetail.model}
+							</p>
+							<p className="text-sm text-[#8a7a6e] font-mono tracking-wider">
+								{vehicleDetail.plate}
+							</p>
+						</div>
+
+						<div className="grid grid-cols-2 gap-4 text-sm">
+							<div>
+								<p className="text-[10px] font-heading font-600 text-[#6a5a4e] uppercase tracking-wider mb-1">
+									Ano
+								</p>
+								<p className="text-[#d4c5b8] font-heading">
+									{vehicleDetail.year || '—'}
+								</p>
+							</div>
+							<div>
+								<p className="text-[10px] font-heading font-600 text-[#6a5a4e] uppercase tracking-wider mb-1">
+									Preço
+								</p>
+								<p className="text-white font-heading font-600">
+									{formatKwanza(Number(vehicleDetail.price))}
+									<span className="text-xs text-[#6a5a4e] font-normal">
+										/evento
+									</span>
+								</p>
+							</div>
+							<div>
+								<p className="text-[10px] font-heading font-600 text-[#6a5a4e] uppercase tracking-wider mb-1">
+									Estado
+								</p>
+								<span
+									className={`text-xs font-heading font-600 flex items-center gap-1.5 ${vehicleDetail.status === 'AVAILABLE' ? 'text-emerald-400' : vehicleDetail.status === 'RENTED' ? 'text-blue-400' : 'text-amber-400'}`}
+								>
+									<span
+										className={`inline-block w-1.5 h-1.5 rounded-full ${vehicleDetail.status === 'AVAILABLE' ? 'bg-emerald-400' : vehicleDetail.status === 'RENTED' ? 'bg-blue-400' : 'bg-amber-400'}`}
+									/>
+									{vehicleDetail.status === 'AVAILABLE'
+										? 'Disponível'
+										: vehicleDetail.status === 'RENTED'
+											? 'Alugado'
+											: 'Manutenção'}
+								</span>
+							</div>
+							<div>
+								<p className="text-[10px] font-heading font-600 text-[#6a5a4e] uppercase tracking-wider mb-1">
+									Proprietário
+								</p>
+								<p className="text-[#d4c5b8] font-heading">
+									{vehicleDetail.owner.name || vehicleDetail.owner.email}
+								</p>
+								<p className="text-xs text-[#8a7a6e]">
+									{vehicleDetail.owner.email}
+								</p>
+							</div>
+							<div>
+								<p className="text-[10px] font-heading font-600 text-[#6a5a4e] uppercase tracking-wider mb-1">
+									Total Alugueres
+								</p>
+								<p className="text-[#d4c5b8] font-heading">
+									{vehicleDetail._count.rentals}
+								</p>
+							</div>
+							<div>
+								<p className="text-[10px] font-heading font-600 text-[#6a5a4e] uppercase tracking-wider mb-1">
+									Criado em
+								</p>
+								<p className="text-[#d4c5b8] font-heading">
+									{formatDate(vehicleDetail.createdAt)}
+								</p>
+							</div>
+						</div>
+
+						{vehicleDetail.rentals.length > 0 && (
+							<div className="pt-4 border-t border-[#3d3028]">
+								<p className="text-xs font-heading font-600 text-[#6a5a4e] uppercase tracking-wider mb-3">
+									Últimos Alugueres
+								</p>
+								<div className="overflow-x-auto">
+									<table className="w-full text-sm">
+										<thead>
+											<tr className="border-b border-[#3d3028]">
+												<th className="text-left py-2 text-[10px] font-heading font-600 text-[#6a5a4e] uppercase tracking-wider">
+													Evento
+												</th>
+												<th className="text-right py-2 text-[10px] font-heading font-600 text-[#6a5a4e] uppercase tracking-wider">
+													Valor
+												</th>
+												<th className="text-right py-2 text-[10px] font-heading font-600 text-[#6a5a4e] uppercase tracking-wider">
+													Estado
+												</th>
+											</tr>
+										</thead>
+										<tbody>
+											{vehicleDetail.rentals.map((r) => (
+												<tr
+													key={r.id}
+													className="border-b border-[#3d3028] last:border-0"
+												>
+													<td className="py-2 text-[#d4c5b8] font-heading text-xs">
+														{r.event?.title || '—'}
+													</td>
+													<td className="py-2 text-right text-white font-heading font-600">
+														{r.order
+															? formatKwanza(
+																	Number(r.order.totalAmount),
+																)
+															: '—'}
+													</td>
+													<td className="py-2 text-right">
+														<span
+															className={`badge-admin text-[10px] ${r.order?.status === 'PAID' ? 'border-emerald-500/40 text-emerald-400' : r.order?.status === 'PENDING' ? 'border-amber-500/40 text-amber-400' : r.order?.status === 'REFUNDED' ? 'border-blue-500/40 text-blue-400' : 'border-gray-500/40 text-gray-400'}`}
+														>
+															{r.order?.status === 'PAID'
+																? 'Pago'
+																: r.order?.status === 'PENDING'
+																	? 'Pendente'
+																	: r.order?.status === 'REFUNDED'
+																		? 'Reembolsado'
+																		: '—'}
+														</span>
+													</td>
+												</tr>
+											))}
+										</tbody>
+									</table>
+								</div>
+							</div>
+						)}
+					</div>
+				) : null}
+			</Modal>
 
 			{/* Create/Edit Modal */}
 			<Modal

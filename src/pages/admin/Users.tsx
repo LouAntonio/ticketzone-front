@@ -1,13 +1,14 @@
 import { useState } from 'react'
 import {
 	useAdminUsers,
+	useAdminUserDetail,
 	useUpdateUserRole,
 	useBanUser,
 	useUnbanUser,
 } from '../../api/hooks/useAdmin'
 import { Skeleton } from '../../components/ui/Skeleton'
 import { Modal } from '../../components/ui/Modal'
-import { formatDate } from '../../lib/format'
+import { formatDate, formatKwanza } from '../../lib/format'
 
 const roleLabels: Record<string, string> = {
 	USER: 'Comprador',
@@ -42,6 +43,9 @@ export function AdminUsers() {
 	const updateRole = useUpdateUserRole()
 	const banUser = useBanUser()
 	const unbanUser = useUnbanUser()
+
+	const [detailTarget, setDetailTarget] = useState<string | null>(null)
+	const { data: userDetail, isLoading: detailLoading } = useAdminUserDetail(detailTarget)
 
 	const [banTarget, setBanTarget] = useState<{ id: string; name: string } | null>(null)
 	const [banMotive, setBanMotive] = useState('')
@@ -246,6 +250,12 @@ export function AdminUsers() {
 										</td>
 										<td className="px-4 py-3 text-right">
 											<div className="flex items-center justify-end gap-2">
+												<button
+													onClick={() => setDetailTarget(user.id)}
+													className="border-brand/40 text-brand text-[11px] px-2 py-1 border-2 font-heading font-500 hover:bg-brand/10 transition-colors"
+												>
+													Detalhes
+												</button>
 												{user.role !== 'ADMIN' && (
 													<select
 														value={user.role}
@@ -325,6 +335,205 @@ export function AdminUsers() {
 					</div>
 				</div>
 			)}
+
+			{/* Detail Modal */}
+			<Modal
+				open={!!detailTarget}
+				onClose={() => setDetailTarget(null)}
+				title="Detalhes do Utilizador"
+			>
+				{detailLoading ? (
+					<div className="space-y-3">
+						<Skeleton variant="dark" className="h-5 w-40" />
+						<Skeleton variant="dark" className="h-4 w-60" />
+						<Skeleton variant="dark" className="h-4 w-full" />
+						<Skeleton variant="dark" className="h-4 w-3/4" />
+					</div>
+				) : userDetail ? (
+					<div className="space-y-5">
+						<div className="flex items-center gap-4 pb-4 border-b border-[#3d3028]">
+							<img
+								src={userDetail.image || '/user.png'}
+								alt={userDetail.name}
+								className="w-14 h-14 rounded-full object-cover shrink-0"
+							/>
+							<div>
+								<p className="font-heading font-600 text-lg text-[#d4c5b8]">
+									{userDetail.name}
+								</p>
+								<p className="text-sm text-[#8a7a6e]">{userDetail.email}</p>
+							</div>
+						</div>
+
+						<div className="grid grid-cols-2 gap-4 text-sm">
+							<div>
+								<p className="text-[10px] font-heading font-600 text-[#6a5a4e] uppercase tracking-wider mb-1">
+									Telefone
+								</p>
+								<p className="text-[#d4c5b8] font-heading">
+									{userDetail.phoneNumber || '—'}
+								</p>
+							</div>
+							<div>
+								<p className="text-[10px] font-heading font-600 text-[#6a5a4e] uppercase tracking-wider mb-1">
+									Função
+								</p>
+								<span
+									className={`badge-admin text-[11px] ${userDetail.role === 'ADMIN' ? 'border-brand/40 text-brand' : userDetail.role === 'PROMOTER' ? 'border-purple-500/40 text-purple-400' : userDetail.role === 'STAFF' ? 'border-cyan-500/40 text-cyan-400' : 'border-blue-500/40 text-blue-400'}`}
+								>
+									{userDetail.role === 'USER'
+										? 'Comprador'
+										: userDetail.role === 'PROMOTER'
+											? 'Organizador'
+											: userDetail.role === 'STAFF'
+												? 'Staff'
+												: 'Admin'}
+								</span>
+							</div>
+							<div>
+								<p className="text-[10px] font-heading font-600 text-[#6a5a4e] uppercase tracking-wider mb-1">
+									Estado
+								</p>
+								<span
+									className={`text-xs font-heading font-600 flex items-center gap-1.5 ${userDetail.status === 'ACTIVE' ? 'text-emerald-400' : 'text-red-400'}`}
+								>
+									<span
+										className={`inline-block w-1.5 h-1.5 rounded-full ${userDetail.status === 'ACTIVE' ? 'bg-emerald-400' : 'bg-red-400'}`}
+									/>
+									{userDetail.status === 'ACTIVE' ? 'Ativo' : 'Banido'}
+								</span>
+							</div>
+							<div>
+								<p className="text-[10px] font-heading font-600 text-[#6a5a4e] uppercase tracking-wider mb-1">
+									Email Verificado
+								</p>
+								<p className="text-[#d4c5b8] font-heading">
+									{userDetail.emailVerified ? 'Sim' : 'Não'}
+								</p>
+							</div>
+							{userDetail.status === 'BANNED' && (
+								<>
+									<div>
+										<p className="text-[10px] font-heading font-600 text-[#6a5a4e] uppercase tracking-wider mb-1">
+											Motivo de Ban
+										</p>
+										<p className="text-red-400 font-heading">
+											{userDetail.banMotive || '—'}
+										</p>
+									</div>
+									<div>
+										<p className="text-[10px] font-heading font-600 text-[#6a5a4e] uppercase tracking-wider mb-1">
+											Ban Até
+										</p>
+										<p className="text-[#d4c5b8] font-heading">
+											{userDetail.bannedUntil
+												? formatDate(userDetail.bannedUntil)
+												: 'Permanente'}
+										</p>
+									</div>
+								</>
+							)}
+							<div>
+								<p className="text-[10px] font-heading font-600 text-[#6a5a4e] uppercase tracking-wider mb-1">
+									Registo
+								</p>
+								<p className="text-[#d4c5b8] font-heading">
+									{formatDate(userDetail.createdAt)}
+								</p>
+							</div>
+						</div>
+
+						{userDetail.promoter && (
+							<div className="pt-4 border-t border-[#3d3028]">
+								<p className="text-xs font-heading font-600 text-[#6a5a4e] uppercase tracking-wider mb-3">
+									Dados de Organizador
+								</p>
+								<div className="grid grid-cols-2 gap-4 text-sm">
+									<div>
+										<p className="text-[10px] font-heading font-600 text-[#6a5a4e] uppercase tracking-wider mb-1">
+											Empresa
+										</p>
+										<p className="text-[#d4c5b8] font-heading">
+											{userDetail.promoter.companyName}
+										</p>
+									</div>
+									<div>
+										<p className="text-[10px] font-heading font-600 text-[#6a5a4e] uppercase tracking-wider mb-1">
+											NIF
+										</p>
+										<p className="text-[#d4c5b8] font-heading">
+											{userDetail.promoter.nif || '—'}
+										</p>
+									</div>
+									<div>
+										<p className="text-[10px] font-heading font-600 text-[#6a5a4e] uppercase tracking-wider mb-1">
+											IBAN
+										</p>
+										<p className="text-[#d4c5b8] font-heading font-mono text-xs">
+											{userDetail.promoter.iban || '—'}
+										</p>
+									</div>
+									<div>
+										<p className="text-[10px] font-heading font-600 text-[#6a5a4e] uppercase tracking-wider mb-1">
+											Eventos
+										</p>
+										<p className="text-[#d4c5b8] font-heading">
+											{userDetail.promoter._count.events}
+										</p>
+									</div>
+									<div>
+										<p className="text-[10px] font-heading font-600 text-[#6a5a4e] uppercase tracking-wider mb-1">
+											Verificação
+										</p>
+										<span
+											className={`badge-admin text-[11px] ${userDetail.promoter.verificationStatus === 'VERIFIED' ? 'border-emerald-500/40 text-emerald-400' : userDetail.promoter.verificationStatus === 'PENDING' ? 'border-amber-500/40 text-amber-400' : 'border-red-500/40 text-red-400'}`}
+										>
+											{userDetail.promoter.verificationStatus === 'VERIFIED'
+												? 'Verificado'
+												: userDetail.promoter.verificationStatus ===
+													  'PENDING'
+													? 'Pendente'
+													: 'Rejeitado'}
+										</span>
+									</div>
+									<div>
+										<p className="text-[10px] font-heading font-600 text-[#6a5a4e] uppercase tracking-wider mb-1">
+											Saldo
+										</p>
+										<p className="text-emerald-400 font-heading font-600">
+											{formatKwanza(userDetail.promoter.balance)}
+										</p>
+									</div>
+								</div>
+							</div>
+						)}
+
+						<div className="pt-4 border-t border-[#3d3028]">
+							<p className="text-xs font-heading font-600 text-[#6a5a4e] uppercase tracking-wider mb-3">
+								Atividade
+							</p>
+							<div className="grid grid-cols-2 gap-4 text-sm">
+								<div className="card-admin p-3 text-center">
+									<p className="font-display text-xl text-white">
+										{userDetail._count.orders}
+									</p>
+									<p className="text-[10px] text-[#8a7a6e] font-heading mt-1">
+										Encomendas
+									</p>
+								</div>
+								<div className="card-admin p-3 text-center">
+									<p className="font-display text-xl text-white">
+										{userDetail._count.tickets}
+									</p>
+									<p className="text-[10px] text-[#8a7a6e] font-heading mt-1">
+										Bilhetes
+									</p>
+								</div>
+							</div>
+						</div>
+					</div>
+				) : null}
+			</Modal>
 
 			{/* Ban Modal */}
 			<Modal open={!!banTarget} onClose={() => setBanTarget(null)}>

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import {
 	useAdminPromoters,
 	useVerificationRequests,
+	useAdminPromoterDetail,
 	useApprovePromoter,
 	useRejectPromoter,
 	useBanPromoter,
@@ -9,7 +10,7 @@ import {
 } from '../../api/hooks/useAdmin'
 import { Skeleton } from '../../components/ui/Skeleton'
 import { Modal } from '../../components/ui/Modal'
-import { formatKwanza } from '../../lib/format'
+import { formatDate, formatKwanza } from '../../lib/format'
 
 const verifColors: Record<string, string> = {
 	VERIFIED: 'border-emerald-500/40 text-emerald-400',
@@ -42,6 +43,9 @@ export function AdminOrganizers() {
 	const rejectPromoter = useRejectPromoter()
 	const banPromoter = useBanPromoter()
 	const unbanPromoter = useUnbanPromoter()
+
+	const [detailTarget, setDetailTarget] = useState<string | null>(null)
+	const { data: promoterDetail, isLoading: detailLoading } = useAdminPromoterDetail(detailTarget)
 
 	const [rejectTarget, setRejectTarget] = useState<{ id: string; companyName: string } | null>(
 		null,
@@ -244,6 +248,12 @@ export function AdminOrganizers() {
 										</td>
 										<td className="px-4 py-3 text-right">
 											<div className="flex items-center justify-end gap-1.5 flex-wrap">
+												<button
+													onClick={() => setDetailTarget(p.id)}
+													className="border-brand/40 text-brand text-[11px] px-2 py-1 border-2 font-heading font-500 hover:bg-brand/10 transition-colors"
+												>
+													Detalhes
+												</button>
 												{activeTab === 'pending' &&
 													p.verificationStatus === 'PENDING' && (
 														<>
@@ -327,6 +337,311 @@ export function AdminOrganizers() {
 					</div>
 				</div>
 			)}
+
+			{/* Detail Modal */}
+			<Modal
+				open={!!detailTarget}
+				onClose={() => setDetailTarget(null)}
+				title="Detalhes do Organizador"
+			>
+				{detailLoading ? (
+					<div className="space-y-3">
+						<Skeleton variant="dark" className="h-5 w-40" />
+						<Skeleton variant="dark" className="h-4 w-60" />
+						<Skeleton variant="dark" className="h-4 w-full" />
+						<Skeleton variant="dark" className="h-4 w-3/4" />
+					</div>
+				) : promoterDetail ? (
+					<div className="space-y-5">
+						<div className="pb-4 border-b border-[#3d3028]">
+							<div className="flex items-center gap-4">
+								<img
+									src={promoterDetail.user.image || '/user.png'}
+									alt={promoterDetail.user.name}
+									className="w-12 h-12 rounded-full object-cover shrink-0"
+								/>
+								<div className="min-w-0 flex-1">
+									<p className="font-heading font-600 text-lg text-[#d4c5b8]">
+										{promoterDetail.companyName}
+									</p>
+									<p className="text-sm text-[#8a7a6e]">
+										{promoterDetail.user.name} · {promoterDetail.user.email}
+									</p>
+								</div>
+								{(promoterDetail.logo as { url?: string } | null)?.url && (
+									<img
+										src={(promoterDetail.logo as { url: string }).url}
+										alt="Logo"
+										className="w-12 h-12 rounded object-contain border border-[#3d3028] bg-[#1a1410] shrink-0"
+									/>
+								)}
+							</div>
+							{(promoterDetail.banner as { url?: string } | null)?.url && (
+								<img
+									src={(promoterDetail.banner as { url: string }).url}
+									alt="Banner"
+									className="w-full h-20 object-cover rounded mt-3 border border-[#3d3028]"
+								/>
+							)}
+						</div>
+
+						<div className="grid grid-cols-2 gap-4 text-sm">
+							<div>
+								<p className="text-[10px] font-heading font-600 text-[#6a5a4e] uppercase tracking-wider mb-1">
+									NIF
+								</p>
+								<p className="text-[#d4c5b8] font-heading">
+									{promoterDetail.nif || '—'}
+								</p>
+							</div>
+							<div>
+								<p className="text-[10px] font-heading font-600 text-[#6a5a4e] uppercase tracking-wider mb-1">
+									IBAN
+								</p>
+								<p className="text-[#d4c5b8] font-heading font-mono text-xs">
+									{promoterDetail.iban || '—'}
+								</p>
+							</div>
+							<div>
+								<p className="text-[10px] font-heading font-600 text-[#6a5a4e] uppercase tracking-wider mb-1">
+									Tipo
+								</p>
+								<p className="text-[#d4c5b8] font-heading">
+									{promoterDetail.promoterType === 'PESSOAL'
+										? 'Pessoal'
+										: 'Empresarial'}
+								</p>
+							</div>
+							<div>
+								<p className="text-[10px] font-heading font-600 text-[#6a5a4e] uppercase tracking-wider mb-1">
+									Verificação
+								</p>
+								<span
+									className={`badge-admin text-[11px] ${promoterDetail.verificationStatus === 'VERIFIED' ? 'border-emerald-500/40 text-emerald-400' : promoterDetail.verificationStatus === 'PENDING' ? 'border-amber-500/40 text-amber-400' : 'border-red-500/40 text-red-400'}`}
+								>
+									{promoterDetail.verificationStatus === 'VERIFIED'
+										? 'Verificado'
+										: promoterDetail.verificationStatus === 'PENDING'
+											? 'Pendente'
+											: 'Rejeitado'}
+								</span>
+							</div>
+							<div>
+								<p className="text-[10px] font-heading font-600 text-[#6a5a4e] uppercase tracking-wider mb-1">
+									Estado
+								</p>
+								<span
+									className={`text-xs font-heading font-600 flex items-center gap-1.5 ${promoterDetail.status === 'ACTIVE' ? 'text-emerald-400' : 'text-red-400'}`}
+								>
+									<span
+										className={`inline-block w-1.5 h-1.5 rounded-full ${promoterDetail.status === 'ACTIVE' ? 'bg-emerald-400' : 'bg-red-400'}`}
+									/>
+									{promoterDetail.status === 'ACTIVE' ? 'Ativo' : 'Banido'}
+								</span>
+							</div>
+							<div>
+								<p className="text-[10px] font-heading font-600 text-[#6a5a4e] uppercase tracking-wider mb-1">
+									Eventos
+								</p>
+								<p className="text-[#d4c5b8] font-heading">
+									{promoterDetail._count.events}
+								</p>
+							</div>
+							<div>
+								<p className="text-[10px] font-heading font-600 text-[#6a5a4e] uppercase tracking-wider mb-1">
+									Saldo
+								</p>
+								<p className="text-emerald-400 font-heading font-600">
+									{formatKwanza(promoterDetail.balance)}
+								</p>
+							</div>
+							{promoterDetail.status === 'BANNED' && (
+								<>
+									<div>
+										<p className="text-[10px] font-heading font-600 text-[#6a5a4e] uppercase tracking-wider mb-1">
+											Motivo de Ban
+										</p>
+										<p className="text-red-400 font-heading">
+											{promoterDetail.banMotive || '—'}
+										</p>
+									</div>
+									<div>
+										<p className="text-[10px] font-heading font-600 text-[#6a5a4e] uppercase tracking-wider mb-1">
+											Ban Até
+										</p>
+										<p className="text-[#d4c5b8] font-heading">
+											{promoterDetail.bannedUntil
+												? formatDate(promoterDetail.bannedUntil)
+												: 'Permanente'}
+										</p>
+									</div>
+								</>
+							)}
+						</div>
+
+						{promoterDetail.payouts.length > 0 && (
+							<div className="pt-4 border-t border-[#3d3028]">
+								<p className="text-xs font-heading font-600 text-[#6a5a4e] uppercase tracking-wider mb-3">
+									Últimos Pagamentos
+								</p>
+								<div className="overflow-x-auto">
+									<table className="w-full text-sm">
+										<thead>
+											<tr className="border-b border-[#3d3028]">
+												<th className="text-left py-2 text-[10px] font-heading font-600 text-[#6a5a4e] uppercase tracking-wider">
+													Valor
+												</th>
+												<th className="text-left py-2 text-[10px] font-heading font-600 text-[#6a5a4e] uppercase tracking-wider">
+													Estado
+												</th>
+												<th className="text-right py-2 text-[10px] font-heading font-600 text-[#6a5a4e] uppercase tracking-wider">
+													Data
+												</th>
+											</tr>
+										</thead>
+										<tbody>
+											{promoterDetail.payouts.map((p) => (
+												<tr
+													key={p.id}
+													className="border-b border-[#3d3028] last:border-0"
+												>
+													<td className="py-2 text-white font-heading font-600">
+														{formatKwanza(Number(p.amount))}
+													</td>
+													<td className="py-2">
+														<span
+															className={`badge-admin text-[10px] ${p.status === 'PROCESSED' ? 'border-emerald-500/40 text-emerald-400' : 'border-amber-500/40 text-amber-400'}`}
+														>
+															{p.status === 'PROCESSED'
+																? 'Processado'
+																: 'Pendente'}
+														</span>
+													</td>
+													<td className="py-2 text-right text-[#8a7a6e] font-heading">
+														{formatDate(p.createdAt)}
+													</td>
+												</tr>
+											))}
+										</tbody>
+									</table>
+								</div>
+							</div>
+						)}
+
+						{promoterDetail.docs?.[0] && (
+							<div className="pt-4 border-t border-[#3d3028]">
+								<p className="text-xs font-heading font-600 text-[#6a5a4e] uppercase tracking-wider mb-3">
+									Documentos
+								</p>
+								<div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+									{promoterDetail.docs[0].personal.length > 0 && (
+										<div>
+											<p className="text-[10px] font-heading font-600 text-[#6a5a4e] uppercase tracking-wider mb-2">
+												Pessoais
+											</p>
+											<div className="space-y-2">
+												{promoterDetail.docs[0].personal.map((doc, i) => (
+													<a
+														key={doc.idcloudinary}
+														href={doc.url}
+														target="_blank"
+														rel="noopener noreferrer"
+														className="flex items-center gap-2 p-2 rounded border border-[#3d3028] hover:border-brand/40 hover:bg-brand/5 transition-colors group"
+													>
+														<svg
+															width="14"
+															height="14"
+															viewBox="0 0 24 24"
+															fill="none"
+															stroke="currentColor"
+															strokeWidth="2"
+															strokeLinecap="round"
+															strokeLinejoin="round"
+															className="text-brand shrink-0"
+														>
+															<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+															<polyline points="14 2 14 8 20 8" />
+														</svg>
+														<span className="text-xs text-[#8a7a6e] group-hover:text-[#d4c5b8] transition-colors truncate font-heading">
+															Documento {i + 1}
+														</span>
+														<svg
+															width="12"
+															height="12"
+															viewBox="0 0 24 24"
+															fill="none"
+															stroke="currentColor"
+															strokeWidth="2"
+															strokeLinecap="round"
+															strokeLinejoin="round"
+															className="text-[#5a4a3e] ml-auto shrink-0"
+														>
+															<path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+															<polyline points="15 3 21 3 21 9" />
+															<line x1="10" y1="14" x2="21" y2="3" />
+														</svg>
+													</a>
+												))}
+											</div>
+										</div>
+									)}
+									{promoterDetail.docs[0].enterprise.length > 0 && (
+										<div>
+											<p className="text-[10px] font-heading font-600 text-[#6a5a4e] uppercase tracking-wider mb-2">
+												Empresariais
+											</p>
+											<div className="space-y-2">
+												{promoterDetail.docs[0].enterprise.map((doc, i) => (
+													<a
+														key={doc.idcloudinary}
+														href={doc.url}
+														target="_blank"
+														rel="noopener noreferrer"
+														className="flex items-center gap-2 p-2 rounded border border-[#3d3028] hover:border-brand/40 hover:bg-brand/5 transition-colors group"
+													>
+														<svg
+															width="14"
+															height="14"
+															viewBox="0 0 24 24"
+															fill="none"
+															stroke="currentColor"
+															strokeWidth="2"
+															strokeLinecap="round"
+															strokeLinejoin="round"
+															className="text-brand shrink-0"
+														>
+															<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+															<polyline points="14 2 14 8 20 8" />
+														</svg>
+														<span className="text-xs text-[#8a7a6e] group-hover:text-[#d4c5b8] transition-colors truncate font-heading">
+															Documento {i + 1}
+														</span>
+														<svg
+															width="12"
+															height="12"
+															viewBox="0 0 24 24"
+															fill="none"
+															stroke="currentColor"
+															strokeWidth="2"
+															strokeLinecap="round"
+															strokeLinejoin="round"
+															className="text-[#5a4a3e] ml-auto shrink-0"
+														>
+															<path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+															<polyline points="15 3 21 3 21 9" />
+															<line x1="10" y1="14" x2="21" y2="3" />
+														</svg>
+													</a>
+												))}
+											</div>
+										</div>
+									)}
+								</div>
+							</div>
+						)}
+					</div>
+				) : null}
+			</Modal>
 
 			{/* Reject Modal */}
 			<Modal open={!!rejectTarget} onClose={() => setRejectTarget(null)}>

@@ -60,6 +60,14 @@ export function useBanUser() {
 	})
 }
 
+export function useAdminUserDetail(id: string | null) {
+	return useQuery({
+		queryKey: ['admin', 'users', 'detail', id],
+		queryFn: () => adminApi.getUser(id!),
+		enabled: !!id,
+	})
+}
+
 export function useUnbanUser() {
 	const qc = useQueryClient()
 	return useMutation({
@@ -132,6 +140,14 @@ export function useCancelEvent() {
 			qc.invalidateQueries({ queryKey: ['admin', 'stats'] })
 		},
 		onError: () => toast.error('Erro ao cancelar evento'),
+	})
+}
+
+export function useAdminEventDetail(id: string | null) {
+	return useQuery({
+		queryKey: ['admin', 'events', 'detail', id],
+		queryFn: () => adminApi.getEvent(id!),
+		enabled: !!id,
 	})
 }
 
@@ -217,6 +233,14 @@ export function useUnbanPromoter() {
 	})
 }
 
+export function useAdminPromoterDetail(id: string | null) {
+	return useQuery({
+		queryKey: ['admin', 'promoters', 'detail', id],
+		queryFn: () => adminApi.getPromoter(id!),
+		enabled: !!id,
+	})
+}
+
 // ==================== Orders ====================
 
 export function useAdminOrders(params?: {
@@ -241,6 +265,14 @@ export function useRefundOrder() {
 			qc.invalidateQueries({ queryKey: ['admin', 'stats'] })
 		},
 		onError: () => toast.error('Erro ao reembolsar pedido'),
+	})
+}
+
+export function useAdminOrderDetail(id: string | null) {
+	return useQuery({
+		queryKey: ['admin', 'orders', 'detail', id],
+		queryFn: () => adminApi.getOrder(id!),
+		enabled: !!id,
 	})
 }
 
@@ -320,6 +352,14 @@ export function useUpdateVehicleStatus() {
 			qc.invalidateQueries({ queryKey: ['admin', 'fleet'] })
 		},
 		onError: () => toast.error('Erro ao atualizar estado'),
+	})
+}
+
+export function useAdminVehicleDetail(id: string | null) {
+	return useQuery({
+		queryKey: ['admin', 'fleet', 'detail', id],
+		queryFn: () => adminApi.getVehicle(id!),
+		enabled: !!id,
 	})
 }
 
