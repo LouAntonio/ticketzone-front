@@ -1,38 +1,72 @@
-import { useState } from 'react'
-import { toast } from 'react-hot-toast'
+import { useState, useEffect } from 'react'
 import { useAuthStore } from '../../stores/useAuthStore'
+import {
+	useOrganizerSettings,
+	useUpdateOrganizerSettings,
+} from '../../api/hooks/useOrganizer'
 import { Card } from '../../components/ui/Card'
 import { Input } from '../../components/ui/Input'
 import { Button } from '../../components/ui/Button'
-import { api } from '../../api/client'
+import { Skeleton, SkeletonText } from '../../components/ui/Skeleton'
+import { formatKwanza } from '../../lib/format'
 
 export function OrgSettings() {
-	const { organizerProfile, user } = useAuthStore()
+	const user = useAuthStore((s) => s.user)
+	const { data: settings, isLoading } = useOrganizerSettings()
+	const updateSettings = useUpdateOrganizerSettings()
 
-	const [form, setForm] = useState({
-		companyName: organizerProfile?.companyName ?? '',
-		bankName: organizerProfile?.bankName ?? '',
-		bankAccount: organizerProfile?.bankAccount ?? '',
-		bankHolder: organizerProfile?.bankHolder ?? user?.name ?? '',
-	})
-	const [saving, setSaving] = useState(false)
+	const [editing, setEditing] = useState(false)
+	const [companyName, setCompanyName] = useState('')
+	const [bankName, setBankName] = useState('')
+	const [bankAccount, setBankAccount] = useState('')
+	const [bankHolder, setBankHolder] = useState('')
 
-	const updateField = (key: string, value: string) => {
-		setForm((prev) => ({ ...prev, [key]: value }))
+	useEffect(() => {
+		if (settings) {
+			setCompanyName(settings.companyName ?? '')
+			setBankName(settings.bankName ?? '')
+			setBankAccount(settings.bankAccount ?? '')
+			setBankHolder(settings.bankHolder ?? '')
+		}
+	}, [settings])
+
+	const handleSave = async () => {
+		await updateSettings.mutateAsync({
+			companyName: companyName || undefined,
+			bankName: bankName || undefined,
+			bankAccount: bankAccount || undefined,
+			bankHolder: bankHolder || undefined,
+		})
+		setEditing(false)
 	}
 
-	const handleSubmit = async (e: React.FormEvent) => {
-		e.preventDefault()
-		setSaving(true)
-		try {
-			await api.put('/api/organizer/settings', form)
-			toast.success('Definições guardadas com sucesso')
-		} catch (err) {
-			toast.error('Erro ao guardar definições')
-			console.error(err)
-		} finally {
-			setSaving(false)
-		}
+	if (isLoading) {
+		return (
+			<div className="max-w-2xl space-y-6">
+				<div className="space-y-2">
+					<Skeleton className="h-8 w-48" />
+					<Skeleton className="h-4 w-64" />
+				</div>
+				<Card>
+					<div className="p-5 space-y-4">
+						<Skeleton className="h-5 w-32" />
+						<div className="flex items-center gap-3">
+							<Skeleton className="w-10 h-10 rounded-full" />
+							<div className="space-y-1">
+								<Skeleton className="h-4 w-32" />
+								<Skeleton className="h-3 w-40" />
+							</div>
+						</div>
+					</div>
+				</Card>
+				<Card>
+					<div className="p-5 space-y-4">
+						<Skeleton className="h-5 w-40" />
+						<SkeletonText lines={3} />
+					</div>
+				</Card>
+			</div>
+		)
 	}
 
 	return (
@@ -43,8 +77,8 @@ export function OrgSettings() {
 			</div>
 
 			<Card>
-				<h3 className="font-heading font-600 text-base mb-4">Perfil</h3>
-				<div className="flex flex-col gap-4">
+				<div className="p-5">
+					<h3 className="font-heading font-600 text-base mb-4">Perfil</h3>
 					<div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
 						<img
 							src={user?.image || '/user.png'}
@@ -59,65 +93,108 @@ export function OrgSettings() {
 				</div>
 			</Card>
 
-			<form onSubmit={handleSubmit} className="space-y-6">
-				<Card>
-					<h3 className="font-heading font-600 text-base mb-4">Informação da Empresa</h3>
-					<div className="flex flex-col gap-4">
-						<Input
-							label="Nome da Empresa"
-							placeholder="A tua empresa"
-							value={form.companyName}
-							onChange={(e) => updateField('companyName', e.target.value)}
-						/>
-					</div>
-				</Card>
-
-				<Card>
-					<h3 className="font-heading font-600 text-base mb-4">Dados Bancários</h3>
-					<p className="text-xs text-text-secondary mb-4">
-						Os pagamentos das vendas serão transferidos para esta conta.
-					</p>
-					<div className="flex flex-col gap-4">
-						<Input
-							label="Nome do Banco"
-							placeholder="Ex: Banco Angolano de Investimentos"
-							value={form.bankName}
-							onChange={(e) => updateField('bankName', e.target.value)}
-							required
-						/>
-						<Input
-							label="Número da Conta"
-							placeholder="Ex: 123456789"
-							value={form.bankAccount}
-							onChange={(e) => updateField('bankAccount', e.target.value)}
-							required
-						/>
-						<Input
-							label="Titular da Conta"
-							placeholder="Nome do titular"
-							value={form.bankHolder}
-							onChange={(e) => updateField('bankHolder', e.target.value)}
-							required
-						/>
-					</div>
-				</Card>
-
-				<Button type="submit" loading={saving}>
-					Guardar Definições
-				</Button>
-			</form>
-
-			{/* Current balance */}
 			<Card>
-				<h3 className="font-heading font-600 text-base mb-2">Saldo Atual</h3>
-				<p className="font-heading font-700 text-3xl text-emerald-600">
-					{new Intl.NumberFormat('pt-AO', {
-						style: 'currency',
-						currency: 'AOA',
-						minimumFractionDigits: 0,
-					}).format(organizerProfile?.balance ?? 0)}
-				</p>
-				<p className="text-xs text-text-secondary mt-1">Valor disponível para saque</p>
+				<div className="p-5">
+					<div className="flex items-center justify-between mb-4">
+						<h3 className="font-heading font-600 text-base">Informação da Empresa</h3>
+						{!editing && (
+							<button
+								onClick={() => setEditing(true)}
+								className="text-sm font-heading font-600 text-brand hover:text-brand-dark transition-colors"
+							>
+								Editar
+							</button>
+						)}
+					</div>
+
+					{editing ? (
+						<div className="space-y-4">
+							<Input
+								label="Nome da Empresa"
+								placeholder="A tua empresa"
+								value={companyName}
+								onChange={(e) => setCompanyName(e.target.value)}
+							/>
+							<Input
+								label="Nome do Banco"
+								placeholder="Ex: Banco Angolano de Investimentos"
+								value={bankName}
+								onChange={(e) => setBankName(e.target.value)}
+							/>
+							<Input
+								label="Número da Conta"
+								placeholder="Ex: 123456789"
+								value={bankAccount}
+								onChange={(e) => setBankAccount(e.target.value)}
+							/>
+							<Input
+								label="Titular da Conta"
+								placeholder="Nome do titular"
+								value={bankHolder}
+								onChange={(e) => setBankHolder(e.target.value)}
+							/>
+							<div className="flex gap-3">
+								<Button
+									onClick={handleSave}
+									loading={updateSettings.isPending}
+								>
+									Guardar
+								</Button>
+								<Button
+									variant="ghost"
+									onClick={() => {
+										setEditing(false)
+										if (settings) {
+											setCompanyName(settings.companyName ?? '')
+											setBankName(settings.bankName ?? '')
+											setBankAccount(settings.bankAccount ?? '')
+											setBankHolder(settings.bankHolder ?? '')
+										}
+									}}
+								>
+									Cancelar
+								</Button>
+							</div>
+						</div>
+					) : (
+						<div className="space-y-3">
+							<div>
+								<span className="text-xs text-text-secondary">Empresa</span>
+								<p className="text-sm font-heading font-600">
+									{settings?.companyName || '—'}
+								</p>
+							</div>
+							<div>
+								<span className="text-xs text-text-secondary">Banco</span>
+								<p className="text-sm font-heading font-600">
+									{settings?.bankName || '—'}
+								</p>
+							</div>
+							<div>
+								<span className="text-xs text-text-secondary">Nº de Conta</span>
+								<p className="text-sm font-heading font-600">
+									{settings?.bankAccount || '—'}
+								</p>
+							</div>
+							<div>
+								<span className="text-xs text-text-secondary">Titular</span>
+								<p className="text-sm font-heading font-600">
+									{settings?.bankHolder || '—'}
+								</p>
+							</div>
+						</div>
+					)}
+				</div>
+			</Card>
+
+			<Card>
+				<div className="p-5">
+					<h3 className="font-heading font-600 text-base mb-2">Saldo Atual</h3>
+					<p className="font-heading font-700 text-3xl text-emerald-600">
+						{formatKwanza(settings?.balance ?? 0)}
+					</p>
+					<p className="text-xs text-text-secondary mt-1">Valor disponível para saque</p>
+				</div>
 			</Card>
 		</div>
 	)

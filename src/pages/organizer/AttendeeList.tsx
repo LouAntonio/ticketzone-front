@@ -1,9 +1,9 @@
-import { useOrganizerAttendees } from '../../api/hooks/useSales'
-import type { SalesOrder } from '../../api/hooks/useSales'
+import { useOrganizerAttendees } from '../../api/hooks/useOrganizer'
 import { Card } from '../../components/ui/Card'
 import { Badge } from '../../components/ui/Badge'
 import { Skeleton, SkeletonTable } from '../../components/ui/Skeleton'
 import { formatDate, formatKwanza } from '../../lib/format'
+import type { SalesOrder } from '../../types/event'
 
 export function AttendeeList() {
 	const { data, isLoading } = useOrganizerAttendees()
@@ -86,14 +86,14 @@ export function AttendeeList() {
 										<td className="px-4 py-3">
 											<Badge
 												variant={
-													order.status === 'confirmed'
+													order.status === 'confirmed' || order.status === 'paid'
 														? 'emerald'
 														: order.status === 'pending'
 															? 'amber'
 															: 'red'
 												}
 											>
-												{order.status === 'confirmed'
+												{order.status === 'confirmed' || order.status === 'paid'
 													? 'Confirmado'
 													: order.status === 'pending'
 														? 'Pendente'
@@ -101,7 +101,7 @@ export function AttendeeList() {
 											</Badge>
 										</td>
 										<td className="px-4 py-3 text-text-secondary text-xs">
-											{formatDate(order.createdAt ?? '')}
+											{formatDate(order.createdAt)}
 										</td>
 									</tr>
 								))}

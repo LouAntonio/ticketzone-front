@@ -1,153 +1,174 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { toast } from 'react-hot-toast'
-import { useCreateEvent, useUpdateEvent } from '../../api/hooks/useEvents'
-import { useEvent } from '../../api/hooks/useEvents'
+import { useOrganizerEvent, useCreateOrganizerEvent, useUpdateOrganizerEvent } from '../../api/hooks/useOrganizer'
+import { useCloudinaryUpload } from '../../api/hooks/useCloudinaryUpload'
+import { api } from '../../api/client'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
 import { Card } from '../../components/ui/Card'
 import { Skeleton } from '../../components/ui/Skeleton'
-import { EVENT_CATEGORIES, PROVINCES, PERIODS } from '../../lib/constants'
-import type { EventFormData, TicketType } from '../../types/event'
+import { PROVINCES } from '../../lib/constants'
+import type { EventFormData } from '../../types/event'
 
-const emptyTicket = {
+interface Category {
+	id: string
+	name: string
+	slug: string
+}
+
+const emptyBatch = {
 	name: '',
 	price: 0,
 	capacity: 0,
-	peoplePerTicket: 1,
-	quantity: 0,
-	description: '',
-}
-
-interface InitEventData {
-	title?: string
-	description?: string
-	shortDescription?: string
-	coverImage?: string
-	category?: string
-	province?: string
-	date?: string
-	time?: string
-	period?: string
-	venue?: string
-	address?: string
-	ticketTypes?: Array<{
-		name: string
-		price: number
-		capacity: number
-		peoplePerTicket: number
-		quantity: number
-		description?: string
-	}>
-}
-
-function initForm(ev: { event?: InitEventData } | undefined): EventFormData {
-	if (!ev?.event) {
-		return {
-			title: '',
-			description: '',
-			shortDescription: '',
-			coverImage: '',
-			category: 'conference',
-			province: 'Luanda',
-			date: '',
-			time: '',
-			period: 'night',
-			venue: '',
-			address: '',
-			ticketTypes: [{ ...emptyTicket }],
-		}
-	}
-	const e = ev.event
-	return {
-		title: e.title ?? '',
-		description: e.description ?? '',
-		shortDescription: e.shortDescription ?? '',
-		coverImage: e.coverImage ?? '',
-		category: (e.category as EventFormData['category']) ?? 'conference',
-		province: e.province ?? 'Luanda',
-		date: e.date ? e.date.split('T')[0] : '',
-		time: e.time ?? '',
-		period: (e.period as EventFormData['period']) ?? 'night',
-		venue: e.venue ?? '',
-		address: e.address ?? '',
-		ticketTypes: e.ticketTypes?.map((t) => ({
-			name: t.name,
-			price: t.price,
-			capacity: t.capacity,
-			peoplePerTicket: t.peoplePerTicket,
-			quantity: t.quantity,
-			description: t.description ?? '',
-		})) ?? [{ ...emptyTicket }],
-	}
+	isGroupTicket: false,
+	groupSize: 1,
 }
 
 export function EventForm() {
 	const { id } = useParams<{ id: string }>()
 	const navigate = useNavigate()
 	const isEdit = !!id
-	const { data, isLoading: loadingEvent } = useEvent(id ?? '')
-	const createEvent = useCreateEvent()
-	const updateEvent = useUpdateEvent(id ?? '')
 
-	const [form, setForm] = useState<EventFormData>(() => initForm(isEdit ? data : undefined))
-	// Sync form with loaded data when it arrives
-	if (isEdit && data?.event && form.title === '') {
-		setForm(initForm(data))
-	}
+	const { data: eventData, isLoading: loadingEvent } = useOrganizerEvent(id ?? '')
+	const createEvent = useCreateOrganizerEvent()
+	const updateEvent = useUpdateOrganizerEvent(id ?? '')
 
-	type FormValue =
-		| string
-		| string[]
-		| {
-				name: string
-				price: number
-				capacity: number
-				peoplePerTicket: number
-				quantity: number
-				description?: string
-		  }[]
-	const updateField = (key: keyof EventFormData, value: FormValue) => {
+	const cloudinary = useCloudinaryUpload()
+	const bannerInputRef = useRef<HTMLInputElement>(null)
+
+	const [categories, setCategories] = useState<Category[]>([])
+	const [form, setForm] = useState<EventFormData>({
+		title: '',
+		description: '',
+		province: 'Luanda',
+		location: '',
+		bannerUrl: '',
+		cloudinaryId: '',
+		categoryId: '',
+		startDate: '',
+		endDate: '',
+		batches: [{ ...emptyBatch }],
+	})
+
+	const [bannerPreview, setBannerPreview] = useState<string | null>(null)
+
+	useEffect(() => {
+		api.get('/categories').then((r) => {
+			const data = r.data as { categories: Category[] }
+			setCategories(data.categories ?? [])
+		}).catch(() => {})
+	}, [])
+
+	useEffect(() => {
+		if (isEdit && eventData?.event && !form.title) {
+			const ev = eventData.event
+			setForm({
+				title: ev.title,
+				description: ev.description,
+				province: ev.province,
+				location: ev.location,
+				bannerUrl: ev.bannerUrl ?? '',
+				cloudinaryId: ev.cloudinaryId ?? '',
+				categoryId: ev.categoryId,
+				startDate: ev.startDate ? ev.startDate.slice(0, 16) : '',
+				endDate: ev.endDate ? ev.endDate.slice(0, 16) : '',
+				batches: ev.batches?.length
+					? ev.batches.map((b) => ({
+							name: b.name,
+							price: b.price,
+							capacity: b.capacity,
+							isGroupTicket: b.isGroupTicket,
+							groupSize: b.groupSize,
+						}))
+					: [{ ...emptyBatch }],
+			})
+			if (ev.bannerUrl) setBannerPreview(ev.bannerUrl)
+		}
+	}, [isEdit, eventData, form.title])
+
+	const updateField = (key: keyof EventFormData, value: string | number | boolean) => {
 		setForm((prev) => ({ ...prev, [key]: value }))
 	}
 
-	const updateTicket = (index: number, key: keyof TicketType, value: string | number) => {
+	const updateBatch = (index: number, key: string, value: string | number | boolean) => {
 		setForm((prev) => {
-			const tickets = [...prev.ticketTypes]
-			tickets[index] = { ...tickets[index], [key]: value }
-			return { ...prev, ticketTypes: tickets }
+			const batches = [...prev.batches]
+			batches[index] = { ...batches[index], [key]: value }
+			return { ...prev, batches }
 		})
 	}
 
-	const addTicket = () => {
+	const addBatch = () => {
 		setForm((prev) => ({
 			...prev,
-			ticketTypes: [...prev.ticketTypes, { ...emptyTicket }],
+			batches: [...prev.batches, { ...emptyBatch }],
 		}))
 	}
 
-	const removeTicket = (index: number) => {
+	const removeBatch = (index: number) => {
 		setForm((prev) => ({
 			...prev,
-			ticketTypes: prev.ticketTypes.filter((_, i) => i !== index),
+			batches: prev.batches.filter((_, i) => i !== index),
 		}))
+	}
+
+	const handleBannerUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+		const file = e.target.files?.[0]
+		if (!file) return
+
+		if (!file.type.startsWith('image/')) {
+			toast.error('Seleciona uma imagem válida')
+			return
+		}
+
+		try {
+			const result = await cloudinary.upload(file, 'eventos/banners')
+			setForm((prev) => ({
+				...prev,
+				bannerUrl: result.url,
+				cloudinaryId: result.idcloudinary,
+			}))
+			setBannerPreview(result.url)
+		} catch {
+			toast.error('Erro ao fazer upload do banner')
+		}
 	}
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault()
+
+		if (!form.title.trim()) {
+			toast.error('O título do evento é obrigatório')
+			return
+		}
+
+		if (!form.categoryId) {
+			toast.error('Seleciona uma categoria')
+			return
+		}
+
+		if (!form.startDate || !form.endDate) {
+			toast.error('Define a data de início e fim do evento')
+			return
+		}
+
+		const payload = {
+			...form,
+			startDate: new Date(form.startDate).toISOString(),
+			endDate: new Date(form.endDate).toISOString(),
+			batches: form.batches.filter((b) => b.name.trim()),
+		}
+
 		try {
 			if (isEdit) {
-				await updateEvent.mutateAsync(form as unknown as Record<string, unknown>)
-				toast.success('Evento atualizado com sucesso')
+				await updateEvent.mutateAsync(payload)
 			} else {
-				await createEvent.mutateAsync(form)
-				toast.success('Evento criado com sucesso')
+				await createEvent.mutateAsync(payload)
 			}
 			navigate('/organizer/events')
-		} catch (err) {
-			const msg = isEdit ? 'Erro ao atualizar evento' : 'Erro ao criar evento'
-			toast.error(msg)
-			console.error(err)
+		} catch {
+			// error handled by hook
 		}
 	}
 
@@ -159,23 +180,13 @@ export function EventForm() {
 					<Skeleton className="h-5 w-40" />
 					<Skeleton className="h-10 w-full" />
 					<Skeleton className="h-24 w-full" />
-					<Skeleton className="h-10 w-full" />
 				</div>
 				<div className="rounded-xl border border-border p-6 space-y-4">
 					<Skeleton className="h-5 w-32" />
 					<div className="grid sm:grid-cols-2 gap-4">
 						<Skeleton className="h-10 w-full" />
 						<Skeleton className="h-10 w-full" />
-						<Skeleton className="h-10 w-full" />
-						<Skeleton className="h-10 w-full" />
 					</div>
-				</div>
-				<div className="rounded-xl border border-border p-6 space-y-4">
-					<div className="flex items-center justify-between">
-						<Skeleton className="h-5 w-40" />
-						<Skeleton className="h-9 w-28 rounded-lg" />
-					</div>
-					<Skeleton className="h-32 w-full" />
 				</div>
 			</div>
 		)
@@ -190,7 +201,6 @@ export function EventForm() {
 			</h1>
 
 			<form onSubmit={handleSubmit} className="space-y-6">
-				{/* Basic info */}
 				<Card>
 					<h3 className="font-heading font-600 text-base mb-4">Informação Básica</h3>
 					<div className="flex flex-col gap-4">
@@ -203,72 +213,97 @@ export function EventForm() {
 						/>
 						<div>
 							<label className="text-sm font-heading font-600 text-text-secondary block mb-1.5">
-								Descrição Curta
-							</label>
-							<input
-								className="input-field"
-								placeholder="Breve descrição para o card"
-								value={form.shortDescription}
-								onChange={(e) => updateField('shortDescription', e.target.value)}
-							/>
-						</div>
-						<div>
-							<label className="text-sm font-heading font-600 text-text-secondary block mb-1.5">
-								Descrição Completa
+								Descrição
 							</label>
 							<textarea
-								className="input-field min-h-[100px] resize-y"
+								className="input-field min-h-[120px] resize-y"
 								placeholder="Descrição detalhada do evento"
 								value={form.description}
 								onChange={(e) => updateField('description', e.target.value)}
+								required
 							/>
 						</div>
-						<Input
-							label="URL da Imagem de Capa"
-							placeholder="https://..."
-							value={form.coverImage}
-							onChange={(e) => updateField('coverImage', e.target.value)}
-						/>
 					</div>
 				</Card>
 
-				{/* Date & Location */}
+				<Card>
+					<h3 className="font-heading font-600 text-base mb-4">Banner do Evento</h3>
+					<input
+						ref={bannerInputRef}
+						type="file"
+						accept=".png,.jpg,.jpeg,.webp"
+						className="hidden"
+						onChange={handleBannerUpload}
+					/>
+					{bannerPreview ? (
+						<div className="relative mb-3">
+							<img
+								src={bannerPreview}
+								alt="Banner preview"
+								className="w-full h-40 object-cover rounded-xl border border-border"
+							/>
+							<button
+								type="button"
+								onClick={() => {
+									setBannerPreview(null)
+									setForm((prev) => ({ ...prev, bannerUrl: '', cloudinaryId: '' }))
+								}}
+								disabled={cloudinary.uploading}
+								className="absolute top-2 right-2 w-7 h-7 rounded-full bg-red-500 text-white flex items-center justify-center hover:bg-red-600 transition-colors"
+							>
+								<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+									<line x1="18" y1="6" x2="6" y2="18" />
+									<line x1="6" y1="6" x2="18" y2="18" />
+								</svg>
+							</button>
+							{cloudinary.uploading && (
+								<div className="absolute inset-0 bg-black/40 rounded-xl flex items-center justify-center">
+									<div className="w-8 h-8 border-3 border-white border-t-transparent rounded-full animate-spin" />
+								</div>
+							)}
+						</div>
+					) : (
+						<button
+							type="button"
+							onClick={() => bannerInputRef.current?.click()}
+							disabled={cloudinary.uploading}
+							className="w-full h-32 rounded-xl border-2 border-dashed border-border flex flex-col items-center justify-center gap-2 text-text-secondary hover:border-brand hover:text-brand transition-all"
+						>
+							<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+								<path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" />
+							</svg>
+							<span className="text-sm">{cloudinary.uploading ? 'A enviar...' : 'Carregar Banner'}</span>
+						</button>
+					)}
+				</Card>
+
 				<Card>
 					<h3 className="font-heading font-600 text-base mb-4">Data e Local</h3>
 					<div className="grid sm:grid-cols-2 gap-4">
 						<Input
-							label="Data"
-							type="date"
-							value={form.date}
-							onChange={(e) => updateField('date', e.target.value)}
+							label="Início"
+							type="datetime-local"
+							value={form.startDate}
+							onChange={(e) => updateField('startDate', e.target.value)}
 							required
 						/>
 						<Input
-							label="Hora"
-							type="time"
-							value={form.time}
-							onChange={(e) => updateField('time', e.target.value)}
+							label="Fim"
+							type="datetime-local"
+							value={form.endDate}
+							onChange={(e) => updateField('endDate', e.target.value)}
 							required
 						/>
 						<select
-							value={form.period}
-							onChange={(e) => updateField('period', e.target.value)}
+							value={form.categoryId}
+							onChange={(e) => updateField('categoryId', e.target.value)}
 							className="input-field"
+							required
 						>
-							{PERIODS.map((p) => (
-								<option key={p.value} value={p.value}>
-									{p.label}
-								</option>
-							))}
-						</select>
-						<select
-							value={form.category}
-							onChange={(e) => updateField('category', e.target.value)}
-							className="input-field"
-						>
-							{EVENT_CATEGORIES.map((c) => (
-								<option key={c.value} value={c.value}>
-									{c.label}
+							<option value="">Selecionar Categoria</option>
+							{categories.map((c) => (
+								<option key={c.id} value={c.id}>
+									{c.name}
 								</option>
 							))}
 						</select>
@@ -284,39 +319,21 @@ export function EventForm() {
 							))}
 						</select>
 						<Input
-							label="Local/Venue"
-							placeholder="Ex: Estádio 11 de Novembro"
-							value={form.venue}
-							onChange={(e) => updateField('venue', e.target.value)}
-							required
-						/>
-						<Input
-							label="Endereço"
-							placeholder="Ex: Via Expressa, Luanda"
-							value={form.address}
-							onChange={(e) => updateField('address', e.target.value)}
+							label="Local"
+							placeholder="Ex: Estádio 11 de Novembro, Luanda"
+							value={form.location}
+							onChange={(e) => updateField('location', e.target.value)}
 							className="sm:col-span-2"
+							required
 						/>
 					</div>
 				</Card>
 
-				{/* Ticket Types */}
 				<Card>
 					<div className="flex items-center justify-between mb-4">
-						<h3 className="font-heading font-600 text-base">
-							Tipos de Ingresso (Lotes)
-						</h3>
-						<Button type="button" variant="outline" size="sm" onClick={addTicket}>
-							<svg
-								width="14"
-								height="14"
-								viewBox="0 0 24 24"
-								fill="none"
-								stroke="currentColor"
-								strokeWidth="2"
-								strokeLinecap="round"
-								strokeLinejoin="round"
-							>
+						<h3 className="font-heading font-600 text-base">Lotes de Bilhetes</h3>
+						<Button type="button" variant="outline" size="sm" onClick={addBatch}>
+							<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
 								<path d="M12 5v14M5 12h14" />
 							</svg>
 							Adicionar
@@ -324,23 +341,15 @@ export function EventForm() {
 					</div>
 
 					<div className="space-y-4">
-						{form.ticketTypes.map((ticket, i) => (
+						{form.batches.map((batch, i) => (
 							<div key={i} className="p-4 border border-border rounded-xl relative">
-								{form.ticketTypes.length > 1 && (
+								{form.batches.length > 1 && (
 									<button
 										type="button"
-										onClick={() => removeTicket(i)}
+										onClick={() => removeBatch(i)}
 										className="absolute top-3 right-3 text-red-500 hover:text-red-700"
 									>
-										<svg
-											width="16"
-											height="16"
-											viewBox="0 0 24 24"
-											fill="none"
-											stroke="currentColor"
-											strokeWidth="2"
-											strokeLinecap="round"
-										>
+										<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
 											<path d="M18 6L6 18M6 6l12 12" />
 										</svg>
 									</button>
@@ -349,81 +358,57 @@ export function EventForm() {
 									<Input
 										label="Nome"
 										placeholder="Ex: VIP"
-										value={ticket.name}
-										onChange={(e) => updateTicket(i, 'name', e.target.value)}
+										value={batch.name}
+										onChange={(e) => updateBatch(i, 'name', e.target.value)}
 										required
 									/>
 									<Input
 										label="Preço (Kz)"
 										type="number"
 										min="0"
-										value={ticket.price || ''}
-										onChange={(e) =>
-											updateTicket(i, 'price', Number(e.target.value))
-										}
+										value={batch.price || ''}
+										onChange={(e) => updateBatch(i, 'price', Number(e.target.value))}
 										required
 									/>
 									<Input
-										label="Pessoas por Bilhete"
+										label="Capacidade"
 										type="number"
 										min="1"
-										value={ticket.peoplePerTicket}
-										onChange={(e) =>
-											updateTicket(
-												i,
-												'peoplePerTicket',
-												Number(e.target.value),
-											)
-										}
-									/>
-									<Input
-										label="Quantidade Total"
-										type="number"
-										min="0"
-										value={ticket.quantity || ''}
-										onChange={(e) =>
-											updateTicket(i, 'quantity', Number(e.target.value))
-										}
+										value={batch.capacity || ''}
+										onChange={(e) => updateBatch(i, 'capacity', Number(e.target.value))}
 										required
 									/>
-									<Input
-										label="Lotação Máxima"
-										type="number"
-										min="0"
-										value={ticket.capacity || ''}
-										onChange={(e) =>
-											updateTicket(i, 'capacity', Number(e.target.value))
-										}
-									/>
-									<div>
-										<label className="text-sm font-heading font-600 text-text-secondary block mb-1.5">
-											Descrição
-										</label>
+									<label className="flex items-center gap-2 text-sm">
 										<input
-											className="input-field"
-											placeholder="Opcional"
-											value={ticket.description ?? ''}
-											onChange={(e) =>
-												updateTicket(i, 'description', e.target.value)
-											}
+											type="checkbox"
+											checked={batch.isGroupTicket}
+											onChange={(e) => updateBatch(i, 'isGroupTicket', e.target.checked)}
+											className="rounded border-border"
 										/>
-									</div>
+										<span className="font-heading font-600 text-text-secondary">
+											Bilhete de Grupo
+										</span>
+									</label>
+									{batch.isGroupTicket && (
+										<Input
+											label="Pessoas por Grupo"
+											type="number"
+											min="2"
+											value={batch.groupSize}
+											onChange={(e) => updateBatch(i, 'groupSize', Number(e.target.value))}
+										/>
+									)}
 								</div>
 							</div>
 						))}
 					</div>
 				</Card>
 
-				{/* Submit */}
 				<div className="flex items-center gap-3">
-					<Button type="submit" loading={isPending}>
+					<Button type="submit" loading={isPending || cloudinary.uploading}>
 						{isEdit ? 'Guardar Alterações' : 'Criar Evento'}
 					</Button>
-					<Button
-						type="button"
-						variant="ghost"
-						onClick={() => navigate('/organizer/events')}
-					>
+					<Button type="button" variant="ghost" onClick={() => navigate('/organizer/events')}>
 						Cancelar
 					</Button>
 				</div>

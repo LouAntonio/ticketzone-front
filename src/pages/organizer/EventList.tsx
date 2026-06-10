@@ -1,13 +1,22 @@
 import { Link } from 'react-router-dom'
-import { useMyEvents } from '../../api/hooks/useEvents'
+import { useOrganizerEvents } from '../../api/hooks/useOrganizer'
 import { Card } from '../../components/ui/Card'
 import { Badge } from '../../components/ui/Badge'
 import { Button } from '../../components/ui/Button'
 import { Skeleton } from '../../components/ui/Skeleton'
-import { formatDate, formatKwanza, getCategoryLabel } from '../../lib/format'
+import { formatKwanza, formatDate } from '../../lib/format'
+
+const statusConfig: Record<
+	string,
+	{ label: string; variant: 'emerald' | 'gray' | 'red' | 'amber' }
+> = {
+	PUBLISHED: { label: 'Publicado', variant: 'emerald' },
+	HIDDEN: { label: 'Por Aprovar', variant: 'amber' },
+	CANCELLED: { label: 'Cancelado', variant: 'red' },
+}
 
 export function EventList() {
-	const { data, isLoading } = useMyEvents()
+	const { data, isLoading } = useOrganizerEvents()
 
 	const events = data?.events ?? []
 
@@ -72,80 +81,78 @@ export function EventList() {
 				</Card>
 			) : (
 				<div className="space-y-4">
-					{events.map((event) => (
-						<Card key={event.id}>
-							<div className="flex gap-4">
-								<img
-									src={event.coverImage}
-									alt={event.title}
-									className="w-24 h-24 rounded-xl object-cover shrink-0"
-								/>
-								<div className="flex-1 min-w-0">
-									<div className="flex items-start justify-between gap-4">
-										<div>
-											<h3 className="font-heading font-600 text-base">
-												{event.title}
-											</h3>
-											<p className="text-xs text-text-secondary mt-0.5">
-												{formatDate(event.date)} · {event.venue}
-											</p>
-											<div className="flex items-center gap-2 mt-2">
-												<Badge
-													variant={
-														event.status === 'published'
-															? 'emerald'
-															: event.status === 'draft'
-																? 'gray'
-																: 'red'
-													}
-												>
-													{event.status === 'published'
-														? 'Publicado'
-														: event.status === 'draft'
-															? 'Rascunho'
-															: 'Cancelado'}
-												</Badge>
-												<Badge>{getCategoryLabel(event.category)}</Badge>
+					{events.map((event) => {
+						const statusInfo = statusConfig[event.status] ?? {
+							label: event.status,
+							variant: 'gray' as const,
+						}
+						const minPrice =
+							event.batches?.length > 0
+								? Math.min(...event.batches.map((b) => b.price))
+								: 0
+						return (
+							<Card key={event.id}>
+								<div className="flex gap-4">
+									<img
+										src={event.bannerUrl || '/event-placeholder.jpg'}
+										alt={event.title}
+										className="w-24 h-24 rounded-xl object-cover shrink-0"
+									/>
+									<div className="flex-1 min-w-0">
+										<div className="flex items-start justify-between gap-4">
+											<div>
+												<h3 className="font-heading font-600 text-base">
+													{event.title}
+												</h3>
+												<p className="text-xs text-text-secondary mt-0.5">
+													{formatDate(event.startDate)} · {event.location}
+												</p>
+												<div className="flex items-center gap-2 mt-2">
+													<Badge variant={statusInfo.variant}>
+														{statusInfo.label}
+													</Badge>
+													{event.categories && (
+														<Badge>{event.categories.name}</Badge>
+													)}
+												</div>
+											</div>
+											<div className="text-right shrink-0">
+												<p className="text-sm font-heading font-600 text-brand">
+													{minPrice > 0
+														? formatKwanza(minPrice)
+														: '—'}
+												</p>
+												<p className="text-xs text-text-secondary">
+													{event.batches?.length ?? 0} lote
+													{event.batches?.length !== 1 ? 's' : ''}
+												</p>
 											</div>
 										</div>
-										<div className="text-right shrink-0">
-											<p className="text-sm font-heading font-600 text-brand">
-												{formatKwanza(
-													Math.min(
-														...event.ticketTypes.map((t) => t.price),
-													),
-												)}
-											</p>
-											<p className="text-xs text-text-secondary">
-												{event.ticketTypes.length} tipo
-												{event.ticketTypes.length !== 1 ? 's' : ''}
-											</p>
+										<div className="flex items-center gap-2 mt-3">
+											<Link
+												to={`/organizer/events/${event.id}`}
+												className="btn-ghost h-8 px-3 text-xs rounded-lg"
+											>
+												Editar
+											</Link>
+											<Link
+												to={`/organizer/events/${event.id}/sales`}
+												className="btn-ghost h-8 px-3 text-xs rounded-lg"
+											>
+												Vendas
+											</Link>
+											<Link
+												to={`/organizer/events/${event.id}/staff`}
+												className="btn-ghost h-8 px-3 text-xs rounded-lg"
+											>
+												Validadores
+											</Link>
 										</div>
 									</div>
-									<div className="flex items-center gap-2 mt-3">
-										<Link
-											to={`/organizer/events/${event.id}`}
-											className="btn-ghost h-8 px-3 text-xs rounded-lg"
-										>
-											Editar
-										</Link>
-										<Link
-											to={`/organizer/events/${event.id}/sales`}
-											className="btn-ghost h-8 px-3 text-xs rounded-lg"
-										>
-											Vendas
-										</Link>
-										<Link
-											to={`/events/${event.slug}`}
-											className="btn-ghost h-8 px-3 text-xs rounded-lg"
-										>
-											Ver Página
-										</Link>
-									</div>
 								</div>
-							</div>
-						</Card>
-					))}
+							</Card>
+						)
+					})}
 				</div>
 			)}
 		</div>

@@ -1,3 +1,5 @@
+export type EventStatus = 'PUBLISHED' | 'HIDDEN' | 'CANCELLED'
+
 export type EventCategory = 'conference' | 'workshop' | 'theatre' | 'festival' | 'family' | 'party'
 
 export type EventPeriod = 'morning' | 'afternoon' | 'night'
@@ -13,55 +15,140 @@ export interface TicketType {
 	description?: string
 }
 
-export interface Addon {
+export interface TicketBatch {
 	id: string
 	name: string
-	description: string
 	price: number
+	capacity: number
+	sold: number
+	isGroupTicket: boolean
+	groupSize: number
+	deletedAt?: string | null
+}
+
+export interface DocFile {
+	url: string
+	idcloudinary: string
+}
+
+export interface CategoryInfo {
+	id: string
+	name: string
+	slug: string
 }
 
 export interface Event {
 	id: string
 	title: string
-	slug: string
 	description: string
-	shortDescription: string
-	coverImage: string
-	category: EventCategory
 	province: string
-	date: string
-	endDate?: string
-	time: string
-	period: EventPeriod
-	venue: string
-	address: string
-	organizerId: string
-	organizerName: string
-	ticketTypes: TicketType[]
-	addons?: Addon[]
-	featured?: boolean
-	status: 'draft' | 'published' | 'cancelled' | 'completed'
+	location: string
+	bannerUrl: string | null
+	cloudinaryId: string | null
+	gallery?: DocFile[]
+	startDate: string
+	endDate: string
+	isApproved: boolean
+	denialReason?: string | null
+	status: EventStatus
+	salesPaused: boolean
+	promoterId: string
+	categoryId: string
+	categories?: CategoryInfo
+	batches: TicketBatch[]
 	createdAt: string
+	promoter?: {
+		companyName: string
+		user: { name: string; image?: string }
+	}
+	_count?: { tickets: number }
+
+	// Legacy fields (for backward compatibility with public pages)
+	slug?: string
+	coverImage?: string
+	category?: EventCategory
+	date?: string
+	time?: string
+	period?: EventPeriod
+	venue?: string
+	address?: string
+	organizerId?: string
+	organizerName?: string
+	ticketTypes?: TicketType[]
 }
 
 export interface EventFormData {
 	title: string
 	description: string
-	shortDescription: string
-	coverImage: string
-	category: EventCategory
 	province: string
-	date: string
-	time: string
-	period: EventPeriod
-	venue: string
-	address: string
-	ticketTypes: Omit<TicketType, 'id' | 'available'>[]
+	location: string
+	bannerUrl: string
+	cloudinaryId: string
+	categoryId: string
+	startDate: string
+	endDate: string
+	batches: Array<{
+		name: string
+		price: number
+		capacity: number
+		isGroupTicket: boolean
+		groupSize: number
+	}>
 }
 
 export interface EventFilters {
+	categoryId?: string
 	category?: EventCategory
 	province?: string
 	period?: EventPeriod
 	search?: string
+	page?: number
+	limit?: number
+}
+
+export interface SalesOrderItem {
+	ticketTypeName: string
+	quantity: number
+	unitPrice: number
+}
+
+export interface SalesOrder {
+	id: string
+	eventTitle?: string
+	eventId?: string
+	buyerName?: string
+	buyerId?: string
+	items?: SalesOrderItem[]
+	total: number
+	status: string
+	createdAt: string
+}
+
+export interface SalesData {
+	totalRevenue: number
+	totalOrders: number
+	totalTickets: number
+	balance: number
+	orders: SalesOrder[]
+}
+
+export interface EventSalesData {
+	totalSold: number
+	totalTickets: number
+	ordersCount: number
+	orders: SalesOrder[]
+}
+
+export interface AttendeesData {
+	attendees: SalesOrder[]
+}
+
+export interface StaffMember {
+	id: string
+	userId: string
+	name: string | null
+	email: string
+	image?: string | null
+	addedByName: string | null
+	addedAt: string
 }

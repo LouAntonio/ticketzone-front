@@ -50,7 +50,27 @@ export const useAuthStore = create<AuthState>()(
 
 			setAccessToken: (accessToken) => set({ token: accessToken }),
 
-			setUser: (user) => set({ user }),
+			setUser: (user) =>
+		set((state) => ({
+			user,
+			organizerProfile: user?.promoter
+				? {
+						id: user.promoter.id ?? state.organizerProfile?.id ?? '',
+						userId: user.id,
+						companyName: user.promoter.companyName,
+						nif: user.promoter.nif,
+						iban: user.promoter.iban,
+						promoterType: user.promoter.promoterType,
+						logo: user.promoter.logo,
+						banner: user.promoter.banner,
+						isVerified: user.promoter.verificationStatus === 'VERIFIED',
+						verificationStatus: user.promoter.verificationStatus,
+						status: (user.promoter.status as 'ACTIVE' | 'BANNED') ?? 'ACTIVE',
+						balance: user.promoter.balance ?? 0,
+						createdAt: user.promoter.createdAt,
+					}
+				: state.organizerProfile,
+		})),
 
 			setLastGoogleAccount: (account) => set({ lastGoogleAccount: account }),
 

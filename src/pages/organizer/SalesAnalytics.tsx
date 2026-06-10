@@ -1,15 +1,15 @@
 import { useParams } from 'react-router-dom'
-import { useEvent, useEventSales } from '../../api/hooks/useEvents'
-import type { SalesOrder } from '../../api/hooks/useSales'
+import { useOrganizerEvent, useOrganizerEventSales } from '../../api/hooks/useOrganizer'
 import { Card } from '../../components/ui/Card'
 import { Badge } from '../../components/ui/Badge'
 import { Skeleton, SkeletonTable } from '../../components/ui/Skeleton'
 import { formatKwanza, formatDate } from '../../lib/format'
+import type { SalesOrder } from '../../types/event'
 
 export function SalesAnalytics() {
 	const { id } = useParams<{ id: string }>()
-	const { data: eventData } = useEvent(id ?? '')
-	const { data: salesData, isLoading } = useEventSales(id ?? '')
+	const { data: eventData } = useOrganizerEvent(id ?? '')
+	const { data: salesData, isLoading } = useOrganizerEventSales(id ?? '')
 
 	if (isLoading) {
 		return (
@@ -78,7 +78,7 @@ export function SalesAnalytics() {
 										{order.items
 											?.map((i) => `${i.quantity}x ${i.ticketTypeName}`)
 											.join(', ')}{' '}
-										· {formatDate(order.createdAt ?? '')}
+										· {formatDate(order.createdAt)}
 									</p>
 								</div>
 								<div className="text-right">
@@ -87,14 +87,14 @@ export function SalesAnalytics() {
 									</p>
 									<Badge
 										variant={
-											order.status === 'confirmed'
+											order.status === 'confirmed' || order.status === 'paid'
 												? 'emerald'
 												: order.status === 'pending'
 													? 'amber'
 													: 'red'
 										}
 									>
-										{order.status === 'confirmed'
+										{order.status === 'confirmed' || order.status === 'paid'
 											? 'Confirmado'
 											: order.status === 'pending'
 												? 'Pendente'

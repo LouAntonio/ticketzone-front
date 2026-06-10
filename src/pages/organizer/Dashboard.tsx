@@ -1,14 +1,33 @@
 import { Link } from 'react-router-dom'
 import { useAuthStore } from '../../stores/useAuthStore'
-import { useOrganizerSales } from '../../api/hooks/useSales'
-import type { SalesOrder } from '../../api/hooks/useSales'
+import { useOrganizerSales } from '../../api/hooks/useOrganizer'
 import { Card } from '../../components/ui/Card'
 import { Skeleton, SkeletonTable } from '../../components/ui/Skeleton'
 import { formatKwanza, formatDate } from '../../lib/format'
+import type { SalesOrder } from '../../types/event'
+
+function StatCard({
+	label,
+	value,
+	className,
+}: {
+	label: string
+	value: string
+	className?: string
+}) {
+	return (
+		<Card>
+			<p className="text-xs text-text-secondary mb-1">{label}</p>
+			<p className={`font-heading font-700 text-2xl ${className ?? ''}`}>
+				{value}
+			</p>
+		</Card>
+	)
+}
 
 export function OrganizerDashboard() {
 	const user = useAuthStore((s) => s.user)
-	const { data, isLoading } = useOrganizerSales()
+	const { data, isLoading, error } = useOrganizerSales()
 
 	if (isLoading) {
 		return (
@@ -33,26 +52,38 @@ export function OrganizerDashboard() {
 		)
 	}
 
+	if (error) {
+		return (
+			<div className="space-y-8">
+				<h1 className="font-heading font-700 text-2xl">Painel do Organizador</h1>
+				<Card className="text-center py-12">
+					<p className="text-red-500">Erro ao carregar dados</p>
+					<p className="text-text-secondary text-sm mt-1">
+						{(error as Error).message}
+					</p>
+				</Card>
+			</div>
+		)
+	}
+
 	const stats = [
 		{
 			label: 'Receita Total',
 			value: formatKwanza(data?.totalRevenue ?? 0),
-			color: 'text-brand',
+			className: 'text-brand',
 		},
 		{
 			label: 'Bilhetes Vendidos',
 			value: String(data?.totalTickets ?? 0),
-			color: 'text-text',
 		},
 		{
 			label: 'Pedidos',
 			value: String(data?.totalOrders ?? 0),
-			color: 'text-text',
 		},
 		{
 			label: 'Saldo a Receber',
 			value: formatKwanza(data?.balance ?? 0),
-			color: 'text-emerald-600',
+			className: 'text-emerald-600',
 		},
 	]
 
@@ -66,19 +97,12 @@ export function OrganizerDashboard() {
 				</p>
 			</div>
 
-			{/* Stats grid */}
 			<div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
 				{stats.map((stat) => (
-					<Card key={stat.label}>
-						<p className="text-xs text-text-secondary mb-1">{stat.label}</p>
-						<p className={`font-heading font-700 text-2xl ${stat.color}`}>
-							{stat.value}
-						</p>
-					</Card>
+					<StatCard key={stat.label} {...stat} />
 				))}
 			</div>
 
-			{/* Quick actions */}
 			<div className="flex flex-wrap gap-3">
 				<Link to="/organizer/events/new" className="btn-brand h-11 px-6 text-sm">
 					<svg
@@ -103,7 +127,6 @@ export function OrganizerDashboard() {
 				</Link>
 			</div>
 
-			{/* Recent orders */}
 			<Card>
 				<h3 className="font-heading font-600 text-base mb-4">Últimas Vendas</h3>
 				{data?.orders && data.orders.length > 0 ? (
@@ -118,7 +141,7 @@ export function OrganizerDashboard() {
 										{order.eventTitle}
 									</p>
 									<p className="text-xs text-text-secondary">
-										{order.buyerName} · {formatDate(order.createdAt ?? '')}
+										{order.buyerName} · {formatDate(order.createdAt)}
 									</p>
 								</div>
 								<div className="text-right">
@@ -127,14 +150,14 @@ export function OrganizerDashboard() {
 									</p>
 									<span
 										className={`text-xs ${
-											order.status === 'confirmed'
+											order.status === 'confirmed' || order.status === 'paid'
 												? 'text-emerald-600'
 												: order.status === 'pending'
 													? 'text-amber-600'
 													: 'text-red-600'
 										}`}
 									>
-										{order.status === 'confirmed'
+										{order.status === 'confirmed' || order.status === 'paid'
 											? 'Confirmado'
 											: order.status === 'pending'
 												? 'Pendente'

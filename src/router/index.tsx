@@ -44,6 +44,7 @@ import { EventForm } from '../pages/organizer/EventForm'
 import { SalesAnalytics } from '../pages/organizer/SalesAnalytics'
 import { AttendeeList } from '../pages/organizer/AttendeeList'
 import { OrgSettings } from '../pages/organizer/Settings'
+import { StaffList } from '../pages/organizer/StaffList'
 
 // Validation
 import { ValidationPortal } from '../pages/validation/ValidationPortal'
@@ -130,6 +131,7 @@ export const router = createBrowserRouter([
 							{ path: '/organizer/events/new', element: <EventForm /> },
 							{ path: '/organizer/events/:id', element: <EventForm /> },
 							{ path: '/organizer/events/:id/sales', element: <SalesAnalytics /> },
+							{ path: '/organizer/events/:id/staff', element: <StaffList /> },
 							{ path: '/organizer/attendees', element: <AttendeeList /> },
 							{ path: '/organizer/settings', element: <OrgSettings /> },
 						],

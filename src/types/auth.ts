@@ -34,6 +34,10 @@ export interface PromoterRequest {
 	personalDocs?: DocFile[]
 	enterpriseDocs?: DocFile[]
 	createdAt?: string
+	bankName?: string | null
+	bankAccount?: string | null
+	bankHolder?: string | null
+	balance?: number
 }
 
 export interface DocFile {
@@ -130,11 +134,16 @@ export interface OrganizerProfile {
 	id: string
 	userId: string
 	companyName?: string
-	document: string
-	bankName: string
-	bankAccount: string
-	bankHolder: string
+	nif?: string | null
+	iban?: string | null
+	promoterType?: string
+	logo?: DocFile | null
+	banner?: DocFile | null
+	isVerified: boolean
+	verificationStatus: 'PENDING' | 'VERIFIED' | 'REJECTED'
+	status: 'ACTIVE' | 'BANNED'
 	balance: number
+	createdAt?: string
 }
 
 export interface OrganizerRegisterData extends RegisterData {
