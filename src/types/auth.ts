@@ -23,8 +23,11 @@ export interface User {
 export interface PromoterRequest {
 	id?: string
 	companyName: string
+	promoterType: 'PESSOAL' | 'EMPRESARIAL'
 	nif?: string
 	iban?: string
+	logo?: DocFile
+	banner?: DocFile
 	verificationStatus: 'PENDING' | 'VERIFIED' | 'REJECTED'
 	status?: 'ACTIVE' | 'BANNED'
 	personalDocs?: DocFile[]
@@ -113,10 +116,13 @@ export interface ChangeEmailData {
 
 export interface BecomePromoterData {
 	companyName: string
+	promoterType: 'PESSOAL' | 'EMPRESARIAL'
 	nif?: string
 	iban?: string
 	personalDocs?: DocFile[]
 	enterpriseDocs?: DocFile[]
+	logo?: DocFile
+	banner?: DocFile
 }
 
 export interface OrganizerProfile {

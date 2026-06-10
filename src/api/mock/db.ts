@@ -889,6 +889,7 @@ export const db: MockDB = {
 		{
 			id: 'promo-req-1',
 			companyName: 'Mega Produções Lda',
+			promoterType: 'EMPRESARIAL',
 			nif: '5000123456',
 			iban: 'AO06012345678901234567890',
 			verificationStatus: 'PENDING',

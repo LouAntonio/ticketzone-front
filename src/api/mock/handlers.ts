@@ -902,10 +902,13 @@ export const handlers = [
 		if (!userId) return apiError('Não autenticado', 401)
 		const body = (await request.json()) as {
 			companyName: string
+			promoterType: 'PESSOAL' | 'EMPRESARIAL'
 			nif?: string
 			iban?: string
 			personalDocs?: Array<{ url: string; idcloudinary: string }>
 			enterpriseDocs?: Array<{ url: string; idcloudinary: string }>
+			logo?: { url: string; idcloudinary: string }
+			banner?: { url: string; idcloudinary: string }
 		}
 
 		const existing = db.promoterRequests.find((r) => r.id === userId)
@@ -914,6 +917,7 @@ export const handlers = [
 		db.promoterRequests.push({
 			id: userId,
 			companyName: body.companyName,
+			promoterType: body.promoterType,
 			nif: body.nif,
 			iban: body.iban,
 			verificationStatus: 'PENDING',
