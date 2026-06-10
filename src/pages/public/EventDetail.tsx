@@ -13,8 +13,9 @@ export function EventDetail() {
 	const { data, isLoading } = useEvent(slug!)
 	const navigate = useNavigate()
 	const user = useAuthStore((s) => s.user)
-	const { addItem, setEvent } = useCartStore()
+	const { addItem, addAddon, setEvent } = useCartStore()
 	const [selectedTickets, setSelectedTickets] = useState<Record<string, number>>({})
+	const [selectedAddons, setSelectedAddons] = useState<Record<string, number>>({})
 
 	if (isLoading) {
 		return (
@@ -67,13 +68,13 @@ export function EventDetail() {
 
 	const event = data.event
 	const tickets = event.ticketTypes ?? []
+	const addons = event.addons ?? []
 
 	const totalSelected = Object.values(selectedTickets).reduce((sum, q) => sum + q, 0)
 
-	const totalPrice = tickets.reduce(
-		(sum, tt) => sum + (selectedTickets[tt.id] ?? 0) * tt.price,
-		0,
-	)
+	const totalPrice =
+		tickets.reduce((sum, tt) => sum + (selectedTickets[tt.id] ?? 0) * tt.price, 0) +
+		addons.reduce((sum, a) => sum + (selectedAddons[a.id] ?? 0) * a.price, 0)
 
 	const handleAddToCart = () => {
 		if (!user) {
@@ -96,6 +97,18 @@ export function EventDetail() {
 			}
 		}
 
+		for (const a of addons) {
+			const qty = selectedAddons[a.id] ?? 0
+			if (qty > 0) {
+				addAddon({
+					addonId: a.id,
+					name: a.name,
+					quantity: qty,
+					unitPrice: a.price,
+				})
+			}
+		}
+
 		navigate(`/checkout/${event.id}`)
 	}
 
@@ -106,6 +119,18 @@ export function EventDetail() {
 				delete next[ticketTypeId]
 			} else {
 				next[ticketTypeId] = value
+			}
+			return next
+		})
+	}
+
+	const handleAddonQuantityChange = (addonId: string, value: number) => {
+		setSelectedAddons((prev) => {
+			const next = { ...prev }
+			if (value <= 0) {
+				delete next[addonId]
+			} else {
+				next[addonId] = value
 			}
 			return next
 		})
@@ -202,28 +227,88 @@ export function EventDetail() {
 						</div>
 
 						{/* Add-ons */}
-						{event.addons && event.addons.length > 0 && (
+						{addons.length > 0 && (
 							<div>
 								<h2 className="font-heading font-700 text-xl mb-3">Add-ons</h2>
 								<div className="grid sm:grid-cols-2 gap-3">
-									{event.addons.map((addon) => (
-										<div
-											key={addon.id}
-											className="card p-4 flex items-center justify-between"
-										>
-											<div>
-												<p className="text-sm font-heading font-600">
-													{addon.name}
-												</p>
-												<p className="text-xs text-text-secondary">
-													{addon.description}
-												</p>
+									{addons.map((addon) => {
+										const qty = selectedAddons[addon.id] ?? 0
+										const maxQty = addon.capacity - addon.sold
+										return (
+											<div
+												key={addon.id}
+												className="card p-4 flex items-center justify-between"
+											>
+												<div className="flex-1 min-w-0">
+													<p className="text-sm font-heading font-600 truncate">
+														{addon.name}
+													</p>
+													<p className="text-xs text-text-secondary truncate">
+														{addon.description}
+													</p>
+													{maxQty > 0 ? (
+														<p className="text-xs text-text-secondary mt-1">
+															{maxQty} restantes
+														</p>
+													) : (
+														<p className="text-xs text-red-500 mt-1">
+															Esgotado
+														</p>
+													)}
+												</div>
+												<div className="flex items-center gap-2 ml-3 shrink-0">
+													<span className="text-sm font-heading font-700 text-brand mr-1">
+														{formatKwanza(addon.price)}
+													</span>
+													<button
+														onClick={() =>
+															handleAddonQuantityChange(
+																addon.id,
+																qty - 1,
+															)
+														}
+														disabled={qty === 0}
+														className="w-8 h-8 rounded-lg border-2 border-border flex items-center justify-center hover:bg-gray-50 transition-colors disabled:opacity-30"
+													>
+														<svg
+															width="12"
+															height="12"
+															viewBox="0 0 24 24"
+															fill="none"
+															stroke="currentColor"
+															strokeWidth="2"
+														>
+															<path d="M5 12h14" />
+														</svg>
+													</button>
+													<span className="w-6 text-center font-heading font-600 text-sm">
+														{qty}
+													</span>
+													<button
+														onClick={() =>
+															handleAddonQuantityChange(
+																addon.id,
+																qty + 1,
+															)
+														}
+														disabled={qty >= maxQty}
+														className="w-8 h-8 rounded-lg border-2 border-border flex items-center justify-center hover:bg-gray-50 transition-colors disabled:opacity-30"
+													>
+														<svg
+															width="12"
+															height="12"
+															viewBox="0 0 24 24"
+															fill="none"
+															stroke="currentColor"
+															strokeWidth="2"
+														>
+															<path d="M12 5v14M5 12h14" />
+														</svg>
+													</button>
+												</div>
 											</div>
-											<span className="text-sm font-heading font-700 text-brand">
-												{formatKwanza(addon.price)}
-											</span>
-										</div>
-									))}
+										)
+									})}
 								</div>
 							</div>
 						)}
@@ -234,84 +319,88 @@ export function EventDetail() {
 						<div className="card p-6 space-y-5">
 							<h3 className="font-heading font-700 text-lg">Bilhetes</h3>
 
-							{tickets.length > 0 ? tickets.map((tt) => (
-								<div
-									key={tt.id}
-									className="pb-4 border-b border-border last:border-0"
-								>
-									<div className="flex items-start justify-between mb-2">
-										<div>
-											<p className="font-heading font-600 text-sm">
-												{tt.name}
-											</p>
-											{tt.description && (
-												<p className="text-xs text-text-secondary">
-													{tt.description}
+							{tickets.length > 0 ? (
+								tickets.map((tt) => (
+									<div
+										key={tt.id}
+										className="pb-4 border-b border-border last:border-0"
+									>
+										<div className="flex items-start justify-between mb-2">
+											<div>
+												<p className="font-heading font-600 text-sm">
+													{tt.name}
 												</p>
-											)}
-											{tt.peoplePerTicket > 1 && (
-												<span className="inline-block mt-1 text-xs bg-brand-soft text-brand px-2 py-0.5 rounded-full font-heading font-600">
-													{tt.peoplePerTicket} pessoas por bilhete
-												</span>
-											)}
+												{tt.description && (
+													<p className="text-xs text-text-secondary">
+														{tt.description}
+													</p>
+												)}
+												{tt.peoplePerTicket > 1 && (
+													<span className="inline-block mt-1 text-xs bg-brand-soft text-brand px-2 py-0.5 rounded-full font-heading font-600">
+														{tt.peoplePerTicket} pessoas por bilhete
+													</span>
+												)}
+											</div>
+											<p className="font-heading font-700 text-brand whitespace-nowrap">
+												{formatKwanza(tt.price)}
+											</p>
 										</div>
-										<p className="font-heading font-700 text-brand whitespace-nowrap">
-											{formatKwanza(tt.price)}
-										</p>
-									</div>
 
-									<div className="flex items-center gap-3 mt-3">
-										<button
-											onClick={() =>
-												handleQuantityChange(
-													tt.id,
-													(selectedTickets[tt.id] ?? 0) - 1,
-												)
-											}
-											disabled={!selectedTickets[tt.id]}
-											className="w-9 h-9 rounded-lg border-2 border-border flex items-center justify-center hover:bg-gray-50 transition-colors disabled:opacity-30"
-										>
-											<svg
-												width="14"
-												height="14"
-												viewBox="0 0 24 24"
-												fill="none"
-												stroke="currentColor"
-												strokeWidth="2"
+										<div className="flex items-center gap-3 mt-3">
+											<button
+												onClick={() =>
+													handleQuantityChange(
+														tt.id,
+														(selectedTickets[tt.id] ?? 0) - 1,
+													)
+												}
+												disabled={!selectedTickets[tt.id]}
+												className="w-9 h-9 rounded-lg border-2 border-border flex items-center justify-center hover:bg-gray-50 transition-colors disabled:opacity-30"
 											>
-												<path d="M5 12h14" />
-											</svg>
-										</button>
-										<span className="w-8 text-center font-heading font-600">
-											{selectedTickets[tt.id] ?? 0}
-										</span>
-										<button
-											onClick={() =>
-												handleQuantityChange(
-													tt.id,
-													(selectedTickets[tt.id] ?? 0) + 1,
-												)
-											}
-											disabled={(selectedTickets[tt.id] ?? 0) >= tt.available}
-											className="w-9 h-9 rounded-lg border-2 border-border flex items-center justify-center hover:bg-gray-50 transition-colors disabled:opacity-30"
-										>
-											<svg
-												width="14"
-												height="14"
-												viewBox="0 0 24 24"
-												fill="none"
-												stroke="currentColor"
-												strokeWidth="2"
+												<svg
+													width="14"
+													height="14"
+													viewBox="0 0 24 24"
+													fill="none"
+													stroke="currentColor"
+													strokeWidth="2"
+												>
+													<path d="M5 12h14" />
+												</svg>
+											</button>
+											<span className="w-8 text-center font-heading font-600">
+												{selectedTickets[tt.id] ?? 0}
+											</span>
+											<button
+												onClick={() =>
+													handleQuantityChange(
+														tt.id,
+														(selectedTickets[tt.id] ?? 0) + 1,
+													)
+												}
+												disabled={
+													(selectedTickets[tt.id] ?? 0) >= tt.available
+												}
+												className="w-9 h-9 rounded-lg border-2 border-border flex items-center justify-center hover:bg-gray-50 transition-colors disabled:opacity-30"
 											>
-												<path d="M12 5v14M5 12h14" />
-											</svg>
-										</button>
-										<span className="text-xs text-text-secondary ml-auto">
-											{tt.available} restantes
-										</span>
+												<svg
+													width="14"
+													height="14"
+													viewBox="0 0 24 24"
+													fill="none"
+													stroke="currentColor"
+													strokeWidth="2"
+												>
+													<path d="M12 5v14M5 12h14" />
+												</svg>
+											</button>
+											<span className="text-xs text-text-secondary ml-auto">
+												{tt.available} restantes
+											</span>
+										</div>
 									</div>
-								</div>
-							)) : (
+								))
+							) : (
 								<p className="text-sm text-text-secondary text-center py-8">
 									Nenhum bilhete disponível neste momento.
 								</p>

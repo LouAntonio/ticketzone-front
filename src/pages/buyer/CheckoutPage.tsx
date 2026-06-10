@@ -18,7 +18,7 @@ export function CheckoutPage() {
 	const [orderCreated, setOrderCreated] = useState(false)
 	const [orderRef, setOrderRef] = useState('')
 
-	if (!eventId || cart.items.length === 0) {
+	if (!eventId || (cart.items.length === 0 && cart.addons.length === 0)) {
 		return (
 			<div className="min-h-screen flex items-center justify-center">
 				<Card className="text-center p-8">
@@ -37,6 +37,7 @@ export function CheckoutPage() {
 			const res = await createOrder.mutateAsync({
 				eventId,
 				items: cart.items,
+				addons: cart.addons.length > 0 ? cart.addons : undefined,
 				paymentMethod,
 			})
 			setOrderRef(res.order.paymentRef ?? '')
@@ -173,7 +174,7 @@ export function CheckoutPage() {
 						{cart.items.map((item) => (
 							<div
 								key={item.ticketTypeId}
-								className="flex items-center justify-between pb-3 border-b border-border last:border-0"
+								className="flex items-center justify-between pb-3 border-b border-border"
 							>
 								<div>
 									<p className="text-sm font-heading font-600">
@@ -186,6 +187,23 @@ export function CheckoutPage() {
 								</div>
 								<p className="text-sm font-heading font-600">
 									{formatKwanza(item.unitPrice * item.quantity)}
+								</p>
+							</div>
+						))}
+
+						{cart.addons.map((addon) => (
+							<div
+								key={addon.addonId}
+								className="flex items-center justify-between pb-3 border-b border-border"
+							>
+								<div>
+									<p className="text-sm font-heading font-600">{addon.name}</p>
+									<p className="text-xs text-text-secondary">
+										{addon.quantity}x add-on
+									</p>
+								</div>
+								<p className="text-sm font-heading font-600">
+									{formatKwanza(addon.unitPrice * addon.quantity)}
 								</p>
 							</div>
 						))}

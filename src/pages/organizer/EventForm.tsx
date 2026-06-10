@@ -9,6 +9,12 @@ import {
 	useUpdateBatch,
 	useRemoveBatch,
 } from '../../api/hooks/useOrganizer'
+import {
+	useAddons,
+	useCreateAddon,
+	useUpdateAddon,
+	useRemoveAddon,
+} from '../../api/hooks/useAddons'
 import { useCloudinaryUpload } from '../../api/hooks/useCloudinaryUpload'
 import { api } from '../../api/client'
 import { Button } from '../../components/ui/Button'
@@ -16,7 +22,7 @@ import { Input } from '../../components/ui/Input'
 import { Card } from '../../components/ui/Card'
 import { Skeleton } from '../../components/ui/Skeleton'
 import { PROVINCES } from '../../lib/constants'
-import type { EventFormData, DocFile } from '../../types/event'
+import type { EventFormData, DocFile, Addon } from '../../types/event'
 
 interface Category {
 	id: string
@@ -81,6 +87,14 @@ export function EventForm() {
 	const createBatch = useCreateBatch(id ?? '')
 	const updateBatch = useUpdateBatch(id ?? '')
 	const removeBatch = useRemoveBatch(id ?? '')
+
+	const { data: addonsData } = useAddons(id ?? '')
+	const createAddon = useCreateAddon(id ?? '')
+	const updateAddon = useUpdateAddon(id ?? '')
+	const removeAddon = useRemoveAddon(id ?? '')
+
+	const [addonForm, setAddonForm] = useState({ name: '', description: '', price: 0, capacity: 0 })
+	const [editingAddon, setEditingAddon] = useState<string | null>(null)
 
 	useEffect(() => {
 		api.get('/categories')
@@ -168,6 +182,68 @@ export function EventForm() {
 			...prev,
 			batches: prev.batches.filter((_, i) => i !== index),
 		}))
+	}
+
+	const resetAddonForm = () => {
+		setAddonForm({ name: '', description: '', price: 0, capacity: 0 })
+		setEditingAddon(null)
+	}
+
+	const handleCreateOrUpdateAddon = async () => {
+		if (!addonForm.name.trim()) {
+			toast.error('O nome do add-on é obrigatório')
+			return
+		}
+		if (addonForm.price <= 0) {
+			toast.error('O preço deve ser maior que zero')
+			return
+		}
+		if (addonForm.capacity < 1) {
+			toast.error('A capacidade deve ser pelo menos 1')
+			return
+		}
+
+		try {
+			if (editingAddon) {
+				await updateAddon.mutateAsync({
+					addonId: editingAddon,
+					data: {
+						name: addonForm.name,
+						description: addonForm.description || undefined,
+						price: addonForm.price,
+						capacity: addonForm.capacity,
+					},
+				})
+			} else {
+				await createAddon.mutateAsync({
+					name: addonForm.name,
+					description: addonForm.description || undefined,
+					price: addonForm.price,
+					capacity: addonForm.capacity,
+				})
+			}
+			resetAddonForm()
+		} catch {
+			// error handled by hook
+		}
+	}
+
+	const handleEditAddon = (addon: Addon) => {
+		setAddonForm({
+			name: addon.name,
+			description: addon.description ?? '',
+			price: addon.price,
+			capacity: addon.capacity,
+		})
+		setEditingAddon(addon.id)
+	}
+
+	const handleRemoveAddon = async (addonId: string) => {
+		try {
+			await removeAddon.mutateAsync(addonId)
+		} catch {
+			// error handled by hook
+		}
 	}
 
 	const handleGallerySelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -270,7 +346,8 @@ export function EventForm() {
 			}
 
 			if (isEdit) {
-				await updateEvent.mutateAsync(payload)
+				const { batches: _, addons: _a, ...eventPayload } = payload
+				await updateEvent.mutateAsync(eventPayload)
 
 				const originals = originalBatchesRef.current
 				const originalsByName = new Map(originals.map((b) => [b.name, b]))
@@ -347,6 +424,9 @@ export function EventForm() {
 		createBatch.isPending ||
 		updateBatch.isPending ||
 		removeBatch.isPending ||
+		createAddon.isPending ||
+		updateAddon.isPending ||
+		removeAddon.isPending ||
 		cloudinary.uploading
 
 	return (
@@ -676,6 +756,136 @@ export function EventForm() {
 						))}
 					</div>
 				</Card>
+
+				{/* Add-ons */}
+				{isEdit && (
+					<Card>
+						<div className="flex items-center justify-between mb-4">
+							<h3 className="font-heading font-600 text-base">Add-ons</h3>
+						</div>
+
+						{/* Existing addons */}
+						{(addonsData?.addons ?? []).length > 0 && (
+							<div className="space-y-2 mb-4">
+								{addonsData?.addons.map((addon) => (
+									<div
+										key={addon.id}
+										className="flex items-center justify-between p-3 border border-border rounded-xl"
+									>
+										<div className="flex-1 min-w-0 mr-3">
+											<p className="text-sm font-heading font-600 truncate">
+												{addon.name}
+											</p>
+											<p className="text-xs text-text-secondary truncate">
+												{addon.description ?? 'Sem descrição'}
+											</p>
+											<p className="text-xs text-text-secondary mt-0.5">
+												{addon.price.toLocaleString()} Kz · {addon.capacity}{' '}
+												stock · {addon.sold} vendidos
+											</p>
+										</div>
+										<div className="flex items-center gap-1 shrink-0">
+											<button
+												type="button"
+												onClick={() => handleEditAddon(addon)}
+												className="p-2 text-text-secondary hover:text-brand transition-colors"
+											>
+												<svg
+													width="16"
+													height="16"
+													viewBox="0 0 24 24"
+													fill="none"
+													stroke="currentColor"
+													strokeWidth="2"
+												>
+													<path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
+													<path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
+												</svg>
+											</button>
+											<button
+												type="button"
+												onClick={() => handleRemoveAddon(addon.id)}
+												className="p-2 text-text-secondary hover:text-red-500 transition-colors"
+											>
+												<svg
+													width="16"
+													height="16"
+													viewBox="0 0 24 24"
+													fill="none"
+													stroke="currentColor"
+													strokeWidth="2"
+												>
+													<path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2" />
+												</svg>
+											</button>
+										</div>
+									</div>
+								))}
+							</div>
+						)}
+
+						{/* Addon form */}
+						<div className="grid sm:grid-cols-4 gap-3 items-end">
+							<Input
+								label="Nome"
+								placeholder="Ex: Cartão Consumo"
+								value={addonForm.name}
+								onChange={(e) =>
+									setAddonForm((p) => ({ ...p, name: e.target.value }))
+								}
+							/>
+							<Input
+								label="Descrição (opcional)"
+								placeholder="Ex: 5.000 Kz em créditos"
+								value={addonForm.description}
+								onChange={(e) =>
+									setAddonForm((p) => ({ ...p, description: e.target.value }))
+								}
+							/>
+							<Input
+								label="Preço (Kz)"
+								type="number"
+								min="0"
+								value={addonForm.price || ''}
+								onChange={(e) =>
+									setAddonForm((p) => ({ ...p, price: Number(e.target.value) }))
+								}
+							/>
+							<Input
+								label="Stock"
+								type="number"
+								min="1"
+								value={addonForm.capacity || ''}
+								onChange={(e) =>
+									setAddonForm((p) => ({
+										...p,
+										capacity: Number(e.target.value),
+									}))
+								}
+							/>
+						</div>
+						<div className="flex items-center gap-2 mt-3">
+							<Button
+								type="button"
+								size="sm"
+								onClick={handleCreateOrUpdateAddon}
+								loading={createAddon.isPending || updateAddon.isPending}
+							>
+								{editingAddon ? 'Atualizar' : 'Adicionar'}
+							</Button>
+							{editingAddon && (
+								<Button
+									type="button"
+									variant="ghost"
+									size="sm"
+									onClick={resetAddonForm}
+								>
+									Cancelar
+								</Button>
+							)}
+						</div>
+					</Card>
+				)}
 
 				<div className="flex items-center gap-3">
 					<Button type="submit" loading={isPending}>

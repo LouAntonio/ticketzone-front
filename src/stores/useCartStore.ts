@@ -8,13 +8,24 @@ interface CartItem {
 	peoplePerTicket: number
 }
 
+interface CartAddon {
+	addonId: string
+	name: string
+	quantity: number
+	unitPrice: number
+}
+
 interface CartState {
 	items: CartItem[]
+	addons: CartAddon[]
 	eventId: string | null
 	eventTitle: string
 	addItem: (item: CartItem) => void
 	removeItem: (ticketTypeId: string) => void
 	updateQuantity: (ticketTypeId: string, quantity: number) => void
+	addAddon: (addon: CartAddon) => void
+	removeAddon: (addonId: string) => void
+	updateAddonQuantity: (addonId: string, quantity: number) => void
 	clear: () => void
 	setEvent: (eventId: string, eventTitle: string) => void
 	total: () => number
@@ -23,10 +34,11 @@ interface CartState {
 
 export const useCartStore = create<CartState>()((set, get) => ({
 	items: [],
+	addons: [],
 	eventId: null,
 	eventTitle: '',
 
-	setEvent: (eventId, eventTitle) => set({ eventId, eventTitle }),
+	setEvent: (eventId, eventTitle) => set({ eventId, eventTitle, items: [], addons: [] }),
 
 	addItem: (item) =>
 		set((state) => {
@@ -62,9 +74,46 @@ export const useCartStore = create<CartState>()((set, get) => ({
 			}
 		}),
 
-	clear: () => set({ items: [], eventId: null, eventTitle: '' }),
+	addAddon: (addon) =>
+		set((state) => {
+			const existing = state.addons.find((a) => a.addonId === addon.addonId)
+			if (existing) {
+				return {
+					addons: state.addons.map((a) =>
+						a.addonId === addon.addonId
+							? { ...a, quantity: a.quantity + addon.quantity }
+							: a,
+					),
+				}
+			}
+			return { addons: [...state.addons, addon] }
+		}),
 
-	total: () => get().items.reduce((sum, i) => sum + i.unitPrice * i.quantity, 0),
+	removeAddon: (addonId) =>
+		set((state) => ({
+			addons: state.addons.filter((a) => a.addonId !== addonId),
+		})),
+
+	updateAddonQuantity: (addonId, quantity) =>
+		set((state) => {
+			if (quantity <= 0) {
+				return {
+					addons: state.addons.filter((a) => a.addonId !== addonId),
+				}
+			}
+			return {
+				addons: state.addons.map((a) => (a.addonId === addonId ? { ...a, quantity } : a)),
+			}
+		}),
+
+	clear: () => set({ items: [], addons: [], eventId: null, eventTitle: '' }),
+
+	total: () => {
+		const state = get()
+		const itemsTotal = state.items.reduce((sum, i) => sum + i.unitPrice * i.quantity, 0)
+		const addonsTotal = state.addons.reduce((sum, a) => sum + a.unitPrice * a.quantity, 0)
+		return itemsTotal + addonsTotal
+	},
 
 	totalPeople: () => get().items.reduce((sum, i) => sum + i.peoplePerTicket * i.quantity, 0),
 }))

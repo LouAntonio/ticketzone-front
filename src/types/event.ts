@@ -43,6 +43,18 @@ export interface EventCategoryRelation {
 	category: CategoryInfo
 }
 
+export interface Addon {
+	id: string
+	name: string
+	description?: string | null
+	price: number
+	capacity: number
+	sold: number
+	createdAt?: string
+	updatedAt?: string
+	deletedAt?: string | null
+}
+
 export interface Event {
 	id: string
 	title: string
@@ -61,6 +73,7 @@ export interface Event {
 	promoterId: string
 	eventCategories: EventCategoryRelation[]
 	batches: TicketBatch[]
+	addons: Addon[]
 	createdAt: string
 	promoter?: {
 		companyName: string
@@ -100,6 +113,7 @@ export interface EventFormData {
 		isGroupTicket: boolean
 		groupSize: number
 	}>
+	addons: Addon[]
 }
 
 export interface EventFilters {

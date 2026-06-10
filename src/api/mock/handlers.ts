@@ -1011,6 +1011,80 @@ export const handlers = [
 		return HttpResponse.json(apiResponse(null, 'Encomenda cancelada com sucesso'))
 	}),
 
+	// --- Addons (organizer) ---
+	http.get(`${API}/events/:eventId/addons`, async ({ params }) => {
+		await delay(200)
+		const event = db.events.find((e) => e.id === params.eventId)
+		if (!event) return apiError('Evento não encontrado', 404)
+		return HttpResponse.json({ addons: event.addons ?? [] })
+	}),
+
+	http.post(`${API}/events/:eventId/addons`, async ({ params, request }) => {
+		await delay(300)
+		const userId = authHeader(request)
+		if (!userId) return apiError('Não autenticado', 401)
+
+		const eventIdx = db.events.findIndex((e) => e.id === params.eventId)
+		if (eventIdx === -1) return apiError('Evento não encontrado', 404)
+
+		const body = (await request.json()) as {
+			name: string
+			description?: string
+			price: number
+			capacity: number
+		}
+		const newAddon = {
+			id: `addon-${Date.now()}`,
+			name: body.name,
+			description: body.description ?? null,
+			price: body.price,
+			capacity: body.capacity,
+			sold: 0,
+			createdAt: new Date().toISOString(),
+		}
+
+		if (!db.events[eventIdx].addons) db.events[eventIdx].addons = []
+		db.events[eventIdx].addons.push(newAddon as any)
+		return HttpResponse.json(apiResponse({ ...newAddon }, 'Add-on criado com sucesso'))
+	}),
+
+	http.patch(`${API}/events/:eventId/addons/:addonId`, async ({ params, request }) => {
+		await delay(300)
+		const userId = authHeader(request)
+		if (!userId) return apiError('Não autenticado', 401)
+
+		const eventIdx = db.events.findIndex((e) => e.id === params.eventId)
+		if (eventIdx === -1) return apiError('Evento não encontrado', 404)
+
+		const addonIdx = db.events[eventIdx].addons.findIndex((a: any) => a.id === params.addonId)
+		if (addonIdx === -1) return apiError('Add-on não encontrado', 404)
+
+		const body = (await request.json()) as Partial<{
+			name: string
+			description: string
+			price: number
+			capacity: number
+		}>
+		const updated = { ...db.events[eventIdx].addons[addonIdx], ...body }
+		db.events[eventIdx].addons[addonIdx] = updated
+		return HttpResponse.json(apiResponse(updated, 'Add-on atualizado com sucesso'))
+	}),
+
+	http.delete(`${API}/events/:eventId/addons/:addonId`, async ({ params, request }) => {
+		await delay(200)
+		const userId = authHeader(request)
+		if (!userId) return apiError('Não autenticado', 401)
+
+		const eventIdx = db.events.findIndex((e) => e.id === params.eventId)
+		if (eventIdx === -1) return apiError('Evento não encontrado', 404)
+
+		const addonIdx = db.events[eventIdx].addons.findIndex((a: any) => a.id === params.addonId)
+		if (addonIdx === -1) return apiError('Add-on não encontrado', 404)
+
+		db.events[eventIdx].addons.splice(addonIdx, 1)
+		return HttpResponse.json(apiResponse(null, 'Add-on removido com sucesso'))
+	}),
+
 	// --- Uploads ---
 	http.post(`${API}/uploads/signature`, async ({ request }) => {
 		await delay(200)
