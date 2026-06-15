@@ -33,15 +33,35 @@ function findUserByToken(token: string): string | null {
 	return null
 }
 
+// Static mock categories to support categoryIds filtering in dev
+const MOCK_CATEGORIES: Record<string, string> = {
+	'cat-festival': 'festival',
+	'cat-theatre': 'theatre',
+	'cat-workshop': 'workshop',
+	'cat-conference': 'conference',
+	'cat-family': 'family',
+	'cat-party': 'party',
+}
+
 function filterEvents(params: URLSearchParams): Event[] {
 	let list = db.events.filter((e) => e.status === 'PUBLISHED')
 	const category = params.get('category')
+	const categoryIds = params.getAll('categoryIds')
 	const province = params.get('province')
 	const period = params.get('period')
 	const search = params.get('search')
-	if (category) list = list.filter((e) => e.category === category)
+	const featured = params.get('featured')
+
+	if (categoryIds.length > 0) {
+		const slugs = categoryIds.map((id) => MOCK_CATEGORIES[id]).filter(Boolean)
+		list = list.filter((e) => slugs.length === 0 || slugs.includes(e.category ?? ''))
+	} else if (category) {
+		list = list.filter((e) => e.category === category)
+	}
+
 	if (province) list = list.filter((e) => e.province === province)
 	if (period) list = list.filter((e) => e.period === period)
+	if (featured === 'true') list = list.filter((e) => e.featured)
 	if (search) {
 		const q = search.toLowerCase()
 		list = list.filter(

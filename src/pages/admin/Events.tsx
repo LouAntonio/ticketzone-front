@@ -6,6 +6,7 @@ import {
 	useApproveEvent,
 	useRejectEvent,
 	useCancelEvent,
+	useToggleFeatured,
 } from '../../api/hooks/useAdmin'
 import { Skeleton } from '../../components/ui/Skeleton'
 import { Modal } from '../../components/ui/Modal'
@@ -49,6 +50,7 @@ export function AdminEvents() {
 	const approveEvent = useApproveEvent()
 	const rejectEvent = useRejectEvent()
 	const cancelEvent = useCancelEvent()
+	const toggleFeatured = useToggleFeatured()
 
 	const [detailTarget, setDetailTarget] = useState<string | null>(null)
 	const { data: eventDetail, isLoading: detailLoading } = useAdminEventDetail(detailTarget)
@@ -235,6 +237,33 @@ export function AdminEvents() {
 										</td>
 										<td className="px-4 py-3 text-right">
 											<div className="flex items-center justify-end gap-1.5 flex-wrap">
+												<button
+													onClick={() =>
+														toggleFeatured.mutate({ id: event.id })
+													}
+													disabled={toggleFeatured.isPending}
+													className={`text-[11px] px-2 py-1 border-2 font-heading font-500 transition-colors ${
+														event.featured
+															? 'border-amber-500/60 text-amber-400 hover:bg-amber-500/10'
+															: 'border-[#3d3028] text-[#6a5a4e] hover:border-amber-500/40 hover:text-amber-400'
+													}`}
+													title={
+														event.featured
+															? 'Remover destaque'
+															: 'Destacar evento'
+													}
+												>
+													<svg
+														width="14"
+														height="14"
+														viewBox="0 0 24 24"
+														fill={event.featured ? 'currentColor' : 'none'}
+														stroke="currentColor"
+														strokeWidth="1.5"
+													>
+														<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+													</svg>
+												</button>
 												<button
 													onClick={() => setDetailTarget(event.id)}
 													className="border-brand/40 text-brand text-[11px] px-2 py-1 border-2 font-heading font-500 hover:bg-brand/10 transition-colors"

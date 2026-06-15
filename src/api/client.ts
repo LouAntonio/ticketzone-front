@@ -8,6 +8,23 @@ export const api = axios.create({
 	baseURL: API_BASE_URL,
 	headers: { 'Content-Type': 'application/json' },
 	timeout: 15000,
+	paramsSerializer: {
+		serialize: (params) => {
+			const searchParams = new URLSearchParams()
+			for (const [key, value] of Object.entries(params)) {
+				if (Array.isArray(value)) {
+					for (const v of value) {
+						if (v !== undefined && v !== null) {
+							searchParams.append(key, String(v))
+						}
+					}
+				} else if (value !== undefined && value !== null) {
+					searchParams.append(key, String(value))
+				}
+			}
+			return searchParams.toString()
+		},
+	},
 })
 
 api.interceptors.request.use((config) => {

@@ -82,7 +82,7 @@ export function LandingPage() {
 					{categories.map((cat) => (
 						<Link
 							key={cat.id}
-							to={`/events?category=${cat.slug}`}
+							to={`/events?categoryIds=${cat.id}`}
 							className="card p-6 flex flex-col items-center text-center gap-3 hover:shadow-lg hover:-translate-y-1 transition-all duration-300"
 						>
 							{cat.image ? (

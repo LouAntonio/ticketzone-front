@@ -144,6 +144,18 @@ export function useCancelEvent() {
 	})
 }
 
+export function useToggleFeatured() {
+	const qc = useQueryClient()
+	return useMutation({
+		mutationFn: ({ id }: { id: string }) => adminApi.toggleFeatured(id),
+		onSuccess: (data) => {
+			toast.success(data.featured ? 'Evento destacado com sucesso' : 'Destaque removido')
+			qc.invalidateQueries({ queryKey: ['admin', 'events'] })
+		},
+		onError: () => toast.error('Erro ao alternar destaque'),
+	})
+}
+
 export function useAdminEventDetail(id: string | null) {
 	return useQuery({
 		queryKey: ['admin', 'events', 'detail', id],

@@ -17,6 +17,7 @@ export interface RawEvent {
 	denialReason?: string | null
 	status: string
 	salesPaused: boolean
+	featured: boolean
 	promoterId: string
 	createdAt: string
 	eventCategories?: Array<{
@@ -84,6 +85,7 @@ export function mapEvent(raw: RawEvent): Event {
 
 	return {
 		...raw,
+		featured: raw.featured ?? false,
 		slug: raw.slug ?? raw.id,
 		coverImage: raw.bannerUrl ?? '',
 		category: categorySlug as EventCategory,

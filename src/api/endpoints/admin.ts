@@ -75,6 +75,7 @@ export interface AdminEvent {
 	salesPaused: boolean
 	bannerUrl: string | null
 	createdAt: string
+	featured: boolean
 }
 
 export interface PaginatedEvents {
@@ -397,6 +398,11 @@ export const adminApi = {
 
 	cancelEvent: (id: string) =>
 		api.post<{ msg: string }>(`/admin/events/${id}/cancel`).then((r) => r.data),
+
+	toggleFeatured: (id: string) =>
+		api
+			.post<{ msg: string; featured: boolean }>(`/admin/events/${id}/featured`)
+			.then((r) => r.data),
 
 	// Promoters
 	listPromoters: (params?: {

@@ -72,7 +72,7 @@ export interface Event {
 	status: EventStatus
 	salesPaused: boolean
 	promoterId: string
-	featured?: boolean
+	featured: boolean
 	shortDescription?: string
 	eventCategories: EventCategoryRelation[]
 	batches: TicketBatch[]
@@ -122,9 +122,11 @@ export interface EventFormData {
 export interface EventFilters {
 	categoryId?: string
 	category?: EventCategory
+	categoryIds?: string[]
 	province?: string
 	period?: EventPeriod
 	search?: string
+	featured?: boolean
 	page?: number
 	limit?: number
 }
