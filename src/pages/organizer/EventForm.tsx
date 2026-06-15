@@ -125,7 +125,7 @@ export function EventForm() {
 			batches: ev.batches?.length
 				? ev.batches.map((b) => ({
 						name: b.name,
-						price: b.price,
+						price: Number(b.price),
 						capacity: b.capacity,
 						isGroupTicket: b.isGroupTicket,
 						groupSize: b.groupSize,
@@ -363,24 +363,24 @@ export function EventForm() {
 				const toDelete: string[] = []
 				const toUpdate: Array<{
 					batchId: string
-					name: string
-					price: number
-					capacity: number
-					isGroupTicket: boolean
-					groupSize: number
+					name?: string
+					price?: number
+					capacity?: number
+					isGroupTicket?: boolean
+					groupSize?: number
 				}> = []
 				const toCreate: typeof validBatches = []
 
 				for (const batch of validBatches) {
 					const orig = originalsByName.get(batch.name)
 					if (orig) {
-						if (
-							orig.price !== batch.price ||
-							orig.capacity !== batch.capacity ||
-							orig.isGroupTicket !== batch.isGroupTicket ||
-							orig.groupSize !== batch.groupSize
-						) {
-							toUpdate.push({ batchId: orig.id, ...batch })
+						const changed: Record<string, unknown> = {}
+						if (orig.price !== batch.price) changed.price = batch.price
+						if (orig.capacity !== batch.capacity) changed.capacity = batch.capacity
+						if (orig.isGroupTicket !== batch.isGroupTicket) changed.isGroupTicket = batch.isGroupTicket
+						if (orig.groupSize !== batch.groupSize) changed.groupSize = batch.groupSize
+						if (Object.keys(changed).length > 0) {
+							toUpdate.push({ batchId: orig.id, ...changed } as typeof toUpdate[number])
 						}
 						originalsByName.delete(batch.name)
 					} else {
