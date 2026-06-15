@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useEvent } from '../../api/hooks/useEvents'
 import { useAuthStore } from '../../stores/useAuthStore'
@@ -16,6 +16,7 @@ export function EventDetail() {
 	const { addItem, addAddon, setEvent } = useCartStore()
 	const [selectedTickets, setSelectedTickets] = useState<Record<string, number>>({})
 	const [selectedAddons, setSelectedAddons] = useState<Record<string, number>>({})
+	const [lightboxIndex, setLightboxIndex] = useState<number | null>(null)
 
 	if (isLoading) {
 		return (
@@ -69,6 +70,7 @@ export function EventDetail() {
 	const event = data
 	const tickets = event.ticketTypes ?? []
 	const addons = event.addons ?? []
+	const gallery = event.gallery ?? []
 
 	const totalSelected = Object.values(selectedTickets).reduce((sum, q) => sum + q, 0)
 
@@ -136,6 +138,25 @@ export function EventDetail() {
 		})
 	}
 
+	const handleLightboxClose = useCallback(() => setLightboxIndex(null), [])
+
+	useEffect(() => {
+		if (lightboxIndex === null) return
+		const handleKey = (e: KeyboardEvent) => {
+			if (e.key === 'Escape') setLightboxIndex(null)
+			if (e.key === 'ArrowRight' && gallery.length > 0) {
+				setLightboxIndex((prev) => prev !== null ? (prev + 1) % gallery.length : null)
+			}
+			if (e.key === 'ArrowLeft' && gallery.length > 0) {
+				setLightboxIndex((prev) =>
+					prev !== null ? (prev - 1 + gallery.length) % gallery.length : null,
+				)
+			}
+		}
+		window.addEventListener('keydown', handleKey)
+		return () => window.removeEventListener('keydown', handleKey)
+	}, [lightboxIndex, gallery.length])
+
 	return (
 		<div>
 			{/* Cover image */}
@@ -147,21 +168,23 @@ export function EventDetail() {
 				/>
 				<div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
 				<div className="absolute bottom-0 left-0 right-0 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8">
-					<Badge
-						variant={
-							event.category === 'festival'
-								? 'brand'
-								: event.category === 'theatre'
-									? 'pink'
-									: event.category === 'family'
-										? 'emerald'
-										: event.category === 'party'
-											? 'amber'
-											: 'blue'
-						}
-					>
-						{event.eventCategories?.[0]?.category?.name ?? event.category ?? ''}
-					</Badge>
+					<div className="flex flex-wrap gap-2">
+						{event.eventCategories?.map((ec) => {
+							const variant =
+								ec.category.slug === 'festival' ? 'brand'
+								: ec.category.slug === 'theatre' ? 'pink'
+								: ec.category.slug === 'family' ? 'emerald'
+								: ec.category.slug === 'party' ? 'amber'
+								: ec.category.slug === 'conference' ? 'blue'
+								: ec.category.slug === 'workshop' ? 'purple'
+								: 'gray'
+							return (
+								<Badge key={ec.category.id} variant={variant}>
+									{ec.category.name}
+								</Badge>
+							)
+						})}
+					</div>
 					<h1 className="font-display text-3xl sm:text-4xl lg:text-5xl text-white mt-2">
 						{event.title}
 					</h1>
@@ -178,7 +201,7 @@ export function EventDetail() {
 								{
 									icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6',
 									label: 'Data',
-									value: formatDate(event.date ?? ''),
+									value: `${formatDate(event.date ?? '')} — ${formatDate(event.endDate ?? '')}`,
 								},
 								{
 									icon: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z',
@@ -312,6 +335,31 @@ export function EventDetail() {
 								</div>
 							</div>
 						)}
+
+						{/* Gallery */}
+						{gallery.length > 0 && (
+							<div>
+								<h2 className="font-heading font-700 text-xl mb-3">Galeria</h2>
+								<div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+									{gallery.map((img, i) => (
+										<button
+											key={i}
+											onClick={() => setLightboxIndex(i)}
+											className="group cursor-pointer overflow-hidden rounded-xl bg-surface-card border border-border"
+										>
+											<div className="aspect-[4/3] overflow-hidden">
+												<img
+													src={img.url}
+													alt={`${event.title} - Foto ${i + 1}`}
+													className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+													loading="lazy"
+												/>
+											</div>
+										</button>
+									))}
+								</div>
+							</div>
+						)}
 					</div>
 
 					{/* Sidebar — Ticket selection */}
@@ -441,6 +489,57 @@ export function EventDetail() {
 					</div>
 				</div>
 			</div>
+
+			{/* Lightbox */}
+			{lightboxIndex !== null && gallery.length > 0 && (
+				<div
+					className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center"
+					onClick={handleLightboxClose}
+				>
+					<button
+						onClick={(e) => {
+							e.stopPropagation()
+							setLightboxIndex((prev) => (prev! - 1 + gallery.length) % gallery.length)
+						}}
+						className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
+						aria-label="Anterior"
+					>
+						<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+							<path d="M15 18l-6-6 6-6" />
+						</svg>
+					</button>
+					<img
+						src={gallery[lightboxIndex].url}
+						alt={`${event.title} - Foto ${lightboxIndex + 1}`}
+						className="max-h-[85vh] max-w-[90vw] object-contain rounded-lg"
+						onClick={(e) => e.stopPropagation()}
+					/>
+					<button
+						onClick={(e) => {
+							e.stopPropagation()
+							setLightboxIndex((prev) => (prev! + 1) % gallery.length)
+						}}
+						className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
+						aria-label="Seguinte"
+					>
+						<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+							<path d="M9 18l6-6-6-6" />
+						</svg>
+					</button>
+					<button
+						onClick={handleLightboxClose}
+						className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
+						aria-label="Fechar"
+					>
+						<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+							<path d="M18 6L6 18M6 6l12 12" />
+						</svg>
+					</button>
+					<div className="absolute bottom-6 left-1/2 -translate-x-1/2 text-white/80 text-sm font-heading font-600">
+						{lightboxIndex + 1} / {gallery.length}
+					</div>
+				</div>
+			)}
 		</div>
 	)
 }
