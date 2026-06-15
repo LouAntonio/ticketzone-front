@@ -4,10 +4,12 @@ import { useCategories } from '../../api/hooks/useCategories'
 import { EventCard } from '../../components/shared/EventCard'
 import { Button } from '../../components/ui/Button'
 import { SkeletonCard } from '../../components/ui/Skeleton'
+import { useAuthStore } from '../../stores/useAuthStore'
 
 export function LandingPage() {
 	const { data, isLoading } = useFeaturedEvents()
 	const { data: categoriesData } = useCategories()
+	const user = useAuthStore((s) => s.user)
 
 	const categories = categoriesData?.categories ?? []
 
@@ -261,20 +263,22 @@ export function LandingPage() {
 			</section>
 
 			{/* CTA */}
-			<section className="bg-surface-card py-16 border-t border-border">
-				<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-					<h2 className="font-display text-3xl sm:text-4xl mb-3">
-						Queres organizar eventos?
-					</h2>
-					<p className="text-text-secondary max-w-md mx-auto mb-8">
-						Cria a tua conta de promotor e começa a vender bilhetes com a plataforma
-						mais confiável de Angola.
-					</p>
-					<Link to="/register">
-						<Button size="lg">Criar Conta de Promotor</Button>
-					</Link>
-				</div>
-			</section>
+			{user?.role !== 'PROMOTER' && (
+				<section className="bg-surface-card py-16 border-t border-border">
+					<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+						<h2 className="font-display text-3xl sm:text-4xl mb-3">
+							Queres organizar eventos?
+						</h2>
+						<p className="text-text-secondary max-w-md mx-auto mb-8">
+							Cria a tua conta de promotor e começa a vender bilhetes com a plataforma
+							mais confiável de Angola.
+						</p>
+						<Link to="/register">
+							<Button size="lg">Criar Conta de Promotor</Button>
+						</Link>
+					</div>
+				</section>
+			)}
 		</div>
 	)
 }
