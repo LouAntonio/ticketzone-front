@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { NavLink, Outlet } from 'react-router-dom'
+import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { useAuthStore } from '../../stores/useAuthStore'
 import { authApi } from '../../api/endpoints/auth'
 import { Header } from './Header'
@@ -67,6 +67,7 @@ const organizerLinks: SidebarLink[] = [
 export function DashboardLayout() {
 	const user = useAuthStore((s) => s.user)
 	const setUser = useAuthStore((s) => s.setUser)
+	const location = useLocation()
 
 	useEffect(() => {
 		if (!user?.emailVerified && user?.id) {
@@ -79,8 +80,8 @@ export function DashboardLayout() {
 		}
 	}, [user?.id, user?.emailVerified, setUser])
 
-	const isOrg = user?.role === 'PROMOTER'
-	const links = isOrg ? organizerLinks : buyerLinks
+	const isOrgPath = location.pathname.startsWith('/organizer')
+	const links = isOrgPath ? organizerLinks : buyerLinks
 
 	return (
 		<div className="min-h-screen flex flex-col">
@@ -120,7 +121,7 @@ export function DashboardLayout() {
 					</nav>
 
 					{/* Quick validation link */}
-					{isOrg && (
+					{isOrgPath && (
 						<div className="p-4 border-t border-border">
 							<NavLink
 								to="/validate"
