@@ -377,10 +377,14 @@ export function EventForm() {
 						const changed: Record<string, unknown> = {}
 						if (orig.price !== batch.price) changed.price = batch.price
 						if (orig.capacity !== batch.capacity) changed.capacity = batch.capacity
-						if (orig.isGroupTicket !== batch.isGroupTicket) changed.isGroupTicket = batch.isGroupTicket
+						if (orig.isGroupTicket !== batch.isGroupTicket)
+							changed.isGroupTicket = batch.isGroupTicket
 						if (orig.groupSize !== batch.groupSize) changed.groupSize = batch.groupSize
 						if (Object.keys(changed).length > 0) {
-							toUpdate.push({ batchId: orig.id, ...changed } as typeof toUpdate[number])
+							toUpdate.push({
+								batchId: orig.id,
+								...changed,
+							} as (typeof toUpdate)[number])
 						}
 						originalsByName.delete(batch.name)
 					} else {

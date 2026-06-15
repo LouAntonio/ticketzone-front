@@ -9,7 +9,12 @@ interface EventsSidebarProps {
 	onClose?: () => void
 }
 
-export function EventsSidebar({ categories, onSearch, initialFilters, onClose }: EventsSidebarProps) {
+export function EventsSidebar({
+	categories,
+	onSearch,
+	initialFilters,
+	onClose,
+}: EventsSidebarProps) {
 	const [search, setSearch] = useState(initialFilters?.search ?? '')
 	const [categoryIds, setCategoryIds] = useState<string[]>(initialFilters?.categoryIds ?? [])
 	const [province, setProvince] = useState(initialFilters?.province ?? '')
@@ -17,9 +22,7 @@ export function EventsSidebar({ categories, onSearch, initialFilters, onClose }:
 	const [featured, setFeatured] = useState(initialFilters?.featured ?? false)
 
 	const toggleCategory = (id: string) => {
-		setCategoryIds((prev) =>
-			prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id],
-		)
+		setCategoryIds((prev) => (prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id]))
 	}
 
 	const handleSearch = (e: FormEvent) => {
@@ -60,7 +63,15 @@ export function EventsSidebar({ categories, onSearch, initialFilters, onClose }:
 						className="lg:hidden p-1 text-text-secondary hover:text-text transition-colors"
 						aria-label="Fechar filtros"
 					>
-						<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+						<svg
+							width="20"
+							height="20"
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							strokeWidth="2"
+							strokeLinecap="round"
+						>
 							<line x1="18" y1="6" x2="6" y2="18" />
 							<line x1="6" y1="6" x2="18" y2="18" />
 						</svg>

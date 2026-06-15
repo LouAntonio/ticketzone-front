@@ -38,14 +38,18 @@ export function EventCard({ event }: EventCardProps) {
 				/>
 				<div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
 				<div className="absolute top-3 left-3">
-					<Badge variant={badgeVariant(catSlug)}>
-						{catName}
-					</Badge>
+					<Badge variant={badgeVariant(catSlug)}>{catName}</Badge>
 				</div>
 				{event.featured && (
 					<div className="absolute top-3 right-3">
 						<div className="flex items-center gap-1 px-2.5 py-1 rounded-md bg-gradient-to-r from-amber-400 to-amber-500 text-[11px] font-700 text-amber-950 uppercase tracking-wider shadow-md rotate-2">
-							<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+							<svg
+								width="12"
+								height="12"
+								viewBox="0 0 24 24"
+								fill="currentColor"
+								stroke="none"
+							>
 								<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
 							</svg>
 							Destaque

@@ -59,20 +59,27 @@ export function EventCatalog() {
 	const categories = useMemo(() => categoriesData?.categories ?? [], [categoriesData])
 	const legacyResolved = useRef(false)
 
-	const [appliedFilters, setAppliedFilters] = useState<Partial<EventFilters>>(
-		() => parseFiltersFromParams(searchParams),
-	)
+	const appliedFilters = useMemo(() => {
+		const raw = parseFiltersFromParams(searchParams)
+		const resolved = resolveLegacyCategoryParam(searchParams, categories)
+		if (resolved) {
+			return { ...raw, categoryIds: resolved, page: 1 }
+		}
+		return raw
+	}, [searchParams, categories])
 
-	// Resolve legacy ?category=slug param to categoryIds when categories load
+	// Sync URL when legacy ?category=slug param is resolved
 	useEffect(() => {
 		if (legacyResolved.current) return
+		if (categories.length === 0) return
 		const resolved = resolveLegacyCategoryParam(searchParams, categories)
 		if (resolved) {
 			legacyResolved.current = true
-			const merged = { ...appliedFilters, categoryIds: resolved, page: 1 }
-			setAppliedFilters(merged)
-			setSearchParams(filtersToParams(merged), { replace: true })
-		} else if (categories.length > 0) {
+			setSearchParams(
+				filtersToParams({ ...appliedFilters, categoryIds: resolved, page: 1 }),
+				{ replace: true },
+			)
+		} else {
 			legacyResolved.current = true
 		}
 	}, [categories, searchParams, appliedFilters, setSearchParams])
@@ -85,7 +92,6 @@ export function EventCatalog() {
 	const handleSearch = useCallback(
 		(filters: Partial<EventFilters>) => {
 			const merged = { ...filters, page: 1 }
-			setAppliedFilters(merged)
 			setSearchParams(filtersToParams(merged), { replace: true })
 			setSidebarOpen(false)
 		},
@@ -96,7 +102,6 @@ export function EventCatalog() {
 		(newPage: number) => {
 			if (newPage < 1 || newPage > totalPages) return
 			const merged = { ...appliedFilters, page: newPage }
-			setAppliedFilters(merged)
 			setSearchParams(filtersToParams(merged), { replace: true })
 		},
 		[appliedFilters, totalPages, setSearchParams],
@@ -124,15 +129,21 @@ export function EventCatalog() {
 					onClick={() => setSidebarOpen(true)}
 					className="lg:hidden flex items-center gap-2 px-4 py-2 text-sm font-600 rounded-lg border border-border hover:bg-warm-bg transition-colors"
 				>
-					<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+					<svg
+						width="16"
+						height="16"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						strokeWidth="2"
+						strokeLinecap="round"
+					>
 						<line x1="4" y1="6" x2="20" y2="6" />
 						<line x1="8" y1="12" x2="20" y2="12" />
 						<line x1="12" y1="18" x2="20" y2="18" />
 					</svg>
 					Filtros
-					{hasActiveFilters && (
-						<span className="w-2 h-2 rounded-full bg-brand" />
-					)}
+					{hasActiveFilters && <span className="w-2 h-2 rounded-full bg-brand" />}
 				</button>
 			</div>
 
@@ -190,7 +201,11 @@ export function EventCatalog() {
 					{isLoading ? (
 						<div className="grid sm:grid-cols-2 gap-6">
 							{[...Array(6)].map((_, i) => (
-								<div key={i} className="fade-in" style={{ animationDelay: `${i * 80}ms` }}>
+								<div
+									key={i}
+									className="fade-in"
+									style={{ animationDelay: `${i * 80}ms` }}
+								>
 									<SkeletonCard />
 								</div>
 							))}
@@ -220,7 +235,16 @@ export function EventCatalog() {
 										className="px-3 py-2 text-sm rounded-lg border border-border hover:bg-warm-bg disabled:opacity-40 disabled:pointer-events-none transition-colors"
 										aria-label="Página anterior"
 									>
-										<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+										<svg
+											width="16"
+											height="16"
+											viewBox="0 0 24 24"
+											fill="none"
+											stroke="currentColor"
+											strokeWidth="2"
+											strokeLinecap="round"
+											strokeLinejoin="round"
+										>
 											<polyline points="15 18 9 12 15 6" />
 										</svg>
 									</button>
@@ -260,7 +284,16 @@ export function EventCatalog() {
 										className="px-3 py-2 text-sm rounded-lg border border-border hover:bg-warm-bg disabled:opacity-40 disabled:pointer-events-none transition-colors"
 										aria-label="Próxima página"
 									>
-										<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+										<svg
+											width="16"
+											height="16"
+											viewBox="0 0 24 24"
+											fill="none"
+											stroke="currentColor"
+											strokeWidth="2"
+											strokeLinecap="round"
+											strokeLinejoin="round"
+										>
 											<polyline points="9 18 15 12 9 6" />
 										</svg>
 									</button>
@@ -284,7 +317,9 @@ export function EventCatalog() {
 									<path d="M21 21l-4.35-4.35" />
 								</svg>
 							</div>
-							<h3 className="font-heading font-700 text-lg mb-1">Nenhum evento encontrado</h3>
+							<h3 className="font-heading font-700 text-lg mb-1">
+								Nenhum evento encontrado
+							</h3>
 							<p className="text-text-secondary text-sm">
 								Tenta ajustar os filtros ou pesquisar por outros termos
 							</p>
