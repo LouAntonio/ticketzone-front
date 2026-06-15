@@ -22,7 +22,7 @@ export interface RawEvent {
 	eventCategories?: Array<{
 		eventId?: string
 		categoryId?: string
-		category: { id: string; name: string; slug: string }
+		category: { id: string; name: string; slug: string; image?: string | null }
 	}>
 	batches?: Array<{
 		id: string

@@ -12,19 +12,12 @@ export function EventCatalog() {
 	const [searchParams, setSearchParams] = useSearchParams()
 	const { data: categoriesData } = useCategories()
 
-	const slugToId = useMemo(() => {
-		const map: Record<string, string> = {}
-		for (const c of categoriesData?.categories ?? []) {
-			map[c.slug] = c.id
-		}
-		return map
-	}, [categoriesData])
+	const categories = useMemo(() => categoriesData?.categories ?? [], [categoriesData])
 
 	const categorySlug = searchParams.get('category') ?? undefined
-	const categoryId = categorySlug ? slugToId[categorySlug] : undefined
 
 	const [filters, setFilters] = useState<EventFilters>(() => ({
-		categoryId,
+		category: categorySlug as EventFilters['category'],
 		province: searchParams.get('province') ?? undefined,
 		period: (searchParams.get('period') as EventPeriod) ?? undefined,
 		search: searchParams.get('search') ?? undefined,
@@ -33,23 +26,13 @@ export function EventCatalog() {
 	const { data, isLoading } = useEvents(filters)
 
 	const updateFilter = (key: keyof EventFilters, value: string) => {
-		const next: EventFilters = { ...filters }
-
-		if (key === 'category') {
-			const slug = value || undefined
-			next.categoryId = slug ? slugToId[slug] : undefined
-		} else {
-			;(next as Record<string, unknown>)[key] = value || undefined
-		}
+		const next: EventFilters = { ...filters, [key]: value || undefined }
 
 		setFilters(next)
 		const params = new URLSearchParams()
-		if (key === 'category' && value) params.set('category', value)
-		else if (key === 'category' && !value) params.delete('category')
-		else
-			Object.entries(next).forEach(([k, v]) => {
-				if (v && k !== 'categoryId') params.set(k, String(v))
-			})
+		Object.entries(next).forEach(([k, v]) => {
+			if (v) params.set(k, String(v))
+		})
 		setSearchParams(params, { replace: true })
 	}
 
@@ -66,6 +49,7 @@ export function EventCatalog() {
 				<CategoryNav
 					active={categorySlug ?? ''}
 					onChange={(cat) => updateFilter('category', cat)}
+					categories={categories}
 				/>
 			</div>
 

@@ -1,24 +1,28 @@
 import { Link } from 'react-router-dom'
 import type { Event } from '../../types/event'
-import { formatDate, formatKwanza, getCategoryLabel } from '../../lib/format'
+import { formatDate, formatKwanza } from '../../lib/format'
 import { Badge } from '../ui/Badge'
 
 interface EventCardProps {
 	event: Event
 }
 
-const categoryColors: Record<string, string> = {
-	conference: 'blue',
-	workshop: 'purple',
-	theatre: 'pink',
-	festival: 'brand',
-	family: 'emerald',
-	party: 'amber',
+const badgeVariants = ['brand', 'blue', 'purple', 'pink', 'emerald', 'amber'] as const
+
+function badgeVariant(slug: string): (typeof badgeVariants)[number] {
+	let hash = 0
+	for (let i = 0; i < slug.length; i++) {
+		hash = slug.charCodeAt(i) + ((hash << 5) - hash)
+	}
+	return badgeVariants[Math.abs(hash) % badgeVariants.length]
 }
 
 export function EventCard({ event }: EventCardProps) {
 	const tickets = event.ticketTypes ?? []
 	const minPrice = tickets.length > 0 ? Math.min(...tickets.map((t) => t.price)) : 0
+	const firstCat = event.eventCategories?.[0]?.category
+	const catSlug = firstCat?.slug ?? ''
+	const catName = firstCat?.name ?? ''
 
 	return (
 		<Link
@@ -34,20 +38,8 @@ export function EventCard({ event }: EventCardProps) {
 				/>
 				<div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
 				<div className="absolute top-3 left-3">
-					<Badge
-						variant={
-							categoryColors[event.category ?? 'festival'] as
-								| 'brand'
-								| 'emerald'
-								| 'amber'
-								| 'red'
-								| 'blue'
-								| 'gray'
-								| 'purple'
-								| 'pink'
-						}
-					>
-						{getCategoryLabel(event.category ?? '')}
+					<Badge variant={badgeVariant(catSlug)}>
+						{catName}
 					</Badge>
 				</div>
 			</div>

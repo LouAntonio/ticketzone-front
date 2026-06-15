@@ -1,12 +1,3 @@
-export const EVENT_CATEGORIES = [
-	{ value: 'conference', label: 'Conferências & Workshops' },
-	{ value: 'workshop', label: 'Workshops' },
-	{ value: 'theatre', label: 'Artes & Teatro' },
-	{ value: 'festival', label: 'Festivais' },
-	{ value: 'family', label: 'Família' },
-	{ value: 'party', label: 'Festas' },
-] as const
-
 export const PROVINCES = [
 	'Bengo',
 	'Benguela',

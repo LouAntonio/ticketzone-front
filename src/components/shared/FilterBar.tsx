@@ -1,12 +1,13 @@
-import { EVENT_CATEGORIES, PROVINCES, PERIODS } from '../../lib/constants'
-import type { EventFilters } from '../../types/event'
+import { PROVINCES, PERIODS } from '../../lib/constants'
+import type { EventFilters, CategoryInfo } from '../../types/event'
 
 interface FilterBarProps {
 	filters: EventFilters
 	onChange: (filters: EventFilters) => void
+	categories: CategoryInfo[]
 }
 
-export function FilterBar({ filters, onChange }: FilterBarProps) {
+export function FilterBar({ filters, onChange, categories }: FilterBarProps) {
 	const update = (key: keyof EventFilters, value: string) => {
 		onChange({ ...filters, [key]: value || undefined })
 	}
@@ -19,9 +20,9 @@ export function FilterBar({ filters, onChange }: FilterBarProps) {
 				className="input-field w-auto min-w-[160px] text-sm"
 			>
 				<option value="">Todas as Categorias</option>
-				{EVENT_CATEGORIES.map((cat) => (
-					<option key={cat.value} value={cat.value}>
-						{cat.label}
+				{categories.map((cat) => (
+					<option key={cat.slug} value={cat.slug}>
+						{cat.name}
 					</option>
 				))}
 			</select>

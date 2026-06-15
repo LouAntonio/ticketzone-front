@@ -27,18 +27,6 @@ export function formatTime(time: string): string {
 	return `${hours}:${minutes}`
 }
 
-export function getCategoryLabel(category: string): string {
-	const labels: Record<string, string> = {
-		conference: 'Conferências & Workshops',
-		workshop: 'Workshops',
-		theatre: 'Artes & Teatro',
-		festival: 'Festivais',
-		family: 'Família',
-		party: 'Festas',
-	}
-	return labels[category] ?? category
-}
-
 export function getPeriodLabel(period: string): string {
 	const labels: Record<string, string> = {
 		morning: 'Manhã',

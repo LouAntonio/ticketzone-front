@@ -6,7 +6,7 @@ import { useCartStore } from '../../stores/useCartStore'
 import { Button } from '../../components/ui/Button'
 import { Badge } from '../../components/ui/Badge'
 import { Skeleton, SkeletonText } from '../../components/ui/Skeleton'
-import { formatDate, formatKwanza, getCategoryLabel, getPeriodLabel } from '../../lib/format'
+import { formatDate, formatKwanza, getPeriodLabel } from '../../lib/format'
 
 export function EventDetail() {
 	const { slug } = useParams<{ slug: string }>()
@@ -160,7 +160,7 @@ export function EventDetail() {
 											: 'blue'
 						}
 					>
-						{getCategoryLabel(event.category ?? '')}
+						{event.eventCategories?.[0]?.category?.name ?? event.category ?? ''}
 					</Badge>
 					<h1 className="font-display text-3xl sm:text-4xl lg:text-5xl text-white mt-2">
 						{event.title}

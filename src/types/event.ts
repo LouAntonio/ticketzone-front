@@ -35,6 +35,7 @@ export interface CategoryInfo {
 	id: string
 	name: string
 	slug: string
+	image?: string | null
 }
 
 export interface EventCategoryRelation {
