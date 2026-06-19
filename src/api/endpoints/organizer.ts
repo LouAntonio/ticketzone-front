@@ -61,6 +61,13 @@ export const organizerApi = {
 	removeStaff: (eventId: string, userId: string) =>
 		api.delete(`/organizer/events/${eventId}/staff/${userId}`).then((r) => r.data),
 
+	lookupUser: (userId: string) =>
+		api
+			.get<{ id: string; name: string | null; email: string; image: string | null }>(
+				`/organizer/user-lookup/${userId}`,
+			)
+			.then((r) => r.data),
+
 	pauseSales: (eventId: string) =>
 		api.post(`/organizer/events/${eventId}/pause-sales`).then((r) => r.data),
 

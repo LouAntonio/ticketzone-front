@@ -141,6 +141,16 @@ export function useRemoveOrganizerStaff(eventId: string) {
 	})
 }
 
+export function useLookupUser(userId: string) {
+	return useQuery({
+		queryKey: ['organizer', 'user-lookup', userId],
+		queryFn: () => organizerApi.lookupUser(userId),
+		enabled: !!userId && userId.length >= 8,
+		retry: false,
+		staleTime: 1000 * 60 * 5,
+	})
+}
+
 export function usePauseSales() {
 	const qc = useQueryClient()
 	return useMutation({
