@@ -159,6 +159,11 @@ export interface AdminVehicle {
 	pricePerDay: number
 	status: string
 	available: boolean
+	transmission?: string
+	seats?: number
+	fuelType?: string
+	location?: string
+	description?: string
 	ownerName: string
 	rentalsCount: number
 	createdAt: string
@@ -334,6 +339,11 @@ export interface AdminVehicleDetail {
 	year: number | null
 	price: number
 	status: string
+	transmission?: string
+	seats?: number
+	fuelType?: string
+	location?: string
+	description?: string
 	createdAt: string
 	owner: { id: string; name: string; email: string }
 	_count: { rentals: number }
@@ -460,6 +470,11 @@ export const adminApi = {
 		plate: string
 		year?: number
 		price: number
+		transmission?: string
+		seats?: number
+		fuelType?: string
+		location?: string
+		description?: string
 	}) => api.post<{ msg: string }>('/admin/fleet', data).then((r) => r.data),
 
 	updateVehicle: (id: string, data: Record<string, unknown>) =>

@@ -49,6 +49,20 @@ export interface OrderDetail extends Order {
 		entriesUsed: number
 		entriesAllowed: number
 	}>
+	rentals?: Array<{
+		id: string
+		vehicleId: string
+		startDate?: string
+		endDate?: string
+		totalDays: number
+		totalPrice: number
+		vehicle: {
+			make: string
+			model: string
+			plate: string
+			photos: string[]
+		}
+	}>
 	eventProvince?: string
 	eventVenue?: string
 	eventAddress?: string

@@ -29,9 +29,14 @@ interface VehicleForm {
 	plate: string
 	year: string
 	price: string
+	transmission: string
+	seats: string
+	fuelType: string
+	location: string
+	description: string
 }
 
-const emptyForm: VehicleForm = { make: '', model: '', plate: '', year: '', price: '' }
+const emptyForm: VehicleForm = { make: '', model: '', plate: '', year: '', price: '', transmission: '', seats: '', fuelType: '', location: '', description: '' }
 
 export function AdminFleet() {
 	const [page, setPage] = useState(1)
@@ -75,6 +80,11 @@ export function AdminFleet() {
 			plate: form.plate,
 			year: form.year ? Number(form.year) : undefined,
 			price: Number(form.price),
+			transmission: form.transmission || undefined,
+			seats: form.seats ? Number(form.seats) : undefined,
+			fuelType: form.fuelType || undefined,
+			location: form.location || undefined,
+			description: form.description || undefined,
 		}
 
 		if (editTarget) {
@@ -105,6 +115,11 @@ export function AdminFleet() {
 			plate: v.plate,
 			year: String(v.year ?? ''),
 			price: String(Math.round(v.pricePerDay)),
+			transmission: v.transmission ?? '',
+			seats: String(v.seats ?? ''),
+			fuelType: v.fuelType ?? '',
+			location: v.location ?? '',
+			description: v.description ?? '',
 		})
 		setForm({
 			make: v.make,
@@ -112,6 +127,11 @@ export function AdminFleet() {
 			plate: v.plate,
 			year: String(v.year ?? ''),
 			price: String(Math.round(v.pricePerDay)),
+			transmission: v.transmission ?? '',
+			seats: String(v.seats ?? ''),
+			fuelType: v.fuelType ?? '',
+			location: v.location ?? '',
+			description: v.description ?? '',
 		})
 		setShowForm(true)
 	}
@@ -434,13 +454,10 @@ export function AdminFleet() {
 							</div>
 							<div>
 								<p className="text-[10px] font-heading font-600 text-[#6a5a4e] uppercase tracking-wider mb-1">
-									Preço
+									Preço (dia)
 								</p>
 								<p className="text-white font-heading font-600">
 									{formatKwanza(Number(vehicleDetail.price))}
-									<span className="text-xs text-[#6a5a4e] font-normal">
-										/evento
-									</span>
 								</p>
 							</div>
 							<div>
@@ -459,6 +476,42 @@ export function AdminFleet() {
 											? 'Alugado'
 											: 'Manutenção'}
 								</span>
+							</div>
+							<div>
+								<p className="text-[10px] font-heading font-600 text-[#6a5a4e] uppercase tracking-wider mb-1">
+									Transmissão
+								</p>
+								<p className="text-[#d4c5b8] font-heading">
+									{vehicleDetail.transmission === 'auto'
+										? 'Automática'
+										: vehicleDetail.transmission === 'manual'
+											? 'Manual'
+											: '—'}
+								</p>
+							</div>
+							<div>
+								<p className="text-[10px] font-heading font-600 text-[#6a5a4e] uppercase tracking-wider mb-1">
+									Lugares
+								</p>
+								<p className="text-[#d4c5b8] font-heading">
+									{vehicleDetail.seats ? `${vehicleDetail.seats} lugares` : '—'}
+								</p>
+							</div>
+							<div>
+								<p className="text-[10px] font-heading font-600 text-[#6a5a4e] uppercase tracking-wider mb-1">
+									Combustível
+								</p>
+								<p className="text-[#d4c5b8] font-heading">
+									{vehicleDetail.fuelType || '—'}
+								</p>
+							</div>
+							<div>
+								<p className="text-[10px] font-heading font-600 text-[#6a5a4e] uppercase tracking-wider mb-1">
+									Localização
+								</p>
+								<p className="text-[#d4c5b8] font-heading">
+									{vehicleDetail.location || '—'}
+								</p>
 							</div>
 							<div>
 								<p className="text-[10px] font-heading font-600 text-[#6a5a4e] uppercase tracking-wider mb-1">
@@ -488,6 +541,17 @@ export function AdminFleet() {
 								</p>
 							</div>
 						</div>
+
+						{vehicleDetail.description && (
+							<div className="pt-4 border-t border-[#3d3028]">
+								<p className="text-[10px] font-heading font-600 text-[#6a5a4e] uppercase tracking-wider mb-2">
+									Descrição
+								</p>
+								<p className="text-sm text-[#8a7a6e] font-heading leading-relaxed">
+									{vehicleDetail.description}
+								</p>
+							</div>
+						)}
 
 						{vehicleDetail.rentals.length > 0 && (
 							<div className="pt-4 border-t border-[#3d3028]">
@@ -609,7 +673,7 @@ export function AdminFleet() {
 						</div>
 						<div className="col-span-2">
 							<label className="block text-xs text-[#8a7a6e] font-heading font-500 mb-1">
-								Preço por Evento (Kz) *
+								Preço por Dia (Kz) *
 							</label>
 							<input
 								value={form.price}
@@ -617,6 +681,91 @@ export function AdminFleet() {
 								placeholder="50000"
 								type="number"
 								className="input-admin"
+							/>
+						</div>
+						<div className="col-span-2 sm:col-span-1">
+							<label className="block text-xs text-[#8a7a6e] font-heading font-500 mb-1">
+								Transmissão
+							</label>
+							<select
+								value={form.transmission}
+								onChange={(e) => setForm({ ...form, transmission: e.target.value })}
+								className="input-admin"
+							>
+								<option value="">Selecionar</option>
+								<option value="auto">Automática</option>
+								<option value="manual">Manual</option>
+							</select>
+						</div>
+						<div className="col-span-2 sm:col-span-1">
+							<label className="block text-xs text-[#8a7a6e] font-heading font-500 mb-1">
+								Lugares
+							</label>
+							<input
+								value={form.seats}
+								onChange={(e) => setForm({ ...form, seats: e.target.value })}
+								placeholder="4"
+								type="number"
+								min="1"
+								max="50"
+								className="input-admin"
+							/>
+						</div>
+						<div className="col-span-2 sm:col-span-1">
+							<label className="block text-xs text-[#8a7a6e] font-heading font-500 mb-1">
+								Combustível
+							</label>
+							<select
+								value={form.fuelType}
+								onChange={(e) => setForm({ ...form, fuelType: e.target.value })}
+								className="input-admin"
+							>
+								<option value="">Selecionar</option>
+								<option value="Gasolina">Gasolina</option>
+								<option value="Diesel">Diesel</option>
+								<option value="Elétrico">Elétrico</option>
+							</select>
+						</div>
+						<div className="col-span-2 sm:col-span-1">
+							<label className="block text-xs text-[#8a7a6e] font-heading font-500 mb-1">
+								Localização
+							</label>
+							<select
+								value={form.location}
+								onChange={(e) => setForm({ ...form, location: e.target.value })}
+								className="input-admin"
+							>
+								<option value="">Selecionar</option>
+								<option value="Bengo">Bengo</option>
+								<option value="Benguela">Benguela</option>
+								<option value="Bié">Bié</option>
+								<option value="Cabinda">Cabinda</option>
+								<option value="Cuando Cubango">Cuando Cubango</option>
+								<option value="Cuanza Norte">Cuanza Norte</option>
+								<option value="Cuanza Sul">Cuanza Sul</option>
+								<option value="Cunene">Cunene</option>
+								<option value="Huambo">Huambo</option>
+								<option value="Huíla">Huíla</option>
+								<option value="Luanda">Luanda</option>
+								<option value="Lunda Norte">Lunda Norte</option>
+								<option value="Lunda Sul">Lunda Sul</option>
+								<option value="Malanje">Malanje</option>
+								<option value="Moxico">Moxico</option>
+								<option value="Namibe">Namibe</option>
+								<option value="Uíge">Uíge</option>
+								<option value="Zaire">Zaire</option>
+							</select>
+						</div>
+						<div className="col-span-2">
+							<label className="block text-xs text-[#8a7a6e] font-heading font-500 mb-1">
+								Descrição
+							</label>
+							<textarea
+								value={form.description}
+								onChange={(e) => setForm({ ...form, description: e.target.value })}
+								placeholder="Descrição da viatura..."
+								rows={3}
+								className="input-admin resize-none"
 							/>
 						</div>
 					</div>

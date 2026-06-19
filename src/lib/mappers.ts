@@ -145,5 +145,6 @@ export function mapVehicle(raw: RawVehicle): Car {
 		available: raw.status === 'AVAILABLE',
 		location: raw.location ?? 'Luanda',
 		description: raw.description ?? `${raw.make} ${raw.model} (${raw.plate})`,
+		plate: raw.plate,
 	}
 }
