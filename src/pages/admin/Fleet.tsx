@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import {
 	useAdminFleet,
 	useAdminVehicleDetail,
@@ -7,9 +7,15 @@ import {
 	useDeleteVehicle,
 	useUpdateVehicleStatus,
 } from '../../api/hooks/useAdmin'
+import { useCloudinaryUpload } from '../../api/hooks/useCloudinaryUpload'
 import { Skeleton } from '../../components/ui/Skeleton'
 import { Modal } from '../../components/ui/Modal'
 import { formatDate, formatKwanza } from '../../lib/format'
+
+interface PhotoFile {
+	url: string
+	idcloudinary: string
+}
 
 const statusColors: Record<string, string> = {
 	AVAILABLE: 'text-emerald-400',
@@ -62,6 +68,12 @@ export function AdminFleet() {
 	const [editTarget, setEditTarget] = useState<({ id: string } & VehicleForm) | null>(null)
 	const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null)
 	const [form, setForm] = useState<VehicleForm>(emptyForm)
+	const [photos, setPhotos] = useState<PhotoFile[]>([])
+	const [filesToUpload, setFilesToUpload] = useState<File[]>([])
+	const [idsToDelete, setIdsToDelete] = useState<string[]>([])
+	const fileInputRef = useRef<HTMLInputElement>(null)
+	const cloudinary = useCloudinaryUpload()
+	const [uploading, setUploading] = useState(false)
 
 	const vehicles = data?.vehicles ?? []
 	const availableCount = vehicles.filter((v) => v.available).length
@@ -71,43 +83,67 @@ export function AdminFleet() {
 	const resetForm = () => {
 		setForm(emptyForm)
 		setEditTarget(null)
+		setPhotos([])
+		setFilesToUpload([])
+		setIdsToDelete([])
 	}
 
-	const handleSubmit = () => {
-		const payload = {
-			make: form.make,
-			model: form.model,
-			plate: form.plate,
-			year: form.year ? Number(form.year) : undefined,
-			price: Number(form.price),
-			transmission: form.transmission || undefined,
-			seats: form.seats ? Number(form.seats) : undefined,
-			fuelType: form.fuelType || undefined,
-			location: form.location || undefined,
-			description: form.description || undefined,
-		}
+	const handleSubmit = async () => {
+		setUploading(true)
+		try {
+			// Upload pending files
+			const uploaded: PhotoFile[] = []
+			for (const file of filesToUpload) {
+				const result = await cloudinary.upload(file, 'veiculos')
+				uploaded.push({ url: result.url, idcloudinary: result.idcloudinary })
+			}
 
-		if (editTarget) {
-			updateVehicle.mutate(
-				{ id: editTarget.id, ...payload },
-				{
+			const finalPhotos = [...photos, ...uploaded]
+			const payload: Record<string, unknown> = {
+				make: form.make,
+				model: form.model,
+				plate: form.plate,
+				year: form.year ? Number(form.year) : undefined,
+				price: Number(form.price),
+				transmission: form.transmission || undefined,
+				seats: form.seats ? Number(form.seats) : undefined,
+				fuelType: form.fuelType || undefined,
+				location: form.location || undefined,
+				description: form.description || undefined,
+				photos: finalPhotos,
+			}
+
+			if (editTarget) {
+				payload.cloudinaryIdsToDelete = idsToDelete
+				updateVehicle.mutate(
+					{ id: editTarget.id, ...payload },
+					{
+						onSuccess: () => {
+							setShowForm(false)
+							resetForm()
+						},
+					},
+				)
+			} else {
+				createVehicle.mutate(payload as any, {
 					onSuccess: () => {
 						setShowForm(false)
 						resetForm()
 					},
-				},
-			)
-		} else {
-			createVehicle.mutate(payload, {
-				onSuccess: () => {
-					setShowForm(false)
-					resetForm()
-				},
-			})
+				})
+			}
+		} catch {
+			// cloudinary.upload shows errors via toast
+		} finally {
+			setUploading(false)
 		}
 	}
 
 	const handleEdit = (v: (typeof vehicles)[0]) => {
+		const existingPhotos = (v.photos ?? []).map((p: any) => ({
+			url: typeof p === 'string' ? p : p.url,
+			idcloudinary: typeof p === 'string' ? '' : p.idcloudinary ?? '',
+		}))
 		setEditTarget({
 			id: v.id,
 			make: v.make,
@@ -133,6 +169,9 @@ export function AdminFleet() {
 			location: v.location ?? '',
 			description: v.description ?? '',
 		})
+		setPhotos(existingPhotos)
+		setFilesToUpload([])
+		setIdsToDelete([])
 		setShowForm(true)
 	}
 
@@ -310,10 +349,10 @@ export function AdminFleet() {
 										className="border-b border-[#3d3028] last:border-0 hover:bg-white/[0.02] transition-colors"
 									>
 										<td className="px-4 py-3">
-											<div className="w-12 h-9 rounded-lg overflow-hidden bg-[#3d3028] shrink-0">
+											<div className="w-14 h-10 rounded-lg overflow-hidden bg-[#3d3028] shrink-0">
 												{v.photos?.[0] ? (
 													<img
-														src={v.photos[0]}
+														src={typeof v.photos[0] === 'string' ? v.photos[0] : (v.photos[0] as any).url}
 														alt={`${v.make} ${v.model}`}
 														className="w-full h-full object-cover"
 													/>
@@ -563,6 +602,32 @@ export function AdminFleet() {
 							</div>
 						</div>
 
+						{vehicleDetail.photos && vehicleDetail.photos.length > 0 && (
+							<div className="pt-4 border-t border-[#3d3028]">
+								<p className="text-[10px] font-heading font-600 text-[#6a5a4e] uppercase tracking-wider mb-2">
+									Galeria
+								</p>
+								<div className="flex flex-wrap gap-2">
+									{vehicleDetail.photos.map((photo: any, i: number) => {
+										const url = typeof photo === 'string' ? photo : photo?.url ?? ''
+										if (!url) return null
+										return (
+											<div
+												key={i}
+												className={`overflow-hidden rounded-lg bg-[#3d3028] ${i === 0 ? 'w-full aspect-[16/9]' : 'w-[calc(33.333%-6px)] aspect-[4/3]'}`}
+											>
+												<img
+													src={url}
+													alt={`${vehicleDetail.make} ${vehicleDetail.model} ${i + 1}`}
+													className="w-full h-full object-cover"
+												/>
+											</div>
+										)
+									})}
+								</div>
+							</div>
+						)}
+
 						{vehicleDetail.description && (
 							<div className="pt-4 border-t border-[#3d3028]">
 								<p className="text-[10px] font-heading font-600 text-[#6a5a4e] uppercase tracking-wider mb-2">
@@ -789,6 +854,96 @@ export function AdminFleet() {
 								className="input-admin resize-none"
 							/>
 						</div>
+
+						{/* Photos */}
+						<div className="col-span-2">
+							<label className="block text-xs text-[#8a7a6e] font-heading font-500 mb-2">
+								Fotos
+							</label>
+							<input
+								ref={fileInputRef}
+								type="file"
+								accept="image/jpeg,image/png,image/webp"
+								multiple
+								className="hidden"
+								onChange={(e) => {
+									const files = Array.from(e.target.files ?? [])
+									setFilesToUpload((prev) => [...prev, ...files])
+									if (fileInputRef.current) fileInputRef.current.value = ''
+								}}
+							/>
+							{photos.length === 0 && filesToUpload.length === 0 ? (
+								<button
+									type="button"
+									onClick={() => fileInputRef.current?.click()}
+									className="w-full border-2 border-dashed border-[#3d3028] rounded-xl py-8 text-center hover:border-brand/40 transition-colors cursor-pointer"
+								>
+									<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="mx-auto mb-2 text-[#6a5a4e]">
+										<path d="M12 5v14M5 12h14" />
+									</svg>
+									<p className="text-xs text-[#6a5a4e] font-heading">Adicionar fotos</p>
+									<p className="text-[10px] text-[#5a4a3e] mt-1">JPEG, PNG ou WebP · Máx 5MB cada</p>
+								</button>
+							) : (
+								<div className="space-y-2">
+									<div className="grid grid-cols-4 sm:grid-cols-5 gap-2">
+										{photos.map((photo, i) => (
+											<div key={photo.idcloudinary || `existing-${i}`} className="relative group aspect-[4/3] rounded-lg overflow-hidden bg-[#3d3028]">
+												<img src={photo.url} alt="" className="w-full h-full object-cover" />
+												<button
+													type="button"
+													onClick={() => {
+														if (photo.idcloudinary) setIdsToDelete((prev) => [...prev, photo.idcloudinary])
+														setPhotos((prev) => prev.filter((_, idx) => idx !== i))
+													}}
+													className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/60 flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500"
+												>
+													<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+														<path d="M18 6L6 18M6 6l12 12" />
+													</svg>
+												</button>
+												{i === 0 && (
+													<span className="absolute bottom-1 left-1 px-1.5 py-0.5 bg-brand/80 text-white text-[9px] font-heading font-600 rounded">Principal</span>
+												)}
+											</div>
+										))}
+										{filesToUpload.map((file, i) => (
+											<div key={`file-${i}`} className="relative group aspect-[4/3] rounded-lg overflow-hidden bg-[#3d3028]">
+												<img src={URL.createObjectURL(file)} alt="" className="w-full h-full object-cover" />
+												<button
+													type="button"
+													onClick={() => setFilesToUpload((prev) => prev.filter((_, idx) => idx !== i))}
+													className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/60 flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500"
+												>
+													<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+														<path d="M18 6L6 18M6 6l12 12" />
+													</svg>
+												</button>
+												<div className="absolute inset-0 flex items-center justify-center bg-black/30">
+													<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
+														<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+														<polyline points="14 2 14 8 20 8" />
+													</svg>
+												</div>
+											</div>
+										))}
+										<button
+											type="button"
+											onClick={() => fileInputRef.current?.click()}
+											className="aspect-[4/3] rounded-lg border-2 border-dashed border-[#3d3028] flex flex-col items-center justify-center hover:border-brand/40 transition-colors cursor-pointer"
+										>
+											<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-[#6a5a4e]">
+												<path d="M12 5v14M5 12h14" />
+											</svg>
+											<span className="text-[10px] text-[#6a5a4e] mt-1 font-heading">Adicionar</span>
+										</button>
+									</div>
+									<p className="text-[10px] text-[#5a4a3e] font-heading">
+										{photos.length + filesToUpload.length} foto{(photos.length + filesToUpload.length) !== 1 ? 's' : ''} · A primeira é a principal
+									</p>
+								</div>
+							)}
+						</div>
 					</div>
 					<div className="flex gap-2 pt-2">
 						<button
@@ -807,12 +962,13 @@ export function AdminFleet() {
 								!form.model ||
 								!form.plate ||
 								!form.price ||
+								uploading ||
 								createVehicle.isPending ||
 								updateVehicle.isPending
 							}
 							className="btn-admin-brand flex-1"
 						>
-							{editTarget ? 'Atualizar' : 'Criar'}
+							{uploading ? 'A enviar fotos...' : editTarget ? 'Atualizar' : 'Criar'}
 						</button>
 					</div>
 				</div>

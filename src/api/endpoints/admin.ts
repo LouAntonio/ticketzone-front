@@ -150,6 +150,11 @@ export interface AdminFinancial {
 	netRevenue: number
 }
 
+export interface PhotoFile {
+	url: string
+	idcloudinary: string
+}
+
 export interface AdminVehicle {
 	id: string
 	make: string
@@ -164,7 +169,7 @@ export interface AdminVehicle {
 	fuelType?: string
 	location?: string
 	description?: string
-	photos: string[]
+	photos: PhotoFile[]
 	ownerName: string
 	rentalsCount: number
 	createdAt: string
@@ -345,6 +350,7 @@ export interface AdminVehicleDetail {
 	fuelType?: string
 	location?: string
 	description?: string
+	photos: PhotoFile[]
 	createdAt: string
 	owner: { id: string; name: string; email: string }
 	_count: { rentals: number }
@@ -476,6 +482,7 @@ export const adminApi = {
 		fuelType?: string
 		location?: string
 		description?: string
+		photos?: { url: string; idcloudinary: string }[]
 	}) => api.post<{ msg: string }>('/admin/fleet', data).then((r) => r.data),
 
 	updateVehicle: (id: string, data: Record<string, unknown>) =>

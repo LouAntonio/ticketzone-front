@@ -122,7 +122,7 @@ export interface RawVehicle {
 	year: number | null
 	price: number
 	status: string
-	photos: string[]
+	photos: any[]
 	transmission: string | null
 	seats: number | null
 	fuelType: string | null
@@ -132,12 +132,14 @@ export interface RawVehicle {
 }
 
 export function mapVehicle(raw: RawVehicle): Car {
+	const rawPhotos = raw.photos ?? []
+	const photos: string[] = rawPhotos.map((p: any) => (typeof p === 'string' ? p : p?.url ?? '')).filter(Boolean)
 	return {
 		id: raw.id,
 		make: raw.make,
 		model: raw.model,
 		year: raw.year ?? new Date().getFullYear(),
-		photos: raw.photos?.length ? raw.photos : [],
+		photos,
 		pricePerDay: Number(raw.price),
 		transmission: (raw.transmission ?? 'auto') as Transmission,
 		seats: raw.seats ?? 5,
