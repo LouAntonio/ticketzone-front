@@ -448,6 +448,37 @@ export function SecurityPage() {
 								{user?.emailVerified ? 'Sim' : 'Não'}
 							</p>
 						</div>
+						<div className="sm:col-span-2 p-4 rounded-xl bg-warm-bg border border-warm-border">
+							<span className="text-text-secondary">ID de Utilizador</span>
+							<div className="flex items-center gap-2 mt-1">
+								<p className="font-heading font-600 text-warm-text text-xs font-mono break-all flex-1 min-w-0">
+									{user?.id}
+								</p>
+								<button
+									type="button"
+									onClick={() => {
+										navigator.clipboard.writeText(user!.id)
+										toast.success('ID copiado')
+									}}
+									className="shrink-0 text-text-secondary hover:text-brand transition-colors"
+									title="Copiar ID"
+								>
+									<svg
+										width="14"
+										height="14"
+										viewBox="0 0 24 24"
+										fill="none"
+										stroke="currentColor"
+										strokeWidth="2"
+										strokeLinecap="round"
+										strokeLinejoin="round"
+									>
+										<rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+										<path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+									</svg>
+								</button>
+							</div>
+						</div>
 					</div>
 				</div>
 			</div>
