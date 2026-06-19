@@ -102,6 +102,10 @@ export function EventDetail() {
 			navigate('/login')
 			return
 		}
+		if (event.salesPaused) {
+			toast.error('As vendas para este evento estão pausadas.')
+			return
+		}
 
 		setEvent(event.id, event.title)
 
@@ -373,7 +377,14 @@ export function EventDetail() {
 						<div className="card p-6 space-y-5">
 							<h3 className="font-heading font-700 text-lg">Bilhetes</h3>
 
-							{tickets.length > 0 ? (
+							{event.salesPaused ? (
+								<div className="text-center py-6 space-y-3">
+									<Badge variant="red">Vendas Pausadas</Badge>
+									<p className="text-xs text-text-secondary">
+										As vendas para este evento estão temporariamente pausadas pelo organizador.
+									</p>
+								</div>
+							) : tickets.length > 0 ? (
 								tickets.map((tt) => (
 									<div
 										key={tt.id}
@@ -479,10 +490,10 @@ export function EventDetail() {
 								<Button
 									className="w-full"
 									size="lg"
-									disabled={totalSelected === 0}
+									disabled={totalSelected === 0 || event.salesPaused}
 									onClick={handleAddToCart}
 								>
-									{user ? 'Comprar Bilhetes' : 'Entrar para Comprar'}
+									{event.salesPaused ? 'Vendas Pausadas' : user ? 'Comprar Bilhetes' : 'Entrar para Comprar'}
 								</Button>
 							</div>
 						</div>

@@ -43,8 +43,9 @@ export function CheckoutPage() {
 			setOrderRef(res.order.paymentRef ?? '')
 			setOrderCreated(true)
 			cart.clear()
-		} catch (err) {
-			toast.error('Erro ao processar o pedido. Tenta novamente.')
+		} catch (err: any) {
+			const message = err?.response?.data?.message ?? 'Erro ao processar o pedido. Tenta novamente.'
+			toast.error(Array.isArray(message) ? message[0] : message)
 			console.error(err)
 		}
 	}
