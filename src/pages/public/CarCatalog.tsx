@@ -27,16 +27,21 @@ export function CarCatalog() {
 	const [transmission, setTransmission] = useState('')
 	const [page, setPage] = useState(1)
 
-	const params: Record<string, string | number | undefined> = {
-		page,
-		limit: 12,
-	}
+	const params: {
+		search?: string
+		status?: string
+		page?: number
+		limit?: number
+		location?: string
+		fuelType?: string
+		transmission?: string
+	} = { page, limit: 12 }
 	if (search) params.search = search
 	if (location) params.location = location
 	if (fuelType) params.fuelType = fuelType
 	if (transmission) params.transmission = transmission
 
-	const { data, isLoading } = useCars(params as { search?: string; status?: string; page?: number; limit?: number })
+	const { data, isLoading } = useCars(params)
 	const createBooking = useCreateBooking()
 
 	const [selectedCar, setSelectedCar] = useState<string | null>(null)

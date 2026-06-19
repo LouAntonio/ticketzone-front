@@ -94,7 +94,7 @@ function mapRental(raw: RawRental): Rental {
 }
 
 export const rentalsApi = {
-	listCars: (params?: { search?: string; status?: string; page?: number; limit?: number }) =>
+	listCars: (params?: { search?: string; status?: string; page?: number; limit?: number; location?: string; fuelType?: string; transmission?: string }) =>
 		api
 			.get<{ vehicles: RawVehicle[]; total: number; page: number; limit: number; totalPages: number }>('/vehicles', { params })
 			.then((r) => ({

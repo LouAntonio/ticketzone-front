@@ -2,7 +2,7 @@ import { useQuery, useMutation } from '@tanstack/react-query'
 import { rentalsApi } from '../endpoints/rentals'
 import type { CreateBookingData } from '../../types/rental'
 
-export function useCars(params?: { search?: string; status?: string; page?: number; limit?: number }) {
+export function useCars(params?: { search?: string; status?: string; page?: number; limit?: number; location?: string; fuelType?: string; transmission?: string }) {
 	return useQuery({
 		queryKey: ['cars', params],
 		queryFn: () => rentalsApi.listCars(params),
