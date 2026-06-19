@@ -402,7 +402,8 @@ export function EventForm() {
 					...toCreate.map((data) => createBatch.mutateAsync(data)),
 				])
 			} else {
-				await createEvent.mutateAsync(payload)
+				const { addons, ...createPayload } = payload
+				await createEvent.mutateAsync(createPayload as EventFormData)
 			}
 			navigate('/organizer/events')
 		} catch {
