@@ -164,6 +164,7 @@ export interface AdminVehicle {
 	fuelType?: string
 	location?: string
 	description?: string
+	photos: string[]
 	ownerName: string
 	rentalsCount: number
 	createdAt: string

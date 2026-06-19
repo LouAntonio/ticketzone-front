@@ -284,6 +284,8 @@ export function AdminFleet() {
 						<table className="w-full">
 							<thead>
 								<tr className="border-b-2 border-[#3d3028]">
+									<th className="text-left px-4 py-3 text-[10px] font-heading font-600 text-[#6a5a4e] uppercase tracking-[0.12em] w-14">
+									</th>
 									<th className="text-left px-4 py-3 text-[10px] font-heading font-600 text-[#6a5a4e] uppercase tracking-[0.12em]">
 										Viatura
 									</th>
@@ -308,6 +310,25 @@ export function AdminFleet() {
 										className="border-b border-[#3d3028] last:border-0 hover:bg-white/[0.02] transition-colors"
 									>
 										<td className="px-4 py-3">
+											<div className="w-12 h-9 rounded-lg overflow-hidden bg-[#3d3028] shrink-0">
+												{v.photos?.[0] ? (
+													<img
+														src={v.photos[0]}
+														alt={`${v.make} ${v.model}`}
+														className="w-full h-full object-cover"
+													/>
+												) : (
+													<div className="w-full h-full flex items-center justify-center">
+														<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-[#6a5a4e]">
+															<path d="M14 16H9m10 0h3v-3.15a1 1 0 00-.84-.99L16 11l-2.7-3.6a1 1 0 00-.8-.4H5.24a2 2 0 00-1.8 1.1l-.8 1.63A6 6 0 002 12.42V16h2" />
+															<circle cx="6.5" cy="16.5" r="2.5" />
+															<circle cx="16.5" cy="16.5" r="2.5" />
+														</svg>
+													</div>
+												)}
+											</div>
+										</td>
+										<td className="px-4 py-3">
 											<p className="text-sm font-heading font-500 text-[#d4c5b8]">
 												{v.make} {v.model}
 											</p>
@@ -331,7 +352,7 @@ export function AdminFleet() {
 										<td className="px-4 py-3 text-sm font-heading font-600 text-white text-right">
 											{formatKwanza(v.pricePerDay)}
 											<span className="text-xs text-[#6a5a4e] font-normal">
-												/evento
+												/dia
 											</span>
 										</td>
 										<td className="px-4 py-3 text-right">

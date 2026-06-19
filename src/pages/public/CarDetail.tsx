@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { toast } from 'react-hot-toast'
 import { useCar, useCreateBooking } from '../../api/hooks/useRentals'
@@ -17,10 +17,29 @@ export function CarDetail() {
 
 	const [startDate, setStartDate] = useState('')
 	const [endDate, setEndDate] = useState('')
+	const [lightboxIndex, setLightboxIndex] = useState<number | null>(null)
 
 	const car = data?.car
+	const photos = car?.photos ?? []
 
 	const today = new Date().toISOString().split('T')[0]
+
+	const handleLightboxClose = useCallback(() => setLightboxIndex(null), [])
+
+	useEffect(() => {
+		const handler = (e: KeyboardEvent) => {
+			if (lightboxIndex === null) return
+			if (e.key === 'Escape') handleLightboxClose()
+			if (e.key === 'ArrowLeft') {
+				setLightboxIndex((prev) => (prev !== null ? (prev - 1 + photos.length) % photos.length : null))
+			}
+			if (e.key === 'ArrowRight') {
+				setLightboxIndex((prev) => (prev !== null ? (prev + 1) % photos.length : null))
+			}
+		}
+		window.addEventListener('keydown', handler)
+		return () => window.removeEventListener('keydown', handler)
+	}, [lightboxIndex, photos.length, handleLightboxClose])
 
 	const handleReserve = async () => {
 		if (!user) {
@@ -54,12 +73,21 @@ export function CarDetail() {
 
 	if (isLoading) {
 		return (
-			<div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+			<div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
 				<Skeleton className="h-8 w-48" />
-				<Skeleton className="h-[400px] w-full rounded-xl" />
-				<div className="grid sm:grid-cols-2 gap-6">
-					<Skeleton className="h-48 rounded-xl" />
-					<Skeleton className="h-48 rounded-xl" />
+				<div className="grid lg:grid-cols-3 gap-8">
+					<div className="lg:col-span-2 space-y-4">
+						<Skeleton className="h-[400px] w-full rounded-xl" />
+						<div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+							{[...Array(3)].map((_, i) => (
+								<Skeleton key={i} className="aspect-[4/3] rounded-xl" />
+							))}
+						</div>
+					</div>
+					<div className="space-y-6">
+						<Skeleton className="h-64 rounded-xl" />
+						<Skeleton className="h-48 rounded-xl" />
+					</div>
 				</div>
 			</div>
 		)
@@ -89,49 +117,93 @@ export function CarDetail() {
 	const totalPrice = pricePerDay * totalDays
 
 	return (
-		<div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+		<div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 			{/* Breadcrumb */}
-			<div className="flex items-center gap-2 text-sm text-text-secondary mb-6 fade-in">
+			<div className="flex items-center gap-2 text-sm text-text-secondary mb-8 fade-in">
 				<Link to="/rentals" className="hover:text-brand transition-colors">Rent-a-Car</Link>
 				<span>/</span>
 				<span className="text-text">{car.make} {car.model}</span>
 			</div>
 
-			<div className="grid lg:grid-cols-5 gap-8">
-				{/* Gallery */}
-				<div className="lg:col-span-3 space-y-4 fade-in">
-					<div className="aspect-[16/9] rounded-xl overflow-hidden card">
-						<img
-							src={car.photos[0] ?? ''}
-							alt={`${car.make} ${car.model}`}
-							className="w-full h-full object-cover"
-						/>
-					</div>
-					{car.photos.length > 1 && (
-						<div className="grid grid-cols-4 gap-3">
-							{car.photos.slice(1).map((photo, i) => (
-								<div key={i} className="aspect-[4/3] rounded-lg overflow-hidden card">
-									<img
-										src={photo}
-										alt={`${car.make} ${car.model} ${i + 2}`}
-										className="w-full h-full object-cover"
-										loading="lazy"
-									/>
-								</div>
-							))}
+			<div className="grid lg:grid-cols-3 gap-8">
+				{/* Gallery + Specs column */}
+				<div className="lg:col-span-2 space-y-8">
+					{/* Gallery */}
+					{photos.length > 0 && (
+						<div className="fade-in">
+							<div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+								{photos.map((photo, i) => (
+									<button
+										key={i}
+										onClick={() => setLightboxIndex(i)}
+										className="group cursor-pointer overflow-hidden rounded-xl bg-surface-card border border-border"
+									>
+										<div className="aspect-[4/3] overflow-hidden">
+											<img
+												src={photo}
+												alt={`${car.make} ${car.model} - Foto ${i + 1}`}
+												className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+												loading={i === 0 ? undefined : 'lazy'}
+											/>
+										</div>
+									</button>
+								))}
+							</div>
 						</div>
 					)}
+
+					{/* Specs card */}
+					<div className="bg-surface-card border border-border rounded-xl p-6 sm:p-8 fade-in">
+						<h2 className="font-heading font-700 text-xl mb-6">Especificações</h2>
+						<div className="grid sm:grid-cols-2 gap-x-8 gap-y-4 text-sm">
+							<div className="flex items-center justify-between sm:justify-start sm:gap-4 py-2 border-b border-border">
+								<span className="text-text-secondary w-28 shrink-0">Ano</span>
+								<span className="font-heading font-600">{car.year}</span>
+							</div>
+							<div className="flex items-center justify-between sm:justify-start sm:gap-4 py-2 border-b border-border">
+								<span className="text-text-secondary w-28 shrink-0">Transmissão</span>
+								<span className="font-heading font-600">
+									{car.transmission === 'auto' ? 'Automática' : 'Manual'}
+								</span>
+							</div>
+							<div className="flex items-center justify-between sm:justify-start sm:gap-4 py-2 border-b border-border">
+								<span className="text-text-secondary w-28 shrink-0">Lugares</span>
+								<span className="font-heading font-600">{car.seats}</span>
+							</div>
+							<div className="flex items-center justify-between sm:justify-start sm:gap-4 py-2 border-b border-border">
+								<span className="text-text-secondary w-28 shrink-0">Combustível</span>
+								<span className="font-heading font-600">{car.fuelType}</span>
+							</div>
+							<div className="flex items-center justify-between sm:justify-start sm:gap-4 py-2 border-b border-border">
+								<span className="text-text-secondary w-28 shrink-0">Localização</span>
+								<span className="font-heading font-600">{car.location}</span>
+							</div>
+							<div className="flex items-center justify-between sm:justify-start sm:gap-4 py-2 border-b border-border">
+								<span className="text-text-secondary w-28 shrink-0">Matrícula</span>
+								<span className="font-heading font-600 font-mono tracking-wider text-xs">{car.plate}</span>
+							</div>
+						</div>
+
+						{car.description && (
+							<div className="mt-6 pt-6 border-t border-border">
+								<p className="text-sm text-text-secondary leading-relaxed">
+									{car.description}
+								</p>
+							</div>
+						)}
+					</div>
 				</div>
 
-				{/* Info + Booking */}
-				<div className="lg:col-span-2 space-y-6">
-					<div className="card p-6 fade-in">
+				{/* Sidebar: Info + Booking */}
+				<div className="space-y-6 fade-in">
+					{/* Price card */}
+					<div className="bg-surface-card border border-border rounded-xl p-6">
 						<div className="flex items-start justify-between mb-4">
 							<div>
-								<h1 className="font-display text-3xl mb-1">
+								<h1 className="font-display text-2xl mb-0.5">
 									{car.make} {car.model}
 								</h1>
-								<p className="text-sm text-text-secondary font-mono tracking-wider">
+								<p className="text-xs text-text-secondary font-mono tracking-wider">
 									{car.plate}
 								</p>
 							</div>
@@ -140,50 +212,17 @@ export function CarDetail() {
 							</Badge>
 						</div>
 
-						<div className="space-y-3 text-sm">
-							<div className="flex items-center gap-3 py-2 border-b border-border">
-								<span className="text-text-secondary w-28">Ano</span>
-								<span className="font-heading font-600">{car.year}</span>
-							</div>
-							<div className="flex items-center gap-3 py-2 border-b border-border">
-								<span className="text-text-secondary w-28">Transmissão</span>
-								<span className="font-heading font-600">
-									{car.transmission === 'auto' ? 'Automática' : 'Manual'}
-								</span>
-							</div>
-							<div className="flex items-center gap-3 py-2 border-b border-border">
-								<span className="text-text-secondary w-28">Lugares</span>
-								<span className="font-heading font-600">{car.seats}</span>
-							</div>
-							<div className="flex items-center gap-3 py-2 border-b border-border">
-								<span className="text-text-secondary w-28">Combustível</span>
-								<span className="font-heading font-600">{car.fuelType}</span>
-							</div>
-							<div className="flex items-center gap-3 py-2 border-b border-border">
-								<span className="text-text-secondary w-28">Localização</span>
-								<span className="font-heading font-600">{car.location}</span>
-							</div>
-						</div>
-
-						{car.description && (
-							<p className="text-sm text-text-secondary mt-4 pt-4 border-t border-border">
-								{car.description}
-							</p>
-						)}
-
-						<div className="mt-6 pt-4 border-t border-border">
-							<div className="flex items-baseline gap-1 mb-1">
-								<span className="font-display text-3xl text-brand">
-									{formatKwanza(pricePerDay)}
-								</span>
-								<span className="text-text-secondary text-sm">/dia</span>
-							</div>
+						<div className="flex items-baseline gap-1 mb-1">
+							<span className="font-display text-3xl text-brand">
+								{formatKwanza(pricePerDay)}
+							</span>
+							<span className="text-text-secondary text-sm">/dia</span>
 						</div>
 					</div>
 
 					{/* Booking Form */}
 					{car.available && (
-						<div className="card p-6 fade-in">
+						<div className="bg-surface-card border border-border rounded-xl p-6">
 							<h3 className="font-heading font-700 text-base mb-4">Reservar</h3>
 							<div className="space-y-4">
 								<div className="grid grid-cols-2 gap-3">
@@ -249,6 +288,61 @@ export function CarDetail() {
 					)}
 				</div>
 			</div>
+
+			{/* Lightbox */}
+			{lightboxIndex !== null && (
+				<div
+					className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center"
+					onClick={handleLightboxClose}
+				>
+					<button
+						onClick={(e) => {
+							e.stopPropagation()
+							setLightboxIndex((prev) => (prev !== null ? (prev - 1 + photos.length) % photos.length : null))
+						}}
+						className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-all"
+					>
+						<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+							<path d="M15 18l-6-6 6-6" />
+						</svg>
+					</button>
+
+					<button
+						onClick={(e) => {
+							e.stopPropagation()
+							setLightboxIndex((prev) => (prev !== null ? (prev + 1) % photos.length : null))
+						}}
+						className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-all"
+					>
+						<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+							<path d="M9 18l6-6-6-6" />
+						</svg>
+					</button>
+
+					<button
+						onClick={(e) => {
+							e.stopPropagation()
+							handleLightboxClose()
+						}}
+						className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-all"
+					>
+						<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+							<path d="M18 6L6 18M6 6l12 12" />
+						</svg>
+					</button>
+
+					<img
+						src={photos[lightboxIndex]}
+						alt={`${car.make} ${car.model} - Foto ${lightboxIndex + 1}`}
+						className="max-h-[85vh] max-w-[90vw] object-contain rounded-lg"
+						onClick={(e) => e.stopPropagation()}
+					/>
+
+					<div className="absolute bottom-6 left-1/2 -translate-x-1/2 text-white/80 text-sm font-heading font-600">
+						{lightboxIndex + 1} / {photos.length}
+					</div>
+				</div>
+			)}
 		</div>
 	)
 }
