@@ -73,7 +73,7 @@ export function CarDetail() {
 
 	if (isLoading) {
 		return (
-			<div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+			<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
 				<Skeleton className="h-8 w-48" />
 				<div className="grid lg:grid-cols-3 gap-8">
 					<div className="lg:col-span-2 space-y-4">
@@ -95,7 +95,7 @@ export function CarDetail() {
 
 	if (!car) {
 		return (
-			<div className="max-w-5xl mx-auto px-4 py-16 text-center">
+			<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 text-center">
 				<div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-brand-soft flex items-center justify-center">
 					<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-brand">
 						<path d="M14 16H9m10 0h3v-3.15a1 1 0 00-.84-.99L16 11l-2.7-3.6a1 1 0 00-.8-.4H5.24a2 2 0 00-1.8 1.1l-.8 1.63A6 6 0 002 12.42V16h2" />
@@ -117,7 +117,7 @@ export function CarDetail() {
 	const totalPrice = pricePerDay * totalDays
 
 	return (
-		<div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+		<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 			{/* Breadcrumb */}
 			<div className="flex items-center gap-2 text-sm text-text-secondary mb-8 fade-in">
 				<Link to="/rentals" className="hover:text-brand transition-colors">Rent-a-Car</Link>
