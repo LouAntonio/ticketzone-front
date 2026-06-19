@@ -467,7 +467,7 @@ export const handlers = [
 			buyerName: user?.name ?? '',
 			items: body.items,
 			totalAmount: total,
-			status: 'pending' as const,
+			status: 'confirmed' as const,
 			paymentMethod: body.paymentMethod as 'multicaixa' | 'paypay' | 'reference',
 			paymentRef:
 				body.paymentMethod === 'multicaixa'
@@ -480,12 +480,6 @@ export const handlers = [
 			createdAt: new Date().toISOString(),
 		}
 		db.orders.push(order)
-
-		// Simulate payment confirmation after a bit
-		setTimeout(() => {
-			const ord = db.orders.find((o) => o.id === order.id)
-			if (ord) ord.status = 'confirmed'
-		}, 3000)
 
 		return HttpResponse.json({ order })
 	}),

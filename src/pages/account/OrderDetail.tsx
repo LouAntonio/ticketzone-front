@@ -1,5 +1,5 @@
 import { useParams, Link, useNavigate } from 'react-router-dom'
-import { useOrder, usePayOrder, useCancelOrder } from '../../api/hooks/useAccount'
+import { useOrder, useCancelOrder } from '../../api/hooks/useAccount'
 import { Badge } from '../../components/ui/Badge'
 import { Skeleton } from '../../components/ui/Skeleton'
 import { Button } from '../../components/ui/Button'
@@ -33,18 +33,7 @@ export function OrderDetailPage() {
 	const { id } = useParams<{ id: string }>()
 	const navigate = useNavigate()
 	const { data: order, isLoading, error } = useOrder(id ?? '')
-	const payOrder = usePayOrder()
 	const cancelOrder = useCancelOrder()
-
-	const handlePay = async () => {
-		if (!id) return
-		try {
-			await payOrder.mutateAsync(id)
-			toast.success('Pagamento confirmado!')
-		} catch {
-			toast.error('Erro ao processar pagamento')
-		}
-	}
 
 	const handleCancel = async () => {
 		if (!id) return
@@ -368,21 +357,6 @@ export function OrderDetailPage() {
 			{/* Actions */}
 			{isPending && (
 				<div className="flex items-center gap-3 stagger-5">
-					<Button onClick={handlePay} loading={payOrder.isPending} className="flex-1">
-						<svg
-							width="16"
-							height="16"
-							viewBox="0 0 24 24"
-							fill="none"
-							stroke="currentColor"
-							strokeWidth="2"
-							strokeLinecap="round"
-							strokeLinejoin="round"
-						>
-							<path d="M12 1v22M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" />
-						</svg>
-						Pagar Agora
-					</Button>
 					<Button
 						variant="outline"
 						onClick={handleCancel}

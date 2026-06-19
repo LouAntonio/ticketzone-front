@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useOrders } from '../../api/hooks/useOrders'
-import { usePayOrder, useCancelOrder } from '../../api/hooks/useAccount'
+import { useCancelOrder } from '../../api/hooks/useAccount'
 import { Badge } from '../../components/ui/Badge'
 import { Skeleton } from '../../components/ui/Skeleton'
 import { formatDate, formatKwanza } from '../../lib/format'
@@ -25,21 +25,11 @@ const statusLabel: Record<string, string> = {
 
 export function OrdersPage() {
 	const { data, isLoading } = useOrders()
-	const payOrder = usePayOrder()
 	const cancelOrder = useCancelOrder()
 	const [filter, setFilter] = useState<string>('all')
 
 	const orders = data?.orders ?? []
 	const filteredOrders = filter === 'all' ? orders : orders.filter((o) => o.status === filter)
-
-	const handlePay = async (id: string) => {
-		try {
-			await payOrder.mutateAsync(id)
-			toast.success('Pagamento confirmado!')
-		} catch {
-			toast.error('Erro ao processar pagamento')
-		}
-	}
 
 	const handleCancel = async (id: string) => {
 		if (!confirm('Tens a certeza que queres cancelar esta encomenda?')) return
@@ -217,26 +207,18 @@ export function OrdersPage() {
 										>
 											Ver Detalhes
 										</Link>
-										{order.status === 'pending' && (
-											<>
-												<span className="text-warm-border">|</span>
-												<button
-													onClick={() => handlePay(order.id ?? '')}
-													disabled={payOrder.isPending}
-													className="text-xs font-heading font-600 text-emerald-600 hover:text-emerald-700 disabled:opacity-50"
-												>
-													Pagar Agora
-												</button>
-												<span className="text-warm-border">|</span>
-												<button
-													onClick={() => handleCancel(order.id ?? '')}
-													disabled={cancelOrder.isPending}
-													className="text-xs font-heading font-600 text-red-500 hover:text-red-600 disabled:opacity-50"
-												>
-													Cancelar
-												</button>
-											</>
-										)}
+									{order.status === 'pending' && (
+										<>
+											<span className="text-warm-border">|</span>
+											<button
+												onClick={() => handleCancel(order.id ?? '')}
+												disabled={cancelOrder.isPending}
+												className="text-xs font-heading font-600 text-red-500 hover:text-red-600 disabled:opacity-50"
+											>
+												Cancelar
+											</button>
+										</>
+									)}
 									</div>
 								</div>
 							</div>
