@@ -91,7 +91,7 @@ export interface AdminOrder {
 	eventTitle: string
 	buyerName: string
 	buyerEmail: string
-	total: number
+	totalAmount: number
 	commission: number
 	status: string
 	paymentMethod: string | null
@@ -150,6 +150,11 @@ export interface AdminFinancial {
 	netRevenue: number
 }
 
+export interface PhotoFile {
+	url: string
+	idcloudinary: string
+}
+
 export interface AdminVehicle {
 	id: string
 	make: string
@@ -159,6 +164,12 @@ export interface AdminVehicle {
 	pricePerDay: number
 	status: string
 	available: boolean
+	transmission?: string
+	seats?: number
+	fuelType?: string
+	location?: string
+	description?: string
+	photos: PhotoFile[]
 	ownerName: string
 	rentalsCount: number
 	createdAt: string
@@ -334,6 +345,12 @@ export interface AdminVehicleDetail {
 	year: number | null
 	price: number
 	status: string
+	transmission?: string
+	seats?: number
+	fuelType?: string
+	location?: string
+	description?: string
+	photos: PhotoFile[]
 	createdAt: string
 	owner: { id: string; name: string; email: string }
 	_count: { rentals: number }
@@ -460,6 +477,12 @@ export const adminApi = {
 		plate: string
 		year?: number
 		price: number
+		transmission?: string
+		seats?: number
+		fuelType?: string
+		location?: string
+		description?: string
+		photos?: { url: string; idcloudinary: string }[]
 	}) => api.post<{ msg: string }>('/admin/fleet', data).then((r) => r.data),
 
 	updateVehicle: (id: string, data: Record<string, unknown>) =>

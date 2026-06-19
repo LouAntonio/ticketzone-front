@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { useAuthStore } from '../../stores/useAuthStore'
 import { useOrders } from '../../api/hooks/useOrders'
+import { useMyRentals } from '../../api/hooks/useRentals'
 import { Card } from '../../components/ui/Card'
 import { Badge } from '../../components/ui/Badge'
 import { Skeleton } from '../../components/ui/Skeleton'
@@ -22,12 +23,18 @@ export function AccountDashboard() {
 	const confirmedOrders =
 		data?.orders?.filter((o: OrderDisplay) => o.status === 'confirmed') ?? []
 	const pendingOrders = data?.orders?.filter((o: OrderDisplay) => o.status === 'pending') ?? []
-	const totalSpent = confirmedOrders.reduce((s: number, o: OrderDisplay) => s + (o.total ?? 0), 0)
+	const totalSpent = confirmedOrders.reduce(
+		(s: number, o: OrderDisplay) => s + ((o as any).totalAmount ?? 0),
+		0,
+	)
 	const totalTickets = confirmedOrders.reduce(
 		(s: number, o: OrderDisplay) =>
 			s + (o.items?.reduce((s2, i) => s2 + (i.quantity ?? 0), 0) ?? 0),
 		0,
 	)
+
+	const { data: rentalsData } = useMyRentals()
+	const myRentals = rentalsData?.rentals ?? []
 
 	const isPromoter = user?.role === 'PROMOTER'
 	const isStaff = user?.role === 'STAFF' || user?.role === 'ADMIN'
@@ -173,6 +180,26 @@ export function AccountDashboard() {
 						</svg>
 						Histórico de Compras
 					</Link>
+					<Link
+						to="/account/rentals"
+						className="inline-flex items-center gap-2 h-11 px-5 border-2 border-warm-border text-text-secondary font-heading font-600 text-sm rounded-xl hover:bg-gray-50 hover:text-text transition-all active:scale-[0.97]"
+					>
+						<svg
+							width="16"
+							height="16"
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							strokeWidth="2"
+							strokeLinecap="round"
+							strokeLinejoin="round"
+						>
+							<path d="M14 16H9m10 0h3v-3.15a1 1 0 00-.84-.99L16 11l-2.7-3.6a1 1 0 00-.8-.4H5.24a2 2 0 00-1.8 1.1l-.8 1.63A6 6 0 002 12.42V16h2" />
+							<circle cx="6.5" cy="16.5" r="2.5" />
+							<circle cx="16.5" cy="16.5" r="2.5" />
+						</svg>
+						Os Meus Alugueres
+					</Link>
 					{!isPromoter && !isStaff && (
 						<Link
 							to="/account/become-promoter"
@@ -264,7 +291,7 @@ export function AccountDashboard() {
 									</div>
 									<div className="text-right shrink-0">
 										<p className="font-heading font-700 text-sm text-warm-text">
-											{formatKwanza(order.total ?? 0)}
+											{formatKwanza((order as any).totalAmount ?? 0)}
 										</p>
 										<Badge
 											variant={statusVariant[order.status ?? ''] ?? 'gray'}
@@ -313,6 +340,126 @@ export function AccountDashboard() {
 						>
 							Explorar Eventos
 						</Link>
+					</div>
+				)}
+			</div>
+
+			{/* Recent Rentals */}
+			<div className="stagger-5">
+				<div className="flex items-center justify-between mb-4">
+					<h2 className="font-heading font-600 text-sm text-text-secondary uppercase tracking-wider">
+						Alugueres Recentes
+					</h2>
+					{myRentals.length > 3 && (
+						<Link
+							to="/account/rentals"
+							className="text-xs font-heading font-600 text-brand link-underline"
+						>
+							Ver todos
+						</Link>
+					)}
+				</div>
+
+				{myRentals.length === 0 ? (
+					<div className="rounded-xl border-2 border-dashed border-warm-border bg-white/50 p-12 text-center">
+						<div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-brand-soft flex items-center justify-center">
+							<svg
+								width="28"
+								height="28"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								strokeWidth="1.5"
+								className="text-brand"
+							>
+								<path d="M14 16H9m10 0h3v-3.15a1 1 0 00-.84-.99L16 11l-2.7-3.6a1 1 0 00-.8-.4H5.24a2 2 0 00-1.8 1.1l-.8 1.63A6 6 0 002 12.42V16h2" />
+								<circle cx="6.5" cy="16.5" r="2.5" />
+								<circle cx="16.5" cy="16.5" r="2.5" />
+							</svg>
+						</div>
+						<p className="font-heading font-600 text-warm-text mb-1">
+							Nenhum aluguer encontrado
+						</p>
+						<p className="text-text-secondary text-sm mb-6">
+							Ainda não alugaste nenhuma viatura
+						</p>
+						<Link
+							to="/rentals"
+							className="inline-flex items-center gap-2 h-11 px-6 bg-brand text-white font-heading font-600 text-sm rounded-xl hover:bg-brand-dark transition-all"
+						>
+							Explorar Viaturas
+						</Link>
+					</div>
+				) : (
+					<div className="space-y-3">
+						{myRentals.slice(0, 3).map((rental) => (
+							<Link
+								key={rental.id}
+								to={`/account/rentals/${rental.id}`}
+								className="block rounded-xl border border-warm-border bg-white p-4 hover:shadow-md hover:border-brand/20 transition-all group"
+							>
+								<div className="flex items-center gap-4">
+									<div className="w-16 h-16 rounded-xl overflow-hidden shrink-0 bg-gray-100">
+										{rental.vehicle?.photos?.[0] ? (
+											<img
+												src={rental.vehicle.photos[0]}
+												alt={`${rental.vehicle.make} ${rental.vehicle.model}`}
+												className="w-full h-full object-cover"
+											/>
+										) : (
+											<div className="w-full h-full flex items-center justify-center text-text-secondary">
+												<svg
+													width="20"
+													height="20"
+													viewBox="0 0 24 24"
+													fill="none"
+													stroke="currentColor"
+													strokeWidth="1.5"
+												>
+													<path d="M14 16H9m10 0h3v-3.15a1 1 0 00-.84-.99L16 11l-2.7-3.6a1 1 0 00-.8-.4H5.24a2 2 0 00-1.8 1.1l-.8 1.63A6 6 0 002 12.42V16h2" />
+													<circle cx="6.5" cy="16.5" r="2.5" />
+													<circle cx="16.5" cy="16.5" r="2.5" />
+												</svg>
+											</div>
+										)}
+									</div>
+									<div className="flex-1 min-w-0">
+										<p className="font-heading font-600 text-sm text-warm-text group-hover:text-brand transition-colors">
+											{rental.vehicle?.make} {rental.vehicle?.model}
+										</p>
+										<p className="text-xs text-text-secondary mt-0.5">
+											{rental.startDate ? formatDate(rental.startDate) : '—'}{' '}
+											— {rental.endDate ? formatDate(rental.endDate) : '—'}
+										</p>
+									</div>
+									<div className="text-right shrink-0">
+										<p className="font-heading font-700 text-sm text-warm-text">
+											{formatKwanza(rental.totalPrice)}
+										</p>
+										<Badge
+											variant={
+												rental.order?.status === 'PAID' ||
+												rental.order?.status === 'paid'
+													? 'emerald'
+													: rental.order?.status === 'PENDING' ||
+														  rental.order?.status === 'pending'
+														? 'amber'
+														: 'gray'
+											}
+											className="mt-1"
+										>
+											{rental.order?.status === 'PAID' ||
+											rental.order?.status === 'paid'
+												? 'Pago'
+												: rental.order?.status === 'PENDING' ||
+													  rental.order?.status === 'pending'
+													? 'Pendente'
+													: (rental.order?.status ?? '—')}
+										</Badge>
+									</div>
+								</div>
+							</Link>
+						))}
 					</div>
 				)}
 			</div>

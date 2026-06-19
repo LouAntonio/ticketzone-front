@@ -321,6 +321,12 @@ export function useCreateVehicle() {
 			plate: string
 			year?: number
 			price: number
+			transmission?: string
+			seats?: number
+			fuelType?: string
+			location?: string
+			description?: string
+			photos?: { url: string; idcloudinary: string }[]
 		}) => adminApi.createVehicle(data),
 		onSuccess: () => {
 			toast.success('Veículo criado com sucesso')

@@ -319,7 +319,7 @@ export function AdminDashboard() {
 								</div>
 								<div className="text-right ml-4 shrink-0">
 									<p className="text-sm font-heading font-600 text-white">
-										{formatKwanza(order.total)}
+										{formatKwanza((order as any).totalAmount ?? 0)}
 									</p>
 									{statusBadge(order.status)}
 								</div>

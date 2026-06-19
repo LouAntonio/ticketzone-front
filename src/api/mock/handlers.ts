@@ -349,7 +349,7 @@ export const handlers = [
 		const eventOrders = db.orders.filter((o) => o.eventId === params.id)
 		const totalSold = eventOrders
 			.filter((o) => o.status === 'confirmed')
-			.reduce((sum, o) => sum + o.total, 0)
+			.reduce((sum, o) => sum + o.totalAmount, 0)
 		const totalTickets = eventOrders
 			.filter((o) => o.status === 'confirmed')
 			.reduce((sum, o) => sum + o.items.reduce((s, i) => s + i.quantity, 0), 0)
@@ -375,7 +375,7 @@ export const handlers = [
 		const eventIds = events.map((e) => e.id)
 		const allOrders = db.orders.filter((o) => eventIds.includes(o.eventId))
 		const confirmedOrders = allOrders.filter((o) => o.status === 'confirmed')
-		const totalRevenue = confirmedOrders.reduce((sum, o) => sum + o.total, 0)
+		const totalRevenue = confirmedOrders.reduce((sum, o) => sum + o.totalAmount, 0)
 		return HttpResponse.json({
 			totalRevenue,
 			totalOrders: confirmedOrders.length,
@@ -466,7 +466,7 @@ export const handlers = [
 			buyerId: userId,
 			buyerName: user?.name ?? '',
 			items: body.items,
-			total,
+			totalAmount: total,
 			status: 'pending' as const,
 			paymentMethod: body.paymentMethod as 'multicaixa' | 'paypay' | 'reference',
 			paymentRef:
@@ -600,7 +600,7 @@ export const handlers = [
 
 		const totalOrders = db.orders.length
 		const confirmedOrders = db.orders.filter((o) => o.status === 'confirmed')
-		const totalRevenue = confirmedOrders.reduce((s, o) => s + o.total, 0)
+		const totalRevenue = confirmedOrders.reduce((s, o) => s + o.totalAmount, 0)
 		const totalCommissions = Math.round(totalRevenue * 0.1)
 		const totalTicketsSold = confirmedOrders.reduce(
 			(s, o) => s + o.items.reduce((s2, i) => s2 + i.quantity, 0),
@@ -632,11 +632,11 @@ export const handlers = [
 					id: o.id,
 					eventTitle: o.eventTitle,
 					buyerName: o.buyerName,
-					total: o.total,
+					totalAmount: o.totalAmount,
 					status: o.status,
 					paymentMethod: o.paymentMethod,
 					createdAt: o.createdAt,
-					commission: Math.round(o.total * 0.1),
+					commission: Math.round(o.totalAmount * 0.1),
 				})),
 			revenueByMonth,
 		})
@@ -681,7 +681,7 @@ export const handlers = [
 					(s, o) => s + o.items.reduce((s2, i) => s2 + i.quantity, 0),
 					0,
 				)
-				const revenue = eventOrders.reduce((s, o) => s + o.total, 0)
+				const revenue = eventOrders.reduce((s, o) => s + o.totalAmount, 0)
 				return {
 					id: e.id,
 					title: e.title,
@@ -709,11 +709,11 @@ export const handlers = [
 				id: o.id,
 				eventTitle: o.eventTitle,
 				buyerName: o.buyerName,
-				total: o.total,
+				totalAmount: o.totalAmount,
 				status: o.status,
 				paymentMethod: o.paymentMethod,
 				createdAt: o.createdAt,
-				commission: Math.round(o.total * 0.1),
+				commission: Math.round(o.totalAmount * 0.1),
 			})),
 		})
 	}),
@@ -734,7 +734,7 @@ export const handlers = [
 						(o) =>
 							orgEvents.some((e) => e.id === o.eventId) && o.status === 'confirmed',
 					)
-					.reduce((s, o) => s + o.total, 0)
+					.reduce((s, o) => s + o.totalAmount, 0)
 				return {
 					id: org.id,
 					userId: org.userId,
@@ -758,11 +758,11 @@ export const handlers = [
 		if (user?.role !== 'ADMIN') return apiError('Não autorizado', 403)
 
 		const confirmedOrders = db.orders.filter((o) => o.status === 'confirmed')
-		const totalRevenue = confirmedOrders.reduce((s, o) => s + o.total, 0)
+		const totalRevenue = confirmedOrders.reduce((s, o) => s + o.totalAmount, 0)
 		const totalCommissions = Math.round(totalRevenue * 0.1)
 		const totalPayouts = Math.round(totalRevenue * 0.85)
 		const pendingOrders = db.orders.filter((o) => o.status === 'pending')
-		const pendingRevenue = pendingOrders.reduce((s, o) => s + o.total, 0)
+		const pendingRevenue = pendingOrders.reduce((s, o) => s + o.totalAmount, 0)
 		const pendingPayouts = Math.round(pendingRevenue * 0.9)
 		const averageCommission =
 			db.orders.length > 0 ? Math.round(totalCommissions / db.orders.length) : 0

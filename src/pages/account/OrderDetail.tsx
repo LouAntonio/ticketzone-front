@@ -107,7 +107,11 @@ export function OrderDetailPage() {
 						Detalhes da Encomenda
 					</h1>
 					<p className="text-text-secondary text-sm">
-						{order.eventTitle} · {formatDate(order.eventDate ?? '')}
+						{order.eventTitle
+							? `${order.eventTitle} · ${formatDate(order.eventDate ?? '')}`
+							: (order as any).rentals?.[0]?.vehicle
+								? `Aluguer: ${(order as any).rentals[0].vehicle.make} ${(order as any).rentals[0].vehicle.model}`
+								: 'Aluguer de viatura'}
 					</p>
 				</div>
 				<div className="ml-auto">
@@ -205,7 +209,7 @@ export function OrderDetailPage() {
 							<div className="flex justify-between pt-2 border-t border-warm-border">
 								<span className="font-heading font-600 text-warm-text">Total</span>
 								<span className="font-heading font-700 text-lg text-brand">
-									{formatKwanza(order.total ?? 0)}
+									{formatKwanza((order as any).totalAmount ?? 0)}
 								</span>
 							</div>
 						</div>
@@ -243,7 +247,7 @@ export function OrderDetailPage() {
 					<div className="mt-4 pt-4 border-t border-warm-border flex items-center justify-between">
 						<span className="font-heading font-700 text-warm-text">Total</span>
 						<span className="font-display-alt font-700 text-2xl text-brand">
-							{formatKwanza(order.total ?? 0)}
+							{formatKwanza((order as any).totalAmount ?? 0)}
 						</span>
 					</div>
 				</div>
@@ -286,6 +290,75 @@ export function OrderDetailPage() {
 										Ver
 									</Link>
 								</div>
+							))}
+						</div>
+					</div>
+				</div>
+			)}
+
+			{/* Rentals (if any) */}
+			{(order as any).rentals && (order as any).rentals.length > 0 && (
+				<div className="card-account stagger-5">
+					<div className="p-6 sm:p-8">
+						<h3 className="font-heading font-700 text-lg text-warm-text mb-4">
+							Alugueres
+						</h3>
+						<div className="space-y-3">
+							{(order as any).rentals.map((rental: any) => (
+								<Link
+									key={rental.id}
+									to={`/account/rentals/${rental.id}`}
+									className="flex items-center gap-4 p-4 rounded-xl border border-warm-border bg-white hover:shadow-md hover:border-brand/20 transition-all group"
+								>
+									<div className="w-16 h-16 rounded-xl overflow-hidden shrink-0 bg-gray-100">
+										{rental.vehicle?.photos?.[0] ? (
+											<img
+												src={rental.vehicle.photos[0]}
+												alt={`${rental.vehicle.make} ${rental.vehicle.model}`}
+												className="w-full h-full object-cover"
+											/>
+										) : (
+											<div className="w-full h-full flex items-center justify-center text-text-secondary">
+												<svg
+													width="20"
+													height="20"
+													viewBox="0 0 24 24"
+													fill="none"
+													stroke="currentColor"
+													strokeWidth="1.5"
+												>
+													<path d="M14 16H9m10 0h3v-3.15a1 1 0 00-.84-.99L16 11l-2.7-3.6a1 1 0 00-.8-.4H5.24a2 2 0 00-1.8 1.1l-.8 1.63A6 6 0 002 12.42V16h2" />
+													<circle cx="6.5" cy="16.5" r="2.5" />
+													<circle cx="16.5" cy="16.5" r="2.5" />
+												</svg>
+											</div>
+										)}
+									</div>
+									<div className="flex-1 min-w-0">
+										<p className="font-heading font-600 text-sm text-warm-text group-hover:text-brand transition-colors">
+											{rental.vehicle?.make} {rental.vehicle?.model}
+										</p>
+										<p className="text-xs text-text-secondary">
+											{rental.vehicle?.plate} · {rental.vehicle?.make}{' '}
+											{rental.vehicle?.model}
+										</p>
+										<p className="text-xs text-text-secondary">
+											{rental.startDate ? formatDate(rental.startDate) : '—'}{' '}
+											— {rental.endDate ? formatDate(rental.endDate) : '—'} ·{' '}
+											{rental.totalDays ?? '—'} dia
+											{rental.totalDays != null && rental.totalDays > 1
+												? 's'
+												: ''}
+										</p>
+									</div>
+									<div className="text-right shrink-0">
+										<p className="font-heading font-700 text-sm text-warm-text">
+											{rental.totalPrice != null
+												? formatKwanza(rental.totalPrice)
+												: '—'}
+										</p>
+									</div>
+								</Link>
 							))}
 						</div>
 					</div>

@@ -20,7 +20,7 @@ interface OrderDisplay {
 	buyerId?: string
 	buyerName?: string
 	items?: OrderItemDisplay[]
-	total?: number
+	totalAmount?: number
 	status?: string
 	paymentMethod?: string
 	createdAt?: string

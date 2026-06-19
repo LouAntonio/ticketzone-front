@@ -81,7 +81,7 @@ export function AttendeeList() {
 												.join(', ')}
 										</td>
 										<td className="px-4 py-3 font-heading font-600">
-											{formatKwanza(order.total ?? 0)}
+											{formatKwanza((order as any).totalAmount ?? 0)}
 										</td>
 										<td className="px-4 py-3">
 											<Badge

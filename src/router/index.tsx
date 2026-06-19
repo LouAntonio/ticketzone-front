@@ -61,6 +61,9 @@ import { AdminCategories } from '../pages/admin/Categories'
 
 // Rentals
 import { CarCatalog } from '../pages/public/CarCatalog'
+import { CarDetail } from '../pages/public/CarDetail'
+import { MyRentalsPage } from '../pages/account/MyRentals'
+import { RentalDetailPage } from '../pages/account/RentalDetail'
 
 export const router = createBrowserRouter([
 	{
@@ -73,6 +76,7 @@ export const router = createBrowserRouter([
 					{ path: '/events', element: <EventCatalog /> },
 					{ path: '/events/:slug', element: <EventDetail /> },
 					{ path: '/rentals', element: <CarCatalog /> },
+					{ path: '/rentals/:id', element: <CarDetail /> },
 					{ path: '/sobre', element: <Sobre /> },
 					{ path: '/ajuda', element: <Ajuda /> },
 					{ path: '/como-funciona', element: <ComoFunciona /> },
@@ -106,6 +110,8 @@ export const router = createBrowserRouter([
 							{ path: '/account/tickets/:id', element: <TicketDetailPage /> },
 							{ path: '/account/orders', element: <OrdersPage /> },
 							{ path: '/account/orders/:id', element: <OrderDetailPage /> },
+							{ path: '/account/rentals', element: <MyRentalsPage /> },
+							{ path: '/account/rentals/:id', element: <RentalDetailPage /> },
 							{ path: '/account/profile', element: <ProfilePage /> },
 							{ path: '/account/security', element: <SecurityPage /> },
 							{ path: '/account/become-promoter', element: <BecomePromoterPage /> },

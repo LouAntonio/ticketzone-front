@@ -30,7 +30,7 @@ export interface Order {
 	buyerName: string
 	items: OrderItem[]
 	addons?: AddonItem[]
-	total: number
+	totalAmount: number
 	status: string
 	paymentMethod: PaymentMethod
 	paymentStatus?: PaymentStatus
@@ -48,6 +48,20 @@ export interface OrderDetail extends Order {
 		ticketTypeName: string
 		entriesUsed: number
 		entriesAllowed: number
+	}>
+	rentals?: Array<{
+		id: string
+		vehicleId: string
+		startDate?: string
+		endDate?: string
+		totalDays: number
+		totalPrice: number
+		vehicle: {
+			make: string
+			model: string
+			plate: string
+			photos: string[]
+		}
 	}>
 	eventProvince?: string
 	eventVenue?: string

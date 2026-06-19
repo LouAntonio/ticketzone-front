@@ -29,6 +29,11 @@ const buyerLinks: SidebarLink[] = [
 		icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4',
 	},
 	{
+		to: '/account/rentals',
+		label: 'Os Meus Alugueres',
+		icon: 'M14 16H9m10 0h3v-3.15a1 1 0 00-.84-.99L16 11l-2.7-3.6a1 1 0 00-.8-.4H5.24a2 2 0 00-1.8 1.1l-.8 1.63A6 6 0 002 12.42V16h2M6.5 16.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM16.5 16.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5z',
+	},
+	{
 		to: '/account/profile',
 		label: 'Perfil',
 		icon: 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z',

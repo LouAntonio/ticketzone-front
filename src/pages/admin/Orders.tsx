@@ -37,7 +37,7 @@ export function AdminOrders() {
 	const [refundTarget, setRefundTarget] = useState<{
 		id: string
 		buyerName: string
-		total: number
+		totalAmount: number
 	} | null>(null)
 
 	const orders = data?.orders ?? []
@@ -180,7 +180,7 @@ export function AdminOrders() {
 											{order.buyerName}
 										</td>
 										<td className="px-4 py-3 text-sm font-heading font-600 text-white text-right">
-											{formatKwanza(order.total)}
+											{formatKwanza(order.totalAmount ?? 0)}
 										</td>
 										<td className="px-4 py-3 text-sm text-[#6a5a4e] text-right hidden md:table-cell font-heading">
 											{formatKwanza(order.commission)}
@@ -209,7 +209,7 @@ export function AdminOrders() {
 															setRefundTarget({
 																id: order.id,
 																buyerName: order.buyerName,
-																total: order.total,
+																totalAmount: order.totalAmount,
 															})
 														}
 														className="btn-admin-danger text-[11px] px-2 py-1"
@@ -478,7 +478,7 @@ export function AdminOrders() {
 					<p className="text-sm text-[#8a7a6e] font-heading">
 						Tens a certeza que queres reembolsar{' '}
 						<strong className="text-[#d4c5b8]">
-							{formatKwanza(refundTarget?.total ?? 0)}
+							{formatKwanza(refundTarget?.totalAmount ?? 0)}
 						</strong>{' '}
 						a <strong className="text-[#d4c5b8]">{refundTarget?.buyerName}</strong>?
 					</p>
