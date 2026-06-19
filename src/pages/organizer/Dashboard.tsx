@@ -142,7 +142,7 @@ export function OrganizerDashboard() {
 								</div>
 								<div className="text-right">
 									<p className="text-sm font-heading font-600">
-										{formatKwanza(order.total ?? 0)}
+										{formatKwanza((order as any).totalAmount ?? 0)}
 									</p>
 									<span
 										className={`text-xs ${

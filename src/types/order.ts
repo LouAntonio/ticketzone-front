@@ -30,7 +30,7 @@ export interface Order {
 	buyerName: string
 	items: OrderItem[]
 	addons?: AddonItem[]
-	total: number
+	totalAmount: number
 	status: string
 	paymentMethod: PaymentMethod
 	paymentStatus?: PaymentStatus

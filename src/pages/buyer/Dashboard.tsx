@@ -19,7 +19,7 @@ export function BuyerDashboard() {
 
 	const confirmedOrders =
 		data?.orders?.filter((o: OrderDisplay) => o.status === 'confirmed') ?? []
-	const totalSpent = confirmedOrders.reduce((s: number, o: OrderDisplay) => s + (o.total ?? 0), 0)
+	const totalSpent = confirmedOrders.reduce((s: number, o: OrderDisplay) => s + ((o as any).totalAmount ?? 0), 0)
 
 	return (
 		<div className="space-y-8">
@@ -115,7 +115,7 @@ export function BuyerDashboard() {
 								</div>
 								<div className="text-right shrink-0">
 									<p className="font-heading font-700 text-sm">
-										{formatKwanza(order.total ?? 0)}
+										{formatKwanza((order as any).totalAmount ?? 0)}
 									</p>
 									<Badge variant={statusVariant[order.status ?? ''] ?? 'gray'}>
 										{order.status === 'confirmed'

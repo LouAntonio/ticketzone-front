@@ -107,7 +107,11 @@ export function OrderDetailPage() {
 						Detalhes da Encomenda
 					</h1>
 					<p className="text-text-secondary text-sm">
-						{order.eventTitle} · {formatDate(order.eventDate ?? '')}
+						{order.eventTitle
+							? `${order.eventTitle} · ${formatDate(order.eventDate ?? '')}`
+							: (order as any).rentals?.[0]?.vehicle
+								? `Aluguer: ${(order as any).rentals[0].vehicle.make} ${(order as any).rentals[0].vehicle.model}`
+								: 'Aluguer de viatura'}
 					</p>
 				</div>
 				<div className="ml-auto">
@@ -205,7 +209,7 @@ export function OrderDetailPage() {
 							<div className="flex justify-between pt-2 border-t border-warm-border">
 								<span className="font-heading font-600 text-warm-text">Total</span>
 								<span className="font-heading font-700 text-lg text-brand">
-									{formatKwanza(order.total ?? 0)}
+									{formatKwanza((order as any).totalAmount ?? 0)}
 								</span>
 							</div>
 						</div>
@@ -243,7 +247,7 @@ export function OrderDetailPage() {
 					<div className="mt-4 pt-4 border-t border-warm-border flex items-center justify-between">
 						<span className="font-heading font-700 text-warm-text">Total</span>
 						<span className="font-display-alt font-700 text-2xl text-brand">
-							{formatKwanza(order.total ?? 0)}
+							{formatKwanza((order as any).totalAmount ?? 0)}
 						</span>
 					</div>
 				</div>
@@ -331,12 +335,12 @@ export function OrderDetailPage() {
 											{rental.vehicle?.plate} · {rental.vehicle?.make} {rental.vehicle?.model}
 										</p>
 										<p className="text-xs text-text-secondary">
-											{rental.startDate ? formatDate(rental.startDate) : '—'} — {rental.endDate ? formatDate(rental.endDate) : '—'} · {rental.totalDays} dia{rental.totalDays > 1 ? 's' : ''}
+											{rental.startDate ? formatDate(rental.startDate) : '—'} — {rental.endDate ? formatDate(rental.endDate) : '—'} · {rental.totalDays ?? '—'} dia{rental.totalDays != null && rental.totalDays > 1 ? 's' : ''}
 										</p>
 									</div>
 									<div className="text-right shrink-0">
 										<p className="font-heading font-700 text-sm text-warm-text">
-											{formatKwanza(rental.totalPrice)}
+											{rental.totalPrice != null ? formatKwanza(rental.totalPrice) : '—'}
 										</p>
 									</div>
 								</Link>

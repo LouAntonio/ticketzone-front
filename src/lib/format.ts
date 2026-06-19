@@ -8,7 +8,9 @@ export function formatKwanza(value: number): string {
 }
 
 export function formatDate(dateStr: string): string {
-	return new Date(dateStr).toLocaleDateString('pt-AO', {
+	const date = new Date(dateStr)
+	if (isNaN(date.getTime())) return '—'
+	return date.toLocaleDateString('pt-AO', {
 		day: 'numeric',
 		month: 'long',
 		year: 'numeric',
@@ -16,7 +18,9 @@ export function formatDate(dateStr: string): string {
 }
 
 export function formatDateShort(dateStr: string): string {
-	return new Date(dateStr).toLocaleDateString('pt-AO', {
+	const date = new Date(dateStr)
+	if (isNaN(date.getTime())) return '—'
+	return date.toLocaleDateString('pt-AO', {
 		day: 'numeric',
 		month: 'short',
 	})
