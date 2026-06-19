@@ -133,7 +133,9 @@ export interface RawVehicle {
 
 export function mapVehicle(raw: RawVehicle): Car {
 	const rawPhotos = raw.photos ?? []
-	const photos: string[] = rawPhotos.map((p: any) => (typeof p === 'string' ? p : p?.url ?? '')).filter(Boolean)
+	const photos: string[] = rawPhotos
+		.map((p: any) => (typeof p === 'string' ? p : (p?.url ?? '')))
+		.filter(Boolean)
 	return {
 		id: raw.id,
 		make: raw.make,

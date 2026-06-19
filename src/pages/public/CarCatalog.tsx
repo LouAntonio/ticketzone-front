@@ -110,36 +110,54 @@ export function CarCatalog() {
 					type="text"
 					placeholder="Pesquisar por marca, modelo..."
 					value={search}
-					onChange={(e) => { setSearch(e.target.value); setPage(1) }}
+					onChange={(e) => {
+						setSearch(e.target.value)
+						setPage(1)
+					}}
 					className="input-field max-w-xs text-sm"
 				/>
 				<select
 					value={location}
-					onChange={(e) => { setLocation(e.target.value); setPage(1) }}
+					onChange={(e) => {
+						setLocation(e.target.value)
+						setPage(1)
+					}}
 					className="input-field max-w-[140px] text-sm"
 				>
 					<option value="">Todas Localizações</option>
 					{PROVINCES.map((p) => (
-						<option key={p} value={p}>{p}</option>
+						<option key={p} value={p}>
+							{p}
+						</option>
 					))}
 				</select>
 				<select
 					value={fuelType}
-					onChange={(e) => { setFuelType(e.target.value); setPage(1) }}
+					onChange={(e) => {
+						setFuelType(e.target.value)
+						setPage(1)
+					}}
 					className="input-field max-w-[140px] text-sm"
 				>
 					<option value="">Todos Combustíveis</option>
 					{FUEL_TYPES.map((f) => (
-						<option key={f} value={f}>{f}</option>
+						<option key={f} value={f}>
+							{f}
+						</option>
 					))}
 				</select>
 				<select
 					value={transmission}
-					onChange={(e) => { setTransmission(e.target.value); setPage(1) }}
+					onChange={(e) => {
+						setTransmission(e.target.value)
+						setPage(1)
+					}}
 					className="input-field max-w-[150px] text-sm"
 				>
 					{TRANSMISSIONS.map((t) => (
-						<option key={t.value} value={t.value}>{t.label}</option>
+						<option key={t.value} value={t.value}>
+							{t.label}
+						</option>
 					))}
 				</select>
 				{(search || location || fuelType || transmission) && (
@@ -152,7 +170,9 @@ export function CarCatalog() {
 			{/* Results count */}
 			{!isLoading && (
 				<p className="text-xs text-text-secondary mb-4 font-heading">
-					{data?.total ?? cars.length} viatura{(data?.total ?? cars.length) !== 1 ? 's' : ''} encontrada{(data?.total ?? cars.length) !== 1 ? 's' : ''}
+					{data?.total ?? cars.length} viatura
+					{(data?.total ?? cars.length) !== 1 ? 's' : ''} encontrada
+					{(data?.total ?? cars.length) !== 1 ? 's' : ''}
 				</p>
 			)}
 
@@ -168,7 +188,10 @@ export function CarCatalog() {
 				<Card className="text-center py-12">
 					<p className="text-text-secondary">Nenhuma viatura disponível de momento</p>
 					{(search || location || fuelType || transmission) && (
-						<button onClick={clearFilters} className="btn-outline mt-4 h-10 px-5 text-sm">
+						<button
+							onClick={clearFilters}
+							className="btn-outline mt-4 h-10 px-5 text-sm"
+						>
 							Limpar Filtros
 						</button>
 					)}
@@ -195,14 +218,19 @@ export function CarCatalog() {
 								<div className="p-5">
 									<div className="flex items-start justify-between mb-2">
 										<div>
-											<Link to={`/rentals/${car.id}`} className="hover:text-brand transition-colors">
+											<Link
+												to={`/rentals/${car.id}`}
+												className="hover:text-brand transition-colors"
+											>
 												<h3 className="font-heading font-700 text-lg">
 													{car.make} {car.model}
 												</h3>
 											</Link>
 											<p className="text-xs text-text-secondary">
 												{car.year} ·{' '}
-												{car.transmission === 'auto' ? 'Automática' : 'Manual'}
+												{car.transmission === 'auto'
+													? 'Automática'
+													: 'Manual'}
 											</p>
 										</div>
 										<Badge variant={car.available ? 'emerald' : 'gray'}>
@@ -222,7 +250,9 @@ export function CarCatalog() {
 
 									<div className="flex items-center justify-between pt-4 border-t border-border">
 										<div>
-											<span className="text-xs text-text-secondary">Por dia</span>
+											<span className="text-xs text-text-secondary">
+												Por dia
+											</span>
 											<p className="font-heading font-700 text-xl text-brand">
 												{formatKwanza(car.pricePerDay)}
 											</p>
@@ -251,7 +281,9 @@ export function CarCatalog() {
 														type="date"
 														className="input-field text-sm"
 														value={startDate}
-														onChange={(e) => setStartDate(e.target.value)}
+														onChange={(e) =>
+															setStartDate(e.target.value)
+														}
 													/>
 												</div>
 												<div>

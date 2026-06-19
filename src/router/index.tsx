@@ -76,7 +76,7 @@ export const router = createBrowserRouter([
 					{ path: '/events', element: <EventCatalog /> },
 					{ path: '/events/:slug', element: <EventDetail /> },
 					{ path: '/rentals', element: <CarCatalog /> },
-				{ path: '/rentals/:id', element: <CarDetail /> },
+					{ path: '/rentals/:id', element: <CarDetail /> },
 					{ path: '/sobre', element: <Sobre /> },
 					{ path: '/ajuda', element: <Ajuda /> },
 					{ path: '/como-funciona', element: <ComoFunciona /> },

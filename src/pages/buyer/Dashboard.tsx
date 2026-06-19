@@ -19,7 +19,10 @@ export function BuyerDashboard() {
 
 	const confirmedOrders =
 		data?.orders?.filter((o: OrderDisplay) => o.status === 'confirmed') ?? []
-	const totalSpent = confirmedOrders.reduce((s: number, o: OrderDisplay) => s + ((o as any).totalAmount ?? 0), 0)
+	const totalSpent = confirmedOrders.reduce(
+		(s: number, o: OrderDisplay) => s + ((o as any).totalAmount ?? 0),
+		0,
+	)
 
 	return (
 		<div className="space-y-8">

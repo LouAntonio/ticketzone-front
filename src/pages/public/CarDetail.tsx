@@ -31,7 +31,9 @@ export function CarDetail() {
 			if (lightboxIndex === null) return
 			if (e.key === 'Escape') handleLightboxClose()
 			if (e.key === 'ArrowLeft') {
-				setLightboxIndex((prev) => (prev !== null ? (prev - 1 + photos.length) % photos.length : null))
+				setLightboxIndex((prev) =>
+					prev !== null ? (prev - 1 + photos.length) % photos.length : null,
+				)
 			}
 			if (e.key === 'ArrowRight') {
 				setLightboxIndex((prev) => (prev !== null ? (prev + 1) % photos.length : null))
@@ -97,7 +99,15 @@ export function CarDetail() {
 		return (
 			<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 text-center">
 				<div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-brand-soft flex items-center justify-center">
-					<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-brand">
+					<svg
+						width="28"
+						height="28"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						strokeWidth="1.5"
+						className="text-brand"
+					>
 						<path d="M14 16H9m10 0h3v-3.15a1 1 0 00-.84-.99L16 11l-2.7-3.6a1 1 0 00-.8-.4H5.24a2 2 0 00-1.8 1.1l-.8 1.63A6 6 0 002 12.42V16h2" />
 						<circle cx="6.5" cy="16.5" r="2.5" />
 						<circle cx="16.5" cy="16.5" r="2.5" />
@@ -112,7 +122,12 @@ export function CarDetail() {
 	const pricePerDay = car.pricePerDay
 	const totalDays =
 		startDate && endDate
-			? Math.max(1, Math.ceil((new Date(endDate).getTime() - new Date(startDate).getTime()) / 86400000))
+			? Math.max(
+					1,
+					Math.ceil(
+						(new Date(endDate).getTime() - new Date(startDate).getTime()) / 86400000,
+					),
+				)
 			: 0
 	const totalPrice = pricePerDay * totalDays
 
@@ -120,9 +135,13 @@ export function CarDetail() {
 		<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 			{/* Breadcrumb */}
 			<div className="flex items-center gap-2 text-sm text-text-secondary mb-8 fade-in">
-				<Link to="/rentals" className="hover:text-brand transition-colors">Rent-a-Car</Link>
+				<Link to="/rentals" className="hover:text-brand transition-colors">
+					Rent-a-Car
+				</Link>
 				<span>/</span>
-				<span className="text-text">{car.make} {car.model}</span>
+				<span className="text-text">
+					{car.make} {car.model}
+				</span>
 			</div>
 
 			<div className="grid lg:grid-cols-3 gap-8">
@@ -161,7 +180,9 @@ export function CarDetail() {
 								<span className="font-heading font-600">{car.year}</span>
 							</div>
 							<div className="flex items-center justify-between sm:justify-start sm:gap-4 py-2 border-b border-border">
-								<span className="text-text-secondary w-28 shrink-0">Transmissão</span>
+								<span className="text-text-secondary w-28 shrink-0">
+									Transmissão
+								</span>
 								<span className="font-heading font-600">
 									{car.transmission === 'auto' ? 'Automática' : 'Manual'}
 								</span>
@@ -171,16 +192,22 @@ export function CarDetail() {
 								<span className="font-heading font-600">{car.seats}</span>
 							</div>
 							<div className="flex items-center justify-between sm:justify-start sm:gap-4 py-2 border-b border-border">
-								<span className="text-text-secondary w-28 shrink-0">Combustível</span>
+								<span className="text-text-secondary w-28 shrink-0">
+									Combustível
+								</span>
 								<span className="font-heading font-600">{car.fuelType}</span>
 							</div>
 							<div className="flex items-center justify-between sm:justify-start sm:gap-4 py-2 border-b border-border">
-								<span className="text-text-secondary w-28 shrink-0">Localização</span>
+								<span className="text-text-secondary w-28 shrink-0">
+									Localização
+								</span>
 								<span className="font-heading font-600">{car.location}</span>
 							</div>
 							<div className="flex items-center justify-between sm:justify-start sm:gap-4 py-2 border-b border-border">
 								<span className="text-text-secondary w-28 shrink-0">Matrícula</span>
-								<span className="font-heading font-600 font-mono tracking-wider text-xs">{car.plate}</span>
+								<span className="font-heading font-600 font-mono tracking-wider text-xs">
+									{car.plate}
+								</span>
 							</div>
 						</div>
 
@@ -255,8 +282,12 @@ export function CarDetail() {
 								{totalDays > 0 && (
 									<div className="p-4 bg-brand-soft rounded-xl space-y-2 slide-up">
 										<div className="flex justify-between text-sm">
-											<span className="text-text-secondary">{totalDays} dia{totalDays > 1 ? 's' : ''}</span>
-											<span className="font-heading font-600">{formatKwanza(pricePerDay)}/dia</span>
+											<span className="text-text-secondary">
+												{totalDays} dia{totalDays > 1 ? 's' : ''}
+											</span>
+											<span className="font-heading font-600">
+												{formatKwanza(pricePerDay)}/dia
+											</span>
 										</div>
 										<div className="flex justify-between pt-2 border-t border-brand/20">
 											<span className="font-heading font-700">Total</span>
@@ -280,7 +311,12 @@ export function CarDetail() {
 								{!user && (
 									<p className="text-xs text-text-secondary text-center">
 										Precisas de uma conta para reservar.{' '}
-										<Link to="/login" className="text-brand font-heading font-600">Entrar</Link>
+										<Link
+											to="/login"
+											className="text-brand font-heading font-600"
+										>
+											Entrar
+										</Link>
 									</p>
 								)}
 							</div>
@@ -298,11 +334,22 @@ export function CarDetail() {
 					<button
 						onClick={(e) => {
 							e.stopPropagation()
-							setLightboxIndex((prev) => (prev !== null ? (prev - 1 + photos.length) % photos.length : null))
+							setLightboxIndex((prev) =>
+								prev !== null ? (prev - 1 + photos.length) % photos.length : null,
+							)
 						}}
 						className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-all"
 					>
-						<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+						<svg
+							width="20"
+							height="20"
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							strokeWidth="2.5"
+							strokeLinecap="round"
+							strokeLinejoin="round"
+						>
 							<path d="M15 18l-6-6 6-6" />
 						</svg>
 					</button>
@@ -310,11 +357,22 @@ export function CarDetail() {
 					<button
 						onClick={(e) => {
 							e.stopPropagation()
-							setLightboxIndex((prev) => (prev !== null ? (prev + 1) % photos.length : null))
+							setLightboxIndex((prev) =>
+								prev !== null ? (prev + 1) % photos.length : null,
+							)
 						}}
 						className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-all"
 					>
-						<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+						<svg
+							width="20"
+							height="20"
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							strokeWidth="2.5"
+							strokeLinecap="round"
+							strokeLinejoin="round"
+						>
 							<path d="M9 18l6-6-6-6" />
 						</svg>
 					</button>
@@ -326,7 +384,16 @@ export function CarDetail() {
 						}}
 						className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-all"
 					>
-						<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+						<svg
+							width="18"
+							height="18"
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							strokeWidth="2.5"
+							strokeLinecap="round"
+							strokeLinejoin="round"
+						>
 							<path d="M18 6L6 18M6 6l12 12" />
 						</svg>
 					</button>

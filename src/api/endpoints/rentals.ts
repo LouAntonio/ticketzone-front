@@ -94,9 +94,23 @@ function mapRental(raw: RawRental): Rental {
 }
 
 export const rentalsApi = {
-	listCars: (params?: { search?: string; status?: string; page?: number; limit?: number; location?: string; fuelType?: string; transmission?: string }) =>
+	listCars: (params?: {
+		search?: string
+		status?: string
+		page?: number
+		limit?: number
+		location?: string
+		fuelType?: string
+		transmission?: string
+	}) =>
 		api
-			.get<{ vehicles: RawVehicle[]; total: number; page: number; limit: number; totalPages: number }>('/vehicles', { params })
+			.get<{
+				vehicles: RawVehicle[]
+				total: number
+				page: number
+				limit: number
+				totalPages: number
+			}>('/vehicles', { params })
 			.then((r) => ({
 				cars: (r.data.vehicles ?? []).map(mapVehicle),
 				total: r.data.total,
@@ -106,7 +120,9 @@ export const rentalsApi = {
 			})),
 
 	getCar: (id: string) =>
-		api.get<{ data: RawVehicle }>(`/vehicles/${id}`).then((r) => ({ car: mapVehicle(r.data.data ?? r.data) })),
+		api
+			.get<{ data: RawVehicle }>(`/vehicles/${id}`)
+			.then((r) => ({ car: mapVehicle(r.data.data ?? r.data) })),
 
 	createBooking: (data: CreateBookingData) =>
 		api

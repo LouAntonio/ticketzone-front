@@ -38,14 +38,19 @@ export function MyRentalsPage() {
 					Os Meus Alugueres
 				</h1>
 				<p className="text-text-secondary text-sm">
-					{isLoading ? '...' : `${rentals.length} aluguer${rentals.length !== 1 ? 'es' : ''}`}
+					{isLoading
+						? '...'
+						: `${rentals.length} aluguer${rentals.length !== 1 ? 'es' : ''}`}
 				</p>
 			</div>
 
 			{isLoading ? (
 				<div className="space-y-3">
 					{[...Array(3)].map((_, i) => (
-						<div key={i} className="rounded-xl border border-warm-border bg-white p-5 flex items-center gap-4">
+						<div
+							key={i}
+							className="rounded-xl border border-warm-border bg-white p-5 flex items-center gap-4"
+						>
 							<Skeleton className="w-20 h-20 rounded-xl shrink-0" />
 							<div className="flex-1 space-y-2">
 								<Skeleton className="h-4 w-48" />
@@ -62,7 +67,15 @@ export function MyRentalsPage() {
 			) : rentals.length === 0 ? (
 				<div className="rounded-xl border-2 border-dashed border-warm-border bg-white/50 p-16 text-center">
 					<div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-brand-soft flex items-center justify-center">
-						<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-brand">
+						<svg
+							width="28"
+							height="28"
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							strokeWidth="1.5"
+							className="text-brand"
+						>
 							<path d="M14 16H9m10 0h3v-3.15a1 1 0 00-.84-.99L16 11l-2.7-3.6a1 1 0 00-.8-.4H5.24a2 2 0 00-1.8 1.1l-.8 1.63A6 6 0 002 12.42V16h2" />
 							<circle cx="6.5" cy="16.5" r="2.5" />
 							<circle cx="16.5" cy="16.5" r="2.5" />
@@ -99,7 +112,14 @@ export function MyRentalsPage() {
 										/>
 									) : (
 										<div className="w-full h-full flex items-center justify-center text-text-secondary">
-											<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+											<svg
+												width="24"
+												height="24"
+												viewBox="0 0 24 24"
+												fill="none"
+												stroke="currentColor"
+												strokeWidth="1.5"
+											>
 												<path d="M14 16H9m10 0h3v-3.15a1 1 0 00-.84-.99L16 11l-2.7-3.6a1 1 0 00-.8-.4H5.24a2 2 0 00-1.8 1.1l-.8 1.63A6 6 0 002 12.42V16h2" />
 												<circle cx="6.5" cy="16.5" r="2.5" />
 												<circle cx="16.5" cy="16.5" r="2.5" />
@@ -117,8 +137,13 @@ export function MyRentalsPage() {
 												{rental.vehicle?.plate}
 											</p>
 											<p className="text-xs text-text-secondary mt-1">
-												{rental.startDate ? formatDate(rental.startDate) : '—'} — {rental.endDate ? formatDate(rental.endDate) : '—'}
-												{rental.totalDays > 0 && ` · ${rental.totalDays} dia${rental.totalDays > 1 ? 's' : ''}`}
+												{rental.startDate
+													? formatDate(rental.startDate)
+													: '—'}{' '}
+												—{' '}
+												{rental.endDate ? formatDate(rental.endDate) : '—'}
+												{rental.totalDays > 0 &&
+													` · ${rental.totalDays} dia${rental.totalDays > 1 ? 's' : ''}`}
 											</p>
 											{rental.event && (
 												<p className="text-xs text-text-secondary mt-0.5">
@@ -130,8 +155,16 @@ export function MyRentalsPage() {
 											<p className="font-heading font-700 text-sm text-warm-text">
 												{formatKwanza(rental.totalPrice)}
 											</p>
-											<Badge variant={statusVariant[rental.order?.status ?? ''] ?? 'gray'} className="mt-1">
-												{statusLabel[rental.order?.status ?? ''] ?? rental.order?.status ?? '—'}
+											<Badge
+												variant={
+													statusVariant[rental.order?.status ?? ''] ??
+													'gray'
+												}
+												className="mt-1"
+											>
+												{statusLabel[rental.order?.status ?? ''] ??
+													rental.order?.status ??
+													'—'}
 											</Badge>
 										</div>
 									</div>

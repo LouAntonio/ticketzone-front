@@ -209,8 +209,8 @@ export function AdminOrders() {
 															setRefundTarget({
 																id: order.id,
 																buyerName: order.buyerName,
-															totalAmount: order.totalAmount,
-														})
+																totalAmount: order.totalAmount,
+															})
 														}
 														className="btn-admin-danger text-[11px] px-2 py-1"
 													>

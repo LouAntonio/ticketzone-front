@@ -91,7 +91,7 @@ export interface AdminOrder {
 	eventTitle: string
 	buyerName: string
 	buyerEmail: string
-	total: number
+	totalAmount: number
 	commission: number
 	status: string
 	paymentMethod: string | null

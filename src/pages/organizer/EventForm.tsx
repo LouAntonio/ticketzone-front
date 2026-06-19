@@ -402,6 +402,7 @@ export function EventForm() {
 					...toCreate.map((data) => createBatch.mutateAsync(data)),
 				])
 			} else {
+				// eslint-disable-next-line @typescript-eslint/no-unused-vars
 				const { addons, ...createPayload } = payload
 				await createEvent.mutateAsync(createPayload as EventFormData)
 			}

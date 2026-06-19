@@ -23,7 +23,10 @@ export function AccountDashboard() {
 	const confirmedOrders =
 		data?.orders?.filter((o: OrderDisplay) => o.status === 'confirmed') ?? []
 	const pendingOrders = data?.orders?.filter((o: OrderDisplay) => o.status === 'pending') ?? []
-	const totalSpent = confirmedOrders.reduce((s: number, o: OrderDisplay) => s + ((o as any).totalAmount ?? 0), 0)
+	const totalSpent = confirmedOrders.reduce(
+		(s: number, o: OrderDisplay) => s + ((o as any).totalAmount ?? 0),
+		0,
+	)
 	const totalTickets = confirmedOrders.reduce(
 		(s: number, o: OrderDisplay) =>
 			s + (o.items?.reduce((s2, i) => s2 + (i.quantity ?? 0), 0) ?? 0),
@@ -360,7 +363,15 @@ export function AccountDashboard() {
 				{myRentals.length === 0 ? (
 					<div className="rounded-xl border-2 border-dashed border-warm-border bg-white/50 p-12 text-center">
 						<div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-brand-soft flex items-center justify-center">
-							<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-brand">
+							<svg
+								width="28"
+								height="28"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								strokeWidth="1.5"
+								className="text-brand"
+							>
 								<path d="M14 16H9m10 0h3v-3.15a1 1 0 00-.84-.99L16 11l-2.7-3.6a1 1 0 00-.8-.4H5.24a2 2 0 00-1.8 1.1l-.8 1.63A6 6 0 002 12.42V16h2" />
 								<circle cx="6.5" cy="16.5" r="2.5" />
 								<circle cx="16.5" cy="16.5" r="2.5" />
@@ -397,7 +408,14 @@ export function AccountDashboard() {
 											/>
 										) : (
 											<div className="w-full h-full flex items-center justify-center text-text-secondary">
-												<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+												<svg
+													width="20"
+													height="20"
+													viewBox="0 0 24 24"
+													fill="none"
+													stroke="currentColor"
+													strokeWidth="1.5"
+												>
 													<path d="M14 16H9m10 0h3v-3.15a1 1 0 00-.84-.99L16 11l-2.7-3.6a1 1 0 00-.8-.4H5.24a2 2 0 00-1.8 1.1l-.8 1.63A6 6 0 002 12.42V16h2" />
 													<circle cx="6.5" cy="16.5" r="2.5" />
 													<circle cx="16.5" cy="16.5" r="2.5" />
@@ -410,7 +428,8 @@ export function AccountDashboard() {
 											{rental.vehicle?.make} {rental.vehicle?.model}
 										</p>
 										<p className="text-xs text-text-secondary mt-0.5">
-											{rental.startDate ? formatDate(rental.startDate) : '—'} — {rental.endDate ? formatDate(rental.endDate) : '—'}
+											{rental.startDate ? formatDate(rental.startDate) : '—'}{' '}
+											— {rental.endDate ? formatDate(rental.endDate) : '—'}
 										</p>
 									</div>
 									<div className="text-right shrink-0">
@@ -419,19 +438,23 @@ export function AccountDashboard() {
 										</p>
 										<Badge
 											variant={
-												rental.order?.status === 'PAID' || rental.order?.status === 'paid'
+												rental.order?.status === 'PAID' ||
+												rental.order?.status === 'paid'
 													? 'emerald'
-													: rental.order?.status === 'PENDING' || rental.order?.status === 'pending'
+													: rental.order?.status === 'PENDING' ||
+														  rental.order?.status === 'pending'
 														? 'amber'
 														: 'gray'
 											}
 											className="mt-1"
 										>
-											{rental.order?.status === 'PAID' || rental.order?.status === 'paid'
+											{rental.order?.status === 'PAID' ||
+											rental.order?.status === 'paid'
 												? 'Pago'
-												: rental.order?.status === 'PENDING' || rental.order?.status === 'pending'
+												: rental.order?.status === 'PENDING' ||
+													  rental.order?.status === 'pending'
 													? 'Pendente'
-													: rental.order?.status ?? '—'}
+													: (rental.order?.status ?? '—')}
 										</Badge>
 									</div>
 								</div>

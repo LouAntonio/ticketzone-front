@@ -47,9 +47,7 @@ export function RentalDetailPage() {
 	if (error || !rental) {
 		return (
 			<div className="max-w-4xl mx-auto text-center py-16">
-				<p className="font-heading font-600 text-warm-text mb-4">
-					Aluguer não encontrado
-				</p>
+				<p className="font-heading font-600 text-warm-text mb-4">Aluguer não encontrado</p>
 				<Button onClick={() => navigate('/account/rentals')}>Voltar</Button>
 			</div>
 		)
@@ -65,7 +63,16 @@ export function RentalDetailPage() {
 					onClick={() => navigate('/account/rentals')}
 					className="w-9 h-9 rounded-xl border border-warm-border flex items-center justify-center hover:bg-gray-50 transition-colors"
 				>
-					<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+					<svg
+						width="16"
+						height="16"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						strokeWidth="2"
+						strokeLinecap="round"
+						strokeLinejoin="round"
+					>
 						<path d="M19 12H5M12 19l-7-7 7-7" />
 					</svg>
 				</button>
@@ -78,7 +85,10 @@ export function RentalDetailPage() {
 					</p>
 				</div>
 				<div className="ml-auto">
-					<Badge variant={statusVariant[orderStatus] ?? 'gray'} className="text-sm px-4 py-1.5">
+					<Badge
+						variant={statusVariant[orderStatus] ?? 'gray'}
+						className="text-sm px-4 py-1.5"
+					>
 						{statusLabel[orderStatus] ?? orderStatus}
 					</Badge>
 				</div>
@@ -96,7 +106,15 @@ export function RentalDetailPage() {
 							/>
 						) : (
 							<div className="w-24 h-24 rounded-xl bg-warm-bg flex items-center justify-center shrink-0">
-								<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-text-secondary">
+								<svg
+									width="32"
+									height="32"
+									viewBox="0 0 24 24"
+									fill="none"
+									stroke="currentColor"
+									strokeWidth="1.5"
+									className="text-text-secondary"
+								>
 									<path d="M14 16H9m10 0h3v-3.15a1 1 0 00-.84-.99L16 11l-2.7-3.6a1 1 0 00-.8-.4H5.24a2 2 0 00-1.8 1.1l-.8 1.63A6 6 0 002 12.42V16h2" />
 									<circle cx="6.5" cy="16.5" r="2.5" />
 									<circle cx="16.5" cy="16.5" r="2.5" />
@@ -122,13 +140,23 @@ export function RentalDetailPage() {
 									</Link>
 								)}
 							</div>
-							{(rental.vehicle?.transmission || rental.vehicle?.seats || rental.vehicle?.fuelType) && (
+							{(rental.vehicle?.transmission ||
+								rental.vehicle?.seats ||
+								rental.vehicle?.fuelType) && (
 								<div className="flex items-center gap-3 text-xs text-text-secondary mt-2 flex-wrap">
 									{rental.vehicle.transmission && (
-										<span>{rental.vehicle.transmission === 'auto' ? 'Automática' : 'Manual'}</span>
+										<span>
+											{rental.vehicle.transmission === 'auto'
+												? 'Automática'
+												: 'Manual'}
+										</span>
 									)}
-									{rental.vehicle.seats && <span>{rental.vehicle.seats} lugares</span>}
-									{rental.vehicle.fuelType && <span>{rental.vehicle.fuelType}</span>}
+									{rental.vehicle.seats && (
+										<span>{rental.vehicle.seats} lugares</span>
+									)}
+									{rental.vehicle.fuelType && (
+										<span>{rental.vehicle.fuelType}</span>
+									)}
 								</div>
 							)}
 						</div>
@@ -195,7 +223,9 @@ export function RentalDetailPage() {
 							)}
 							{rental.order && (
 								<div className="flex justify-between pt-2 border-t border-warm-border">
-									<span className="font-heading font-600 text-warm-text">Total</span>
+									<span className="font-heading font-600 text-warm-text">
+										Total
+									</span>
 									<span className="font-heading font-700 text-lg text-brand">
 										{formatKwanza(rental.order.totalAmount)}
 									</span>
@@ -220,10 +250,13 @@ export function RentalDetailPage() {
 								</p>
 								<p className="text-xs text-text-secondary">
 									{rental.event.startDate && formatDate(rental.event.startDate)}
-									{rental.event.endDate && ` — ${formatDate(rental.event.endDate)}`}
+									{rental.event.endDate &&
+										` — ${formatDate(rental.event.endDate)}`}
 								</p>
 								{rental.event.location && (
-									<p className="text-xs text-text-secondary">{rental.event.location}</p>
+									<p className="text-xs text-text-secondary">
+										{rental.event.location}
+									</p>
 								)}
 							</div>
 						</div>
@@ -238,7 +271,16 @@ export function RentalDetailPage() {
 						to={`/account/orders/${rental.orderId}`}
 						className="inline-flex items-center gap-2 h-11 px-5 border-2 border-warm-border text-text-secondary font-heading font-600 text-sm rounded-xl hover:bg-gray-50 hover:text-text transition-all"
 					>
-						<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+						<svg
+							width="16"
+							height="16"
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							strokeWidth="2"
+							strokeLinecap="round"
+							strokeLinejoin="round"
+						>
 							<path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
 						</svg>
 						Ver Encomenda

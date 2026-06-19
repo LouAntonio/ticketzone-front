@@ -152,7 +152,15 @@ export function OrdersPage() {
 									/>
 								) : (
 									<div className="w-16 h-16 rounded-xl bg-warm-bg flex items-center justify-center shrink-0">
-										<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-text-secondary">
+										<svg
+											width="20"
+											height="20"
+											viewBox="0 0 24 24"
+											fill="none"
+											stroke="currentColor"
+											strokeWidth="1.5"
+											className="text-text-secondary"
+										>
 											<path d="M14 16H9m10 0h3v-3.15a1 1 0 00-.84-.99L16 11l-2.7-3.6a1 1 0 00-.8-.4H5.24a2 2 0 00-1.8 1.1l-.8 1.63A6 6 0 002 12.42V16h2" />
 											<circle cx="6.5" cy="16.5" r="2.5" />
 											<circle cx="16.5" cy="16.5" r="2.5" />
@@ -169,13 +177,20 @@ export function OrdersPage() {
 												{order.eventTitle ?? 'Aluguer de viatura'}
 											</Link>
 											<p className="text-xs text-text-secondary mt-0.5">
-												{order.eventDate ? formatDate(order.eventDate) : (order as any).rentals?.[0]?.startDate
-													? `${formatDate((order as any).rentals[0].startDate)} — ${formatDate((order as any).rentals[0].endDate)}`
-													: '—'}
+												{order.eventDate
+													? formatDate(order.eventDate)
+													: (order as any).rentals?.[0]?.startDate
+														? `${formatDate((order as any).rentals[0].startDate)} — ${formatDate((order as any).rentals[0].endDate)}`
+														: '—'}
 											</p>
 											<p className="text-xs text-text-secondary mt-0.5">
 												{order.items?.length
-													? order.items.map((i) => `${i.quantity}x ${i.ticketTypeName}`).join(', ')
+													? order.items
+															.map(
+																(i) =>
+																	`${i.quantity}x ${i.ticketTypeName}`,
+															)
+															.join(', ')
 													: (order as any).rentals?.length
 														? `${(order as any).rentals.length} aluguer${(order as any).rentals.length > 1 ? 'es' : ''}`
 														: ''}

@@ -42,7 +42,18 @@ interface VehicleForm {
 	description: string
 }
 
-const emptyForm: VehicleForm = { make: '', model: '', plate: '', year: '', price: '', transmission: '', seats: '', fuelType: '', location: '', description: '' }
+const emptyForm: VehicleForm = {
+	make: '',
+	model: '',
+	plate: '',
+	year: '',
+	price: '',
+	transmission: '',
+	seats: '',
+	fuelType: '',
+	location: '',
+	description: '',
+}
 
 export function AdminFleet() {
 	const [page, setPage] = useState(1)
@@ -142,7 +153,7 @@ export function AdminFleet() {
 	const handleEdit = (v: (typeof vehicles)[0]) => {
 		const existingPhotos = (v.photos ?? []).map((p: any) => ({
 			url: typeof p === 'string' ? p : p.url,
-			idcloudinary: typeof p === 'string' ? '' : p.idcloudinary ?? '',
+			idcloudinary: typeof p === 'string' ? '' : (p.idcloudinary ?? ''),
 		}))
 		setEditTarget({
 			id: v.id,
@@ -323,8 +334,7 @@ export function AdminFleet() {
 						<table className="w-full">
 							<thead>
 								<tr className="border-b-2 border-[#3d3028]">
-									<th className="text-left px-4 py-3 text-[10px] font-heading font-600 text-[#6a5a4e] uppercase tracking-[0.12em] w-14">
-									</th>
+									<th className="text-left px-4 py-3 text-[10px] font-heading font-600 text-[#6a5a4e] uppercase tracking-[0.12em] w-14"></th>
 									<th className="text-left px-4 py-3 text-[10px] font-heading font-600 text-[#6a5a4e] uppercase tracking-[0.12em]">
 										Viatura
 									</th>
@@ -352,13 +362,25 @@ export function AdminFleet() {
 											<div className="w-14 h-10 rounded-lg overflow-hidden bg-[#3d3028] shrink-0">
 												{v.photos?.[0] ? (
 													<img
-														src={typeof v.photos[0] === 'string' ? v.photos[0] : (v.photos[0] as any).url}
+														src={
+															typeof v.photos[0] === 'string'
+																? v.photos[0]
+																: (v.photos[0] as any).url
+														}
 														alt={`${v.make} ${v.model}`}
 														className="w-full h-full object-cover"
 													/>
 												) : (
 													<div className="w-full h-full flex items-center justify-center">
-														<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-[#6a5a4e]">
+														<svg
+															width="14"
+															height="14"
+															viewBox="0 0 24 24"
+															fill="none"
+															stroke="currentColor"
+															strokeWidth="1.5"
+															className="text-[#6a5a4e]"
+														>
 															<path d="M14 16H9m10 0h3v-3.15a1 1 0 00-.84-.99L16 11l-2.7-3.6a1 1 0 00-.8-.4H5.24a2 2 0 00-1.8 1.1l-.8 1.63A6 6 0 002 12.42V16h2" />
 															<circle cx="6.5" cy="16.5" r="2.5" />
 															<circle cx="16.5" cy="16.5" r="2.5" />
@@ -609,7 +631,8 @@ export function AdminFleet() {
 								</p>
 								<div className="flex flex-wrap gap-2">
 									{vehicleDetail.photos.map((photo: any, i: number) => {
-										const url = typeof photo === 'string' ? photo : photo?.url ?? ''
+										const url =
+											typeof photo === 'string' ? photo : (photo?.url ?? '')
 										if (!url) return null
 										return (
 											<div
@@ -878,49 +901,108 @@ export function AdminFleet() {
 									onClick={() => fileInputRef.current?.click()}
 									className="w-full border-2 border-dashed border-[#3d3028] rounded-xl py-8 text-center hover:border-brand/40 transition-colors cursor-pointer"
 								>
-									<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="mx-auto mb-2 text-[#6a5a4e]">
+									<svg
+										width="24"
+										height="24"
+										viewBox="0 0 24 24"
+										fill="none"
+										stroke="currentColor"
+										strokeWidth="1.5"
+										className="mx-auto mb-2 text-[#6a5a4e]"
+									>
 										<path d="M12 5v14M5 12h14" />
 									</svg>
-									<p className="text-xs text-[#6a5a4e] font-heading">Adicionar fotos</p>
-									<p className="text-[10px] text-[#5a4a3e] mt-1">JPEG, PNG ou WebP · Máx 5MB cada</p>
+									<p className="text-xs text-[#6a5a4e] font-heading">
+										Adicionar fotos
+									</p>
+									<p className="text-[10px] text-[#5a4a3e] mt-1">
+										JPEG, PNG ou WebP · Máx 5MB cada
+									</p>
 								</button>
 							) : (
 								<div className="space-y-2">
 									<div className="grid grid-cols-4 sm:grid-cols-5 gap-2">
 										{photos.map((photo, i) => (
-											<div key={photo.idcloudinary || `existing-${i}`} className="relative group aspect-[4/3] rounded-lg overflow-hidden bg-[#3d3028]">
-												<img src={photo.url} alt="" className="w-full h-full object-cover" />
+											<div
+												key={photo.idcloudinary || `existing-${i}`}
+												className="relative group aspect-[4/3] rounded-lg overflow-hidden bg-[#3d3028]"
+											>
+												<img
+													src={photo.url}
+													alt=""
+													className="w-full h-full object-cover"
+												/>
 												<button
 													type="button"
 													onClick={() => {
-														if (photo.idcloudinary) setIdsToDelete((prev) => [...prev, photo.idcloudinary])
-														setPhotos((prev) => prev.filter((_, idx) => idx !== i))
+														if (photo.idcloudinary)
+															setIdsToDelete((prev) => [
+																...prev,
+																photo.idcloudinary,
+															])
+														setPhotos((prev) =>
+															prev.filter((_, idx) => idx !== i),
+														)
 													}}
 													className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/60 flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500"
 												>
-													<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+													<svg
+														width="10"
+														height="10"
+														viewBox="0 0 24 24"
+														fill="none"
+														stroke="currentColor"
+														strokeWidth="3"
+													>
 														<path d="M18 6L6 18M6 6l12 12" />
 													</svg>
 												</button>
 												{i === 0 && (
-													<span className="absolute bottom-1 left-1 px-1.5 py-0.5 bg-brand/80 text-white text-[9px] font-heading font-600 rounded">Principal</span>
+													<span className="absolute bottom-1 left-1 px-1.5 py-0.5 bg-brand/80 text-white text-[9px] font-heading font-600 rounded">
+														Principal
+													</span>
 												)}
 											</div>
 										))}
 										{filesToUpload.map((file, i) => (
-											<div key={`file-${i}`} className="relative group aspect-[4/3] rounded-lg overflow-hidden bg-[#3d3028]">
-												<img src={URL.createObjectURL(file)} alt="" className="w-full h-full object-cover" />
+											<div
+												key={`file-${i}`}
+												className="relative group aspect-[4/3] rounded-lg overflow-hidden bg-[#3d3028]"
+											>
+												<img
+													src={URL.createObjectURL(file)}
+													alt=""
+													className="w-full h-full object-cover"
+												/>
 												<button
 													type="button"
-													onClick={() => setFilesToUpload((prev) => prev.filter((_, idx) => idx !== i))}
+													onClick={() =>
+														setFilesToUpload((prev) =>
+															prev.filter((_, idx) => idx !== i),
+														)
+													}
 													className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/60 flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500"
 												>
-													<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+													<svg
+														width="10"
+														height="10"
+														viewBox="0 0 24 24"
+														fill="none"
+														stroke="currentColor"
+														strokeWidth="3"
+													>
 														<path d="M18 6L6 18M6 6l12 12" />
 													</svg>
 												</button>
 												<div className="absolute inset-0 flex items-center justify-center bg-black/30">
-													<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
+													<svg
+														width="14"
+														height="14"
+														viewBox="0 0 24 24"
+														fill="none"
+														stroke="white"
+														strokeWidth="2"
+													>
 														<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
 														<polyline points="14 2 14 8 20 8" />
 													</svg>
@@ -932,14 +1014,26 @@ export function AdminFleet() {
 											onClick={() => fileInputRef.current?.click()}
 											className="aspect-[4/3] rounded-lg border-2 border-dashed border-[#3d3028] flex flex-col items-center justify-center hover:border-brand/40 transition-colors cursor-pointer"
 										>
-											<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-[#6a5a4e]">
+											<svg
+												width="16"
+												height="16"
+												viewBox="0 0 24 24"
+												fill="none"
+												stroke="currentColor"
+												strokeWidth="1.5"
+												className="text-[#6a5a4e]"
+											>
 												<path d="M12 5v14M5 12h14" />
 											</svg>
-											<span className="text-[10px] text-[#6a5a4e] mt-1 font-heading">Adicionar</span>
+											<span className="text-[10px] text-[#6a5a4e] mt-1 font-heading">
+												Adicionar
+											</span>
 										</button>
 									</div>
 									<p className="text-[10px] text-[#5a4a3e] font-heading">
-										{photos.length + filesToUpload.length} foto{(photos.length + filesToUpload.length) !== 1 ? 's' : ''} · A primeira é a principal
+										{photos.length + filesToUpload.length} foto
+										{photos.length + filesToUpload.length !== 1 ? 's' : ''} · A
+										primeira é a principal
 									</p>
 								</div>
 							)}
