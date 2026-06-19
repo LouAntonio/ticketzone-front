@@ -124,6 +124,11 @@ export const rentalsApi = {
 			.get<{ data: RawVehicle }>(`/vehicles/${id}`)
 			.then((r) => ({ car: mapVehicle(r.data.data ?? r.data) })),
 
+	getCarBySlug: (slug: string) =>
+		api
+			.get<{ data: RawVehicle }>(`/vehicles/slug/${slug}`)
+			.then((r) => ({ car: mapVehicle(r.data.data ?? r.data) })),
+
 	createBooking: (data: CreateBookingData) =>
 		api
 			.post<{ data: RentalResponse }>(`/vehicles/${data.carId}/rent`, {

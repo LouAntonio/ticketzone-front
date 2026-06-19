@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { toast } from 'react-hot-toast'
-import { useCar, useCreateBooking } from '../../api/hooks/useRentals'
+import { useCarBySlug, useCreateBooking } from '../../api/hooks/useRentals'
 import { Button } from '../../components/ui/Button'
 import { Badge } from '../../components/ui/Badge'
 import { Skeleton } from '../../components/ui/Skeleton'
@@ -9,10 +9,10 @@ import { useAuthStore } from '../../stores/useAuthStore'
 import { formatKwanza } from '../../lib/format'
 
 export function CarDetail() {
-	const { id } = useParams<{ id: string }>()
+	const { slug } = useParams<{ slug: string }>()
 	const navigate = useNavigate()
 	const user = useAuthStore((s) => s.user)
-	const { data, isLoading } = useCar(id ?? '')
+	const { data, isLoading } = useCarBySlug(slug ?? '')
 	const createBooking = useCreateBooking()
 
 	const [startDate, setStartDate] = useState('')
@@ -58,7 +58,7 @@ export function CarDetail() {
 		}
 		try {
 			const result = await createBooking.mutateAsync({
-				carId: id!,
+				carId: car.id,
 				startDate,
 				endDate,
 			})

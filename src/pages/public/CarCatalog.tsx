@@ -205,7 +205,7 @@ export function CarCatalog() {
 								className="card overflow-hidden hover:shadow-lg transition-all duration-300 fade-in"
 								style={{ animationDelay: `${i * 80}ms` }}
 							>
-								<Link to={`/rentals/${car.id}`}>
+								<Link to={`/rentals/${car.slug}`}>
 									<div className="aspect-[16/10] overflow-hidden">
 										<img
 											src={car.photos[0] ?? ''}
@@ -219,7 +219,7 @@ export function CarCatalog() {
 									<div className="flex items-start justify-between mb-2">
 										<div>
 											<Link
-												to={`/rentals/${car.id}`}
+												to={`/rentals/${car.slug}`}
 												className="hover:text-brand transition-colors"
 											>
 												<h3 className="font-heading font-700 text-lg">
