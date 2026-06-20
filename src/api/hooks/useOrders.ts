@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { ordersApi } from '../endpoints/orders'
-import type { CreateOrderData, Order } from '../../types/order'
+import type { CreateOrderData } from '../../types/order'
 
 export function useOrders() {
 	return useQuery({

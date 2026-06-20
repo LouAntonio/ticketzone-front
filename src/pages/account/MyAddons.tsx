@@ -30,9 +30,7 @@ export function MyAddonsPage() {
 					<h1 className="font-display-alt font-700 text-2xl text-warm-text mb-1">
 						Os Meus Add-ons
 					</h1>
-					<p className="text-text-secondary text-sm">
-						Gerir os add-ons adquiridos
-					</p>
+					<p className="text-text-secondary text-sm">Gerir os add-ons adquiridos</p>
 				</div>
 			</div>
 
@@ -46,7 +44,15 @@ export function MyAddonsPage() {
 				<div className="card-account">
 					<div className="p-12 text-center">
 						<div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-brand-soft flex items-center justify-center">
-							<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-brand">
+							<svg
+								width="28"
+								height="28"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								strokeWidth="1.5"
+								className="text-brand"
+							>
 								<path d="M20 12H4M12 4v16" />
 							</svg>
 						</div>
@@ -81,7 +87,14 @@ export function MyAddonsPage() {
 										<p className="font-heading font-600 text-sm text-warm-text group-hover:text-brand transition-colors truncate">
 											{instance.addonName}
 										</p>
-										<Badge variant={statusVariant[instance.status.toLowerCase() as keyof typeof statusVariant] ?? 'gray'} className="text-xs shrink-0">
+										<Badge
+											variant={
+												statusVariant[
+													instance.status.toLowerCase() as keyof typeof statusVariant
+												] ?? 'gray'
+											}
+											className="text-xs shrink-0"
+										>
 											{statusLabel[instance.status] ?? instance.status}
 										</Badge>
 									</div>
@@ -89,10 +102,21 @@ export function MyAddonsPage() {
 										{instance.event?.title ?? 'Evento'}
 									</p>
 									<p className="text-xs text-text-secondary">
-										{instance.entriesUsed}/{instance.entriesAllowed} entradas usadas
+										{instance.entriesUsed}/{instance.entriesAllowed} entradas
+										usadas
 									</p>
 								</div>
-								<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-text-secondary shrink-0 group-hover:text-brand transition-colors">
+								<svg
+									width="16"
+									height="16"
+									viewBox="0 0 24 24"
+									fill="none"
+									stroke="currentColor"
+									strokeWidth="2"
+									strokeLinecap="round"
+									strokeLinejoin="round"
+									className="text-text-secondary shrink-0 group-hover:text-brand transition-colors"
+								>
 									<path d="M9 18l6-6-6-6" />
 								</svg>
 							</div>

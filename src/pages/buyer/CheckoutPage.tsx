@@ -42,7 +42,8 @@ export function CheckoutPage() {
 			setOrderCreated(true)
 			cart.clear()
 		} catch (err: any) {
-			const message = err?.response?.data?.message ?? 'Erro ao processar o pedido. Tenta novamente.'
+			const message =
+				err?.response?.data?.message ?? 'Erro ao processar o pedido. Tenta novamente.'
 			toast.error(Array.isArray(message) ? message[0] : message)
 			console.error(err)
 		}

@@ -57,16 +57,11 @@ function mapTicket(t: RawTicket): Ticket {
 
 export const ticketsApi = {
 	list: () =>
-		api.get<{ data: RawTicket[]; total: number }>('/tickets')
-			.then((r) => {
-				const raw = Array.isArray(r.data)
-					? r.data
-					: (r.data as any)?.data ?? []
-				const total = Array.isArray(r.data)
-					? raw.length
-					: (r.data as any)?.total ?? 0
-				return { data: raw.map(mapTicket), total }
-			}),
+		api.get<{ data: RawTicket[]; total: number }>('/tickets').then((r) => {
+			const raw = Array.isArray(r.data) ? r.data : ((r.data as any)?.data ?? [])
+			const total = Array.isArray(r.data) ? raw.length : ((r.data as any)?.total ?? 0)
+			return { data: raw.map(mapTicket), total }
+		}),
 
 	verifyQr: (qrCode: string) =>
 		api.post<VerifyQrResponse>('/tickets/verify-qr', { qrCode }).then((r) => r.data),
@@ -90,8 +85,7 @@ export const ticketsApi = {
 	verifyAddonQr: (qrCode: string) =>
 		api.post<VerifyQrResponse>('/addons/verify-qr', { qrCode }).then((r) => r.data),
 
-	myAddons: () =>
-		api.get<{ data: AddonInstance[] }>('/my-addons').then((r) => r.data),
+	myAddons: () => api.get<{ data: AddonInstance[] }>('/my-addons').then((r) => r.data),
 
 	getAddon: (addonId: string) =>
 		api.get<AddonInstanceDetail>(`/addons/${addonId}`).then((r) => r.data),

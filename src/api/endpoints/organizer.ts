@@ -14,9 +14,7 @@ export const organizerApi = {
 
 	attendees: (eventId?: string) =>
 		api
-			.get<AttendeesData>(
-				`/organizer/attendees${eventId ? `?eventId=${eventId}` : ''}`,
-			)
+			.get<AttendeesData>(`/organizer/attendees${eventId ? `?eventId=${eventId}` : ''}`)
 			.then((r) => r.data),
 
 	settings: () =>
@@ -68,9 +66,12 @@ export const organizerApi = {
 
 	lookupUser: (userId: string) =>
 		api
-			.get<{ id: string; name: string | null; email: string; image: string | null }>(
-				`/organizer/user-lookup/${userId}`,
-			)
+			.get<{
+				id: string
+				name: string | null
+				email: string
+				image: string | null
+			}>(`/organizer/user-lookup/${userId}`)
 			.then((r) => r.data),
 
 	pauseSales: (eventId: string) =>
@@ -108,5 +109,7 @@ export const organizerApi = {
 		api.delete(`/organizer/events/${eventId}/batches/${batchId}`).then((r) => r.data),
 
 	startEvent: (eventId: string) =>
-		api.post<{ msg: string; startedAt: string }>(`/organizer/events/${eventId}/start`).then((r) => r.data),
+		api
+			.post<{ msg: string; startedAt: string }>(`/organizer/events/${eventId}/start`)
+			.then((r) => r.data),
 }

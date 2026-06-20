@@ -22,16 +22,11 @@ export function AccountDashboard() {
 	const { data, isLoading } = useOrders()
 	const { data: validatorEventsData } = useValidatorEvents()
 
-	const paidOrders =
-		data?.orders?.filter((o: Order) => o.status === 'paid') ?? []
+	const paidOrders = data?.orders?.filter((o: Order) => o.status === 'paid') ?? []
 	const pendingOrders = data?.orders?.filter((o: Order) => o.status === 'pending') ?? []
-	const totalSpent = paidOrders.reduce(
-		(s: number, o: Order) => s + (o.totalAmount ?? 0),
-		0,
-	)
+	const totalSpent = paidOrders.reduce((s: number, o: Order) => s + (o.totalAmount ?? 0), 0)
 	const totalTickets = paidOrders.reduce(
-		(s: number, o: Order) =>
-			s + (o.items?.reduce((s2, i) => s2 + (i.quantity ?? 0), 0) ?? 0),
+		(s: number, o: Order) => s + (o.items?.reduce((s2, i) => s2 + (i.quantity ?? 0), 0) ?? 0),
 		0,
 	)
 
@@ -91,8 +86,8 @@ export function AccountDashboard() {
 						{isLoading ? <Skeleton className="h-7 w-28" /> : formatKwanza(totalSpent)}
 					</p>
 					<p className="text-xs text-text-secondary mt-1">
-						{paidOrders.length} compra{paidOrders.length !== 1 ? 's' : ''}{' '}
-						paga{paidOrders.length !== 1 ? 's' : ''}
+						{paidOrders.length} compra{paidOrders.length !== 1 ? 's' : ''} paga
+						{paidOrders.length !== 1 ? 's' : ''}
 					</p>
 				</Card>
 				<Card className="!p-5">
@@ -103,11 +98,8 @@ export function AccountDashboard() {
 						{isLoading ? <Skeleton className="h-7 w-20" /> : totalTickets}
 					</p>
 					<p className="text-xs text-text-secondary mt-1">
-						em {new Set(paidOrders.map((o) => o.eventId)).size}{' '}
-						evento
-						{new Set(paidOrders.map((o) => o.eventId)).size !== 1
-							? 's'
-							: ''}
+						em {new Set(paidOrders.map((o) => o.eventId)).size} evento
+						{new Set(paidOrders.map((o) => o.eventId)).size !== 1 ? 's' : ''}
 					</p>
 				</Card>
 				<Card className="!p-5">
@@ -525,4 +517,3 @@ export function AccountDashboard() {
 		</div>
 	)
 }
-

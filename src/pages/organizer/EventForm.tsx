@@ -942,19 +942,25 @@ export function EventForm() {
 										Evento Iniciado
 									</p>
 									<p className="text-xs text-emerald-600">
-										{new Date(eventData.event.startedAt).toLocaleString('pt-AO')}
+										{new Date(eventData.event.startedAt).toLocaleString(
+											'pt-AO',
+										)}
 									</p>
 								</div>
 							</div>
 						</Card>
 					) : (
-						eventData.event.isApproved && eventData.event.status === 'PUBLISHED' && (
+						eventData.event.isApproved &&
+						eventData.event.status === 'PUBLISHED' && (
 							<Card className="p-4">
 								<div className="flex items-center justify-between">
 									<div>
-										<p className="font-heading font-600 text-sm">Iniciar Evento</p>
+										<p className="font-heading font-600 text-sm">
+											Iniciar Evento
+										</p>
 										<p className="text-xs text-text-secondary">
-											Ao iniciar o evento, os validadores poderão consumir entradas dos bilhetes
+											Ao iniciar o evento, os validadores poderão consumir
+											entradas dos bilhetes
 										</p>
 									</div>
 									<Button
@@ -976,7 +982,9 @@ export function EventForm() {
 					<Card className="p-6 max-w-sm w-full mx-4">
 						<h3 className="font-heading font-600 text-lg mb-2">Iniciar Evento?</h3>
 						<p className="text-sm text-text-secondary mb-6">
-							Tens a certeza que queres iniciar este evento? Após iniciado, os validadores poderão consumir entradas dos bilhetes. Esta ação é irreversível.
+							Tens a certeza que queres iniciar este evento? Após iniciado, os
+							validadores poderão consumir entradas dos bilhetes. Esta ação é
+							irreversível.
 						</p>
 						<div className="flex items-center gap-3">
 							<Button
@@ -988,10 +996,7 @@ export function EventForm() {
 							>
 								Sim, Iniciar Evento
 							</Button>
-							<Button
-								variant="ghost"
-								onClick={() => setShowStartConfirm(false)}
-							>
+							<Button variant="ghost" onClick={() => setShowStartConfirm(false)}>
 								Cancelar
 							</Button>
 						</div>

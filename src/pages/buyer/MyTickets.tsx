@@ -29,12 +29,18 @@ export function MyTickets() {
 
 	const tickets = data?.data ?? []
 
-	const updateQrFromTicket = useCallback((ticket: { id: string; qrCode: string; qrExpiresAt: string }) => {
-		setQrStates((prev) => {
-			if (prev[ticket.id]) return prev
-			return { ...prev, [ticket.id]: { qrCode: ticket.qrCode, qrExpiresAt: ticket.qrExpiresAt } }
-		})
-	}, [])
+	const updateQrFromTicket = useCallback(
+		(ticket: { id: string; qrCode: string; qrExpiresAt: string }) => {
+			setQrStates((prev) => {
+				if (prev[ticket.id]) return prev
+				return {
+					...prev,
+					[ticket.id]: { qrCode: ticket.qrCode, qrExpiresAt: ticket.qrExpiresAt },
+				}
+			})
+		},
+		[],
+	)
 
 	useEffect(() => {
 		for (const t of tickets) {
@@ -59,14 +65,17 @@ export function MyTickets() {
 
 		if (now >= expiresAt && !rotatingRef.current.has(selectedTicket)) {
 			rotatingRef.current.add(selectedTicket)
-			rotateMutation.mutateAsync(selectedTicket).then((res) => {
-				setQrStates((prev) => ({
-					...prev,
-					[selectedTicket]: { qrCode: res.qrCode, qrExpiresAt: res.qrExpiresAt },
-				}))
-			}).finally(() => {
-				rotatingRef.current.delete(selectedTicket)
-			})
+			rotateMutation
+				.mutateAsync(selectedTicket)
+				.then((res) => {
+					setQrStates((prev) => ({
+						...prev,
+						[selectedTicket]: { qrCode: res.qrCode, qrExpiresAt: res.qrExpiresAt },
+					}))
+				})
+				.finally(() => {
+					rotatingRef.current.delete(selectedTicket)
+				})
 		}
 	}, [now, selectedTicket, qrStates, rotateMutation])
 
@@ -205,7 +214,6 @@ export function MyTickets() {
 													? 'Clique para fechar'
 													: 'Ver QR Code completo'}
 											</p>
-										
 										</div>
 									</button>
 

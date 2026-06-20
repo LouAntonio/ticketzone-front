@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useAddonInstance, useRotateAddonQrCode } from '../../api/hooks/useTickets'
 import { Badge } from '../../components/ui/Badge'
@@ -6,11 +6,6 @@ import { Skeleton } from '../../components/ui/Skeleton'
 import { Button } from '../../components/ui/Button'
 import { formatDate } from '../../lib/format'
 import { QRCodeSVG } from 'qrcode.react'
-
-interface QrState {
-	qrCode: string
-	qrExpiresAt: string
-}
 
 const statusVariant: Record<string, 'emerald' | 'gray' | 'red'> = {
 	active: 'emerald',
@@ -32,14 +27,13 @@ export function AddonDetailPage() {
 	const rotateMutation = useRotateAddonQrCode()
 	const rotatingRef = useRef(false)
 
-	const [qrState, setQrState] = useState<QrState | null>(null)
-	const [now, setNow] = useState(Date.now())
-	const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+	const qrState = useMemo(() => {
+		if (!instance) return null
+		return { qrCode: instance.qrSecret, qrExpiresAt: instance.qrExpiresAt }
+	}, [instance])
 
-	useEffect(() => {
-		if (!instance) return
-		setQrState({ qrCode: instance.qrSecret, qrExpiresAt: instance.qrExpiresAt })
-	}, [instance?.id])
+	const [now, setNow] = useState(() => Date.now())
+	const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
 	useEffect(() => {
 		intervalRef.current = setInterval(() => {
@@ -56,11 +50,14 @@ export function AddonDetailPage() {
 		const expiresAt = new Date(qrState.qrExpiresAt).getTime()
 		if (now >= expiresAt) {
 			rotatingRef.current = true
-			rotateMutation.mutateAsync(id).then((res) => {
-				setQrState({ qrCode: res.qrCode, qrExpiresAt: res.qrExpiresAt })
-			}).finally(() => {
-				rotatingRef.current = false
-			})
+			rotateMutation
+				.mutateAsync(id)
+				.then((res) => {
+					rotatingRef.current = false
+				})
+				.catch(() => {
+					rotatingRef.current = false
+				})
 		}
 	}, [now, qrState, id, rotateMutation])
 

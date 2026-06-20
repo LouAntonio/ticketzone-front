@@ -16,38 +16,44 @@ export function ValidationPortal() {
 	const [result, setResult] = useState<VerifyQrResponse | null>(null)
 	const [validateResult, setValidateResult] = useState<ValidationResult | null>(null)
 
-	const handleVerify = useCallback(async (code: string) => {
-		if (!code.trim()) return
-		setResult(null)
-		setValidateResult(null)
-		try {
-			const res = await verify.mutateAsync(code.trim())
-			setResult(res)
-			if (res.status === 'valid') {
-				if (res.type === 'ticket') {
-					toast.success('Bilhete válido')
-				} else {
-					toast.success('Add-on válido')
+	const handleVerify = useCallback(
+		async (code: string) => {
+			if (!code.trim()) return
+			setResult(null)
+			setValidateResult(null)
+			try {
+				const res = await verify.mutateAsync(code.trim())
+				setResult(res)
+				if (res.status === 'valid') {
+					if (res.type === 'ticket') {
+						toast.success('Bilhete válido')
+					} else {
+						toast.success('Add-on válido')
+					}
 				}
+			} catch {
+				toast.error('Erro ao verificar código')
+				setResult({
+					type: 'ticket',
+					status: 'invalid',
+					msg: 'Código não encontrado ou erro na verificação',
+					ticket: null,
+				})
 			}
-		} catch {
-			toast.error('Erro ao verificar código')
-			setResult({
-				type: 'ticket',
-				status: 'invalid',
-				msg: 'Código não encontrado ou erro na verificação',
-				ticket: null,
-			})
-		}
-	}, [verify])
+		},
+		[verify],
+	)
 
-	const handleScan = useCallback((detectedCodes: { rawValue: string }[]) => {
-		if (scannerPaused || detectedCodes.length === 0) return
-		const code = detectedCodes[0].rawValue
-		if (!code) return
-		setScannerPaused(true)
-		handleVerify(code)
-	}, [scannerPaused, handleVerify])
+	const handleScan = useCallback(
+		(detectedCodes: { rawValue: string }[]) => {
+			if (scannerPaused || detectedCodes.length === 0) return
+			const code = detectedCodes[0].rawValue
+			if (!code) return
+			setScannerPaused(true)
+			handleVerify(code)
+		},
+		[scannerPaused, handleVerify],
+	)
 
 	const handleValidate = async () => {
 		if (!result?.ticket?.id && !result?.addon?.id) return
@@ -101,8 +107,7 @@ export function ValidationPortal() {
 	const isAddon = result?.type === 'addon'
 	const canValidate =
 		result?.status === 'valid' &&
-		((isAddon && result.addon?.eventStarted) ||
-			(!isAddon && result?.ticket?.eventStarted))
+		((isAddon && result.addon?.eventStarted) || (!isAddon && result?.ticket?.eventStarted))
 
 	const typeLabel = isAddon ? 'Add-on' : 'Bilhete'
 
@@ -171,7 +176,11 @@ export function ValidationPortal() {
 									Câmara indisponível
 								</p>
 								<p className="text-xs text-text-secondary mb-4">{scannerError}</p>
-								<Button variant="outline" size="sm" onClick={() => setScannerError(null)}>
+								<Button
+									variant="outline"
+									size="sm"
+									onClick={() => setScannerError(null)}
+								>
 									Tentar novamente
 								</Button>
 							</div>
@@ -194,7 +203,8 @@ export function ValidationPortal() {
 							</div>
 						)}
 						<p className="text-xs text-text-secondary text-center max-w-xs">
-							Aponte a câmara para o QR Code do bilhete ou add-on. A verificação é automática.
+							Aponte a câmara para o QR Code do bilhete ou add-on. A verificação é
+							automática.
 						</p>
 					</div>
 				</Card>
@@ -234,112 +244,160 @@ export function ValidationPortal() {
 								{statusConfig[result.status]?.label ?? 'Desconhecido'}
 							</Badge>
 
-							{result.status === 'valid' && result.type === 'ticket' && result.ticket && (
-								<div className="space-y-3 w-full max-w-sm">
-									<div className="p-3 bg-blue-50 rounded-xl">
-										<p className="text-xs text-blue-600 font-heading font-600">Bilhete</p>
-									</div>
-
-									<div className="p-3 bg-gray-50 rounded-xl">
-										<p className="text-xs text-text-secondary">Evento</p>
-										<p className="font-heading font-600">{result.ticket.eventTitle}</p>
-									</div>
-
-									<div className="grid grid-cols-2 gap-3">
-										<div className="p-3 bg-gray-50 rounded-xl">
-											<p className="text-xs text-text-secondary">Tipo</p>
-											<p className="font-heading font-600">{result.ticket.ticketType}</p>
-										</div>
-										<div className="p-3 bg-gray-50 rounded-xl">
-											<p className="text-xs text-text-secondary">Comprador</p>
-											<p className="font-heading font-600">{result.ticket.ownerName}</p>
-										</div>
-									</div>
-
-									<div className="p-3 bg-gray-50 rounded-xl">
-										<p className="text-xs text-text-secondary">Email do comprador</p>
-										<p className="font-heading font-600 text-sm">{result.ticket.ownerEmail}</p>
-									</div>
-
-									{result.ticket.isGroupTicket && result.ticket.groupSize && (
-										<div className="p-3 bg-brand-soft rounded-xl">
-											<p className="text-xs text-brand">Bilhete de Grupo</p>
-											<p className="font-heading font-600 text-brand">
-												{result.ticket.entriesUsed}/{result.ticket.groupSize} usados ·{' '}
-												{result.ticket.entriesAllowed - result.ticket.entriesUsed} restantes
+							{result.status === 'valid' &&
+								result.type === 'ticket' &&
+								result.ticket && (
+									<div className="space-y-3 w-full max-w-sm">
+										<div className="p-3 bg-blue-50 rounded-xl">
+											<p className="text-xs text-blue-600 font-heading font-600">
+												Bilhete
 											</p>
 										</div>
-									)}
 
-									{!result.ticket.isGroupTicket && (
+										<div className="p-3 bg-gray-50 rounded-xl">
+											<p className="text-xs text-text-secondary">Evento</p>
+											<p className="font-heading font-600">
+												{result.ticket.eventTitle}
+											</p>
+										</div>
+
+										<div className="grid grid-cols-2 gap-3">
+											<div className="p-3 bg-gray-50 rounded-xl">
+												<p className="text-xs text-text-secondary">Tipo</p>
+												<p className="font-heading font-600">
+													{result.ticket.ticketType}
+												</p>
+											</div>
+											<div className="p-3 bg-gray-50 rounded-xl">
+												<p className="text-xs text-text-secondary">
+													Comprador
+												</p>
+												<p className="font-heading font-600">
+													{result.ticket.ownerName}
+												</p>
+											</div>
+										</div>
+
+										<div className="p-3 bg-gray-50 rounded-xl">
+											<p className="text-xs text-text-secondary">
+												Email do comprador
+											</p>
+											<p className="font-heading font-600 text-sm">
+												{result.ticket.ownerEmail}
+											</p>
+										</div>
+
+										{result.ticket.isGroupTicket && result.ticket.groupSize && (
+											<div className="p-3 bg-brand-soft rounded-xl">
+												<p className="text-xs text-brand">
+													Bilhete de Grupo
+												</p>
+												<p className="font-heading font-600 text-brand">
+													{result.ticket.entriesUsed}/
+													{result.ticket.groupSize} usados ·{' '}
+													{result.ticket.entriesAllowed -
+														result.ticket.entriesUsed}{' '}
+													restantes
+												</p>
+											</div>
+										)}
+
+										{!result.ticket.isGroupTicket && (
+											<div className="p-3 bg-gray-50 rounded-xl">
+												<p className="text-xs text-text-secondary">
+													Entradas
+												</p>
+												<p className="font-heading font-600">
+													{result.ticket.entriesUsed}/
+													{result.ticket.entriesAllowed} usadas
+												</p>
+											</div>
+										)}
+
+										{!result.ticket.eventStarted && (
+											<div className="p-3 bg-amber-50 rounded-xl">
+												<p className="text-xs text-amber-700">
+													Evento ainda não iniciado. Apenas verificação
+													consultiva — não é possível consumir entradas.
+												</p>
+											</div>
+										)}
+
+										<p className="text-xs text-text-secondary italic">
+											{result.note}
+										</p>
+									</div>
+								)}
+
+							{result.status === 'valid' &&
+								result.type === 'addon' &&
+								result.addon && (
+									<div className="space-y-3 w-full max-w-sm">
+										<div className="p-3 bg-purple-50 rounded-xl">
+											<p className="text-xs text-purple-600 font-heading font-600">
+												Add-on
+											</p>
+										</div>
+
+										<div className="p-3 bg-gray-50 rounded-xl">
+											<p className="text-xs text-text-secondary">Evento</p>
+											<p className="font-heading font-600">
+												{result.addon.eventTitle}
+											</p>
+										</div>
+
+										<div className="grid grid-cols-2 gap-3">
+											<div className="p-3 bg-gray-50 rounded-xl">
+												<p className="text-xs text-text-secondary">
+													Add-on
+												</p>
+												<p className="font-heading font-600">
+													{result.addon.addonName}
+												</p>
+											</div>
+											<div className="p-3 bg-gray-50 rounded-xl">
+												<p className="text-xs text-text-secondary">
+													Comprador
+												</p>
+												<p className="font-heading font-600">
+													{result.addon.ownerName}
+												</p>
+											</div>
+										</div>
+
+										{result.addon.addonDescription && (
+											<div className="p-3 bg-gray-50 rounded-xl">
+												<p className="text-xs text-text-secondary">
+													Descrição
+												</p>
+												<p className="font-heading font-600 text-sm">
+													{result.addon.addonDescription}
+												</p>
+											</div>
+										)}
+
 										<div className="p-3 bg-gray-50 rounded-xl">
 											<p className="text-xs text-text-secondary">Entradas</p>
 											<p className="font-heading font-600">
-												{result.ticket.entriesUsed}/{result.ticket.entriesAllowed} usadas
+												{result.addon.entriesUsed}/
+												{result.addon.entriesAllowed} usadas
 											</p>
 										</div>
-									)}
 
-									{!result.ticket.eventStarted && (
-										<div className="p-3 bg-amber-50 rounded-xl">
-											<p className="text-xs text-amber-700">
-												Evento ainda não iniciado. Apenas verificação consultiva — não é
-												possível consumir entradas.
-											</p>
-										</div>
-									)}
+										{!result.addon.eventStarted && (
+											<div className="p-3 bg-amber-50 rounded-xl">
+												<p className="text-xs text-amber-700">
+													Evento ainda não iniciado. Apenas verificação
+													consultiva.
+												</p>
+											</div>
+										)}
 
-									<p className="text-xs text-text-secondary italic">{result.note}</p>
-								</div>
-							)}
-
-							{result.status === 'valid' && result.type === 'addon' && result.addon && (
-								<div className="space-y-3 w-full max-w-sm">
-									<div className="p-3 bg-purple-50 rounded-xl">
-										<p className="text-xs text-purple-600 font-heading font-600">Add-on</p>
-									</div>
-
-									<div className="p-3 bg-gray-50 rounded-xl">
-										<p className="text-xs text-text-secondary">Evento</p>
-										<p className="font-heading font-600">{result.addon.eventTitle}</p>
-									</div>
-
-									<div className="grid grid-cols-2 gap-3">
-										<div className="p-3 bg-gray-50 rounded-xl">
-											<p className="text-xs text-text-secondary">Add-on</p>
-											<p className="font-heading font-600">{result.addon.addonName}</p>
-										</div>
-										<div className="p-3 bg-gray-50 rounded-xl">
-											<p className="text-xs text-text-secondary">Comprador</p>
-											<p className="font-heading font-600">{result.addon.ownerName}</p>
-										</div>
-									</div>
-
-									{result.addon.addonDescription && (
-										<div className="p-3 bg-gray-50 rounded-xl">
-											<p className="text-xs text-text-secondary">Descrição</p>
-											<p className="font-heading font-600 text-sm">{result.addon.addonDescription}</p>
-										</div>
-									)}
-
-									<div className="p-3 bg-gray-50 rounded-xl">
-										<p className="text-xs text-text-secondary">Entradas</p>
-										<p className="font-heading font-600">
-											{result.addon.entriesUsed}/{result.addon.entriesAllowed} usadas
+										<p className="text-xs text-text-secondary italic">
+											{result.note}
 										</p>
 									</div>
-
-									{!result.addon.eventStarted && (
-										<div className="p-3 bg-amber-50 rounded-xl">
-											<p className="text-xs text-amber-700">
-												Evento ainda não iniciado. Apenas verificação consultiva.
-											</p>
-										</div>
-									)}
-
-									<p className="text-xs text-text-secondary italic">{result.note}</p>
-								</div>
-							)}
+								)}
 
 							{result.status !== 'valid' && (
 								<div className="p-4 bg-red-50 rounded-xl w-full max-w-sm">
@@ -358,7 +416,9 @@ export function ValidationPortal() {
 						<Card className="p-6 text-center">
 							<Button
 								onClick={handleValidate}
-								loading={isAddon ? validateAddon.isPending : validateTicket.isPending}
+								loading={
+									isAddon ? validateAddon.isPending : validateTicket.isPending
+								}
 								size="lg"
 								className="w-full max-w-xs"
 							>
@@ -371,33 +431,40 @@ export function ValidationPortal() {
 					)}
 
 					{/* Validation success result */}
-					{validateResult && (validateResult.type === 'validation' || validateResult.type === 'addon-validation') && (
-						<Card className="p-8 text-center bg-emerald-50 border-emerald-200">
-							<div className="w-20 h-20 mx-auto mb-4 rounded-full bg-emerald-100 flex items-center justify-center">
-								<svg
-									width="36"
-									height="36"
-									viewBox="0 0 24 24"
-									fill="none"
-									stroke="#059669"
-									strokeWidth="1.5"
-									strokeLinecap="round"
-									strokeLinejoin="round"
-								>
-									<path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-								</svg>
-							</div>
-							<Badge variant="emerald" className="text-base px-4 py-1.5 mb-4">
-								{validateResult.type === 'addon-validation' ? 'Add-on Confirmado' : 'Entrada Confirmada'}
-							</Badge>
-							<div className="space-y-1">
-								<p className="font-heading font-600 text-lg">
-									{validateResult.addonName ?? `Entrada ${validateResult.entry} de ${validateResult.total}`}
-								</p>
-								<p className="text-sm text-text-secondary">{validateResult.event}</p>
-							</div>
-						</Card>
-					)}
+					{validateResult &&
+						(validateResult.type === 'validation' ||
+							validateResult.type === 'addon-validation') && (
+							<Card className="p-8 text-center bg-emerald-50 border-emerald-200">
+								<div className="w-20 h-20 mx-auto mb-4 rounded-full bg-emerald-100 flex items-center justify-center">
+									<svg
+										width="36"
+										height="36"
+										viewBox="0 0 24 24"
+										fill="none"
+										stroke="#059669"
+										strokeWidth="1.5"
+										strokeLinecap="round"
+										strokeLinejoin="round"
+									>
+										<path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+									</svg>
+								</div>
+								<Badge variant="emerald" className="text-base px-4 py-1.5 mb-4">
+									{validateResult.type === 'addon-validation'
+										? 'Add-on Confirmado'
+										: 'Entrada Confirmada'}
+								</Badge>
+								<div className="space-y-1">
+									<p className="font-heading font-600 text-lg">
+										{validateResult.addonName ??
+											`Entrada ${validateResult.entry} de ${validateResult.total}`}
+									</p>
+									<p className="text-sm text-text-secondary">
+										{validateResult.event}
+									</p>
+								</div>
+							</Card>
+						)}
 
 					<Button variant="outline" className="mt-2 w-full" onClick={handleReset}>
 						{validateResult ? 'Validar Outro Código' : 'Cancelar'}

@@ -188,9 +188,8 @@ export function StaffList() {
 						Insere o ID do utilizador que desejas adicionar como validador de bilhetes.
 					</p>
 					<div className="text-xs text-text-secondary bg-amber-50 border border-amber-200 rounded-lg p-3">
-						O ID do utilizador pode ser encontrado na página de{' '}
-						<strong>Perfil</strong> ou <strong>Segurança</strong> da conta do
-						utilizador.
+						O ID do utilizador pode ser encontrado na página de <strong>Perfil</strong>{' '}
+						ou <strong>Segurança</strong> da conta do utilizador.
 					</div>
 					<Input
 						label="ID do Utilizador"
@@ -275,8 +274,8 @@ export function StaffList() {
 			>
 				<div className="space-y-4">
 					<p className="text-sm text-text-secondary">
-						Tens a certeza que desejas remover{' '}
-						<strong>{removeTarget?.name}</strong> como validador?
+						Tens a certeza que desejas remover <strong>{removeTarget?.name}</strong>{' '}
+						como validador?
 					</p>
 					<div className="flex gap-3">
 						<Button variant="ghost" onClick={() => setRemoveTarget(null)}>

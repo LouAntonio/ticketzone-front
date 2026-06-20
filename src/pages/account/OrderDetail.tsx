@@ -6,7 +6,6 @@ import { Button } from '../../components/ui/Button'
 import { formatDate, formatKwanza } from '../../lib/format'
 import { QRCodeSVG } from 'qrcode.react'
 import { toast } from 'react-hot-toast'
-import type { OrderDetail } from '../../types/order'
 
 const statusVariant: Record<string, 'emerald' | 'amber' | 'red' | 'gray'> = {
 	paid: 'emerald',
@@ -181,8 +180,9 @@ export function OrderDetailPage() {
 							<div className="flex justify-between">
 								<span className="text-text-secondary">Método</span>
 								<span className="font-heading font-600 text-warm-text">
-									{paymentMethodLabel[(order.paymentMethod ?? '').toLowerCase()] ??
-										order.paymentMethod}
+									{paymentMethodLabel[
+										(order.paymentMethod ?? '').toLowerCase()
+									] ?? order.paymentMethod}
 								</span>
 							</div>
 							{order.paymentRef && (
@@ -319,7 +319,8 @@ export function OrderDetailPage() {
 											{ai.addon.name}
 										</p>
 										<p className="text-xs text-text-secondary">
-											{ai.entriesUsed}/{ai.entriesAllowed} usados · {ai.status}
+											{ai.entriesUsed}/{ai.entriesAllowed} usados ·{' '}
+											{ai.status}
 										</p>
 									</div>
 									<Link

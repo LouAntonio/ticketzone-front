@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useTickets, useRotateQrCode } from '../../api/hooks/useTickets'
 import { Badge } from '../../components/ui/Badge'
@@ -57,11 +57,14 @@ export function TicketDetailPage() {
 		const expiresAt = new Date(qrState.qrExpiresAt).getTime()
 		if (now >= expiresAt) {
 			rotatingRef.current = true
-			rotateMutation.mutateAsync(id).then((res) => {
-				setQrState({ qrCode: res.qrCode, qrExpiresAt: res.qrExpiresAt })
-			}).finally(() => {
-				rotatingRef.current = false
-			})
+			rotateMutation
+				.mutateAsync(id)
+				.then((res) => {
+					setQrState({ qrCode: res.qrCode, qrExpiresAt: res.qrExpiresAt })
+				})
+				.finally(() => {
+					rotatingRef.current = false
+				})
 		}
 	}, [now, qrState, id, rotateMutation])
 

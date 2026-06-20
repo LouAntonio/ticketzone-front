@@ -98,7 +98,10 @@ export function AttendeeList() {
 										<td className="px-4 py-3">
 											<div className="space-y-0.5">
 												{order.items?.map((i, idx) => (
-													<div key={idx} className="text-sm whitespace-nowrap">
+													<div
+														key={idx}
+														className="text-sm whitespace-nowrap"
+													>
 														{i.quantity}x {i.ticketTypeName}
 													</div>
 												))}
@@ -108,13 +111,18 @@ export function AttendeeList() {
 											{order.addons?.length ? (
 												<div className="space-y-0.5">
 													{order.addons.map((a, idx) => (
-														<div key={idx} className="text-xs text-text-secondary whitespace-nowrap">
+														<div
+															key={idx}
+															className="text-xs text-text-secondary whitespace-nowrap"
+														>
 															{a.quantity}x {a.name}
 														</div>
 													))}
 												</div>
 											) : (
-												<span className="text-xs text-text-secondary">—</span>
+												<span className="text-xs text-text-secondary">
+													—
+												</span>
 											)}
 										</td>
 										<td className="px-4 py-3 font-heading font-600 whitespace-nowrap">

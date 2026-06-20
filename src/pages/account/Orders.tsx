@@ -166,7 +166,9 @@ export function OrdersPage() {
 												{order.eventTitle}
 											</Link>
 											<p className="text-xs text-text-secondary mt-0.5">
-												{order.eventDate ? formatDate(order.eventDate) : '—'}
+												{order.eventDate
+													? formatDate(order.eventDate)
+													: '—'}
 											</p>
 											<p className="text-xs text-text-secondary mt-0.5 space-y-0.5">
 												{order.items?.map((i, idx) => (
@@ -175,7 +177,10 @@ export function OrdersPage() {
 													</span>
 												))}
 												{order.addons?.map((a, idx) => (
-													<span key={`a-${idx}`} className="block text-text-secondary/70">
+													<span
+														key={`a-${idx}`}
+														className="block text-text-secondary/70"
+													>
 														+ {a.quantity}x {a.name}
 													</span>
 												))}
@@ -186,7 +191,9 @@ export function OrdersPage() {
 												{formatKwanza(order.totalAmount ?? 0)}
 											</p>
 											<Badge
-												variant={statusVariant[order.status ?? ''] ?? 'gray'}
+												variant={
+													statusVariant[order.status ?? ''] ?? 'gray'
+												}
 												className="mt-1"
 											>
 												{statusLabel[order.status ?? ''] ?? order.status}
@@ -200,18 +207,18 @@ export function OrdersPage() {
 										>
 											Ver Detalhes
 										</Link>
-									{order.status === 'pending' && (
-										<>
-											<span className="text-warm-border">|</span>
-											<button
-												onClick={() => handleCancel(order.id ?? '')}
-												disabled={cancelOrder.isPending}
-												className="text-xs font-heading font-600 text-red-500 hover:text-red-600 disabled:opacity-50"
-											>
-												Cancelar
-											</button>
-										</>
-									)}
+										{order.status === 'pending' && (
+											<>
+												<span className="text-warm-border">|</span>
+												<button
+													onClick={() => handleCancel(order.id ?? '')}
+													disabled={cancelOrder.isPending}
+													className="text-xs font-heading font-600 text-red-500 hover:text-red-600 disabled:opacity-50"
+												>
+													Cancelar
+												</button>
+											</>
+										)}
 									</div>
 								</div>
 							</div>
