@@ -199,15 +199,16 @@ export function MyAddonsPage() {
 													}
 													className="text-xs shrink-0"
 												>
-													{statusLabel[instance.status] ?? instance.status}
+													{statusLabel[instance.status] ??
+														instance.status}
 												</Badge>
 											</div>
 											<p className="text-xs text-text-secondary truncate">
 												{instance.event?.title ?? 'Evento'}
 											</p>
 											<p className="text-xs text-text-secondary">
-												{instance.entriesUsed}/{instance.entriesAllowed} entradas
-												usadas
+												{instance.entriesUsed}/{instance.entriesAllowed}{' '}
+												entradas usadas
 											</p>
 										</div>
 									</div>
@@ -219,7 +220,11 @@ export function MyAddonsPage() {
 										>
 											<div className="w-12 h-12 bg-white rounded-lg border-2 border-warm-border flex items-center justify-center overflow-hidden shrink-0">
 												{qs && (
-													<QRCodeSVG value={qs.qrCode} size={44} level="M" />
+													<QRCodeSVG
+														value={qs.qrCode}
+														size={44}
+														level="M"
+													/>
 												)}
 											</div>
 											<div className="flex-1 min-w-0">
@@ -256,7 +261,8 @@ export function MyAddonsPage() {
 													includeMargin
 												/>
 												<p className="text-xs text-text-secondary text-center mt-3">
-													Apresenta este código no evento para validar o teu add-on.
+													Apresenta este código no evento para validar o
+													teu add-on.
 												</p>
 											</div>
 										)}
