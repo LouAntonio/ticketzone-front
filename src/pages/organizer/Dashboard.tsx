@@ -119,7 +119,7 @@ export function OrganizerDashboard() {
 					Gerir Eventos
 				</Link>
 				<Link to="/validate" className="btn-outline h-11 px-6 text-sm">
-					Validar Bilhetes
+					Validar Bilhetes/Add-ons
 				</Link>
 			</div>
 

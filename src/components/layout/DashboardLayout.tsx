@@ -149,7 +149,7 @@ export function DashboardLayout() {
 								>
 									<path d="M12 4v16m-8-8h16" />
 								</svg>
-								Validar Bilhetes
+								Validar Bilhetes/Add-ons
 							</NavLink>
 						</div>
 					)}

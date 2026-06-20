@@ -125,7 +125,7 @@ export function ValidationPortal() {
 					</svg>
 				</div>
 				<h1 className="font-heading font-700 text-2xl">Validar Bilhetes e Add-ons</h1>
-				<p className="text-text-secondary text-sm mt-1">Portal de verificação de ingressos</p>
+				<p className="text-text-secondary text-sm mt-1">Portal de Verificação</p>
 			</div>
 
 			{/* Scanner always active when no result */}
