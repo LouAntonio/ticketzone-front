@@ -101,4 +101,7 @@ export const organizerApi = {
 
 	removeBatch: (eventId: string, batchId: string) =>
 		api.delete(`/organizer/events/${eventId}/batches/${batchId}`).then((r) => r.data),
+
+	startEvent: (eventId: string) =>
+		api.post<{ msg: string; startedAt: string }>(`/organizer/events/${eventId}/start`).then((r) => r.data),
 }

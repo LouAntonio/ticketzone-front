@@ -73,6 +73,7 @@ export interface Event {
 	salesPaused: boolean
 	promoterId: string
 	featured: boolean
+	startedAt?: string | null
 	shortDescription?: string
 	eventCategories: EventCategoryRelation[]
 	batches: TicketBatch[]

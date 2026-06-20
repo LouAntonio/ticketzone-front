@@ -220,6 +220,20 @@ export function useUpdateBatch(eventId: string) {
 	})
 }
 
+export function useStartEvent() {
+	const qc = useQueryClient()
+	return useMutation({
+		mutationFn: (eventId: string) => organizerApi.startEvent(eventId),
+		onSuccess: () => {
+			toast.success('Evento iniciado com sucesso')
+			qc.invalidateQueries({ queryKey: ['organizer', 'events'] })
+		},
+		onError: (err: Error) => {
+			toast.error(err.message || 'Erro ao iniciar evento')
+		},
+	})
+}
+
 export function useRemoveBatch(eventId: string) {
 	const qc = useQueryClient()
 	return useMutation({
