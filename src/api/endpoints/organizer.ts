@@ -12,7 +12,10 @@ import type {
 export const organizerApi = {
 	sales: () => api.get<SalesData>('/organizer/sales').then((r) => r.data),
 
-	attendees: () => api.get<AttendeesData>('/organizer/attendees').then((r) => r.data),
+	attendees: (eventId?: string) =>
+		api
+			.get<AttendeesData>(`/organizer/attendees${eventId ? `?eventId=${eventId}` : ''}`)
+			.then((r) => r.data),
 
 	settings: () =>
 		api
@@ -61,6 +64,16 @@ export const organizerApi = {
 	removeStaff: (eventId: string, userId: string) =>
 		api.delete(`/organizer/events/${eventId}/staff/${userId}`).then((r) => r.data),
 
+	lookupUser: (userId: string) =>
+		api
+			.get<{
+				id: string
+				name: string | null
+				email: string
+				image: string | null
+			}>(`/organizer/user-lookup/${userId}`)
+			.then((r) => r.data),
+
 	pauseSales: (eventId: string) =>
 		api.post(`/organizer/events/${eventId}/pause-sales`).then((r) => r.data),
 
@@ -94,4 +107,9 @@ export const organizerApi = {
 
 	removeBatch: (eventId: string, batchId: string) =>
 		api.delete(`/organizer/events/${eventId}/batches/${batchId}`).then((r) => r.data),
+
+	startEvent: (eventId: string) =>
+		api
+			.post<{ msg: string; startedAt: string }>(`/organizer/events/${eventId}/start`)
+			.then((r) => r.data),
 }

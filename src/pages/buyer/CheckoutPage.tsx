@@ -16,7 +16,6 @@ export function CheckoutPage() {
 	const createOrder = useCreateOrder()
 	const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('multicaixa')
 	const [orderCreated, setOrderCreated] = useState(false)
-	const [orderRef, setOrderRef] = useState('')
 
 	if (!eventId || (cart.items.length === 0 && cart.addons.length === 0)) {
 		return (
@@ -34,17 +33,18 @@ export function CheckoutPage() {
 
 	const handleCheckout = async () => {
 		try {
-			const res = await createOrder.mutateAsync({
+			await createOrder.mutateAsync({
 				eventId,
 				items: cart.items,
 				addons: cart.addons.length > 0 ? cart.addons : undefined,
 				paymentMethod,
 			})
-			setOrderRef(res.order.paymentRef ?? '')
 			setOrderCreated(true)
 			cart.clear()
-		} catch (err) {
-			toast.error('Erro ao processar o pedido. Tenta novamente.')
+		} catch (err: any) {
+			const message =
+				err?.response?.data?.message ?? 'Erro ao processar o pedido. Tenta novamente.'
+			toast.error(Array.isArray(message) ? message[0] : message)
 			console.error(err)
 		}
 	}
@@ -68,81 +68,11 @@ export function CheckoutPage() {
 							<polyline points="20 6 9 17 4 12" />
 						</svg>
 					</div>
-					<h2 className="font-heading font-700 text-xl mb-2">Pedido Confirmado!</h2>
+					<h2 className="font-heading font-700 text-xl mb-2">Compra Confirmada!</h2>
 					<p className="text-text-secondary text-sm mb-6">
-						O teu pedido foi registado. Assim que o pagamento for confirmado, receberás
-						os bilhetes por email.
+						O pagamento foi processado com sucesso. Os teus bilhetes já estão
+						disponíveis e foram enviados por email.
 					</p>
-
-					{paymentMethod === 'reference' && orderRef && (
-						<div className="p-4 bg-gray-50 rounded-xl mb-6">
-							<p className="text-xs text-text-secondary mb-1">
-								Referência Multicaixa
-							</p>
-							<p className="font-heading font-700 text-2xl tracking-widest">
-								{orderRef}
-							</p>
-							<p className="text-xs text-text-secondary mt-2">
-								Paga em qualquer ATM ou app de Internet Banking
-							</p>
-						</div>
-					)}
-
-					{paymentMethod === 'paypay' && (
-						<div className="p-4 bg-gray-50 rounded-xl mb-6 flex flex-col items-center">
-							<p className="text-xs text-text-secondary mb-3">
-								Escaneia o QR Code com o PayPay
-							</p>
-							<div className="w-40 h-40 bg-white rounded-xl flex items-center justify-center border-2 border-border">
-								<svg
-									width="120"
-									height="120"
-									viewBox="0 0 120 120"
-									className="text-gray-800"
-								>
-									<rect
-										x="20"
-										y="20"
-										width="30"
-										height="30"
-										fill="currentColor"
-									/>
-									<rect
-										x="70"
-										y="20"
-										width="30"
-										height="30"
-										fill="currentColor"
-									/>
-									<rect
-										x="20"
-										y="70"
-										width="30"
-										height="30"
-										fill="currentColor"
-									/>
-									<rect
-										x="70"
-										y="70"
-										width="30"
-										height="30"
-										fill="currentColor"
-									/>
-								</svg>
-							</div>
-						</div>
-					)}
-
-					{paymentMethod === 'multicaixa' && (
-						<div className="p-4 bg-gray-50 rounded-xl mb-6">
-							<p className="text-xs text-text-secondary mb-1">
-								Pagamento via Multicaixa Express
-							</p>
-							<p className="text-sm font-heading font-600">
-								Receberás uma notificação push para confirmar o pagamento
-							</p>
-						</div>
-					)}
 
 					<div className="flex gap-3">
 						<Button

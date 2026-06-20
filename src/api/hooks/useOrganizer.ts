@@ -10,10 +10,10 @@ export function useOrganizerSales() {
 	})
 }
 
-export function useOrganizerAttendees() {
+export function useOrganizerAttendees(eventId?: string) {
 	return useQuery({
-		queryKey: ['organizer', 'attendees'],
-		queryFn: organizerApi.attendees,
+		queryKey: ['organizer', 'attendees', eventId],
+		queryFn: () => organizerApi.attendees(eventId),
 	})
 }
 
@@ -141,6 +141,16 @@ export function useRemoveOrganizerStaff(eventId: string) {
 	})
 }
 
+export function useLookupUser(userId: string) {
+	return useQuery({
+		queryKey: ['organizer', 'user-lookup', userId],
+		queryFn: () => organizerApi.lookupUser(userId),
+		enabled: !!userId && userId.length >= 8,
+		retry: false,
+		staleTime: 1000 * 60 * 5,
+	})
+}
+
 export function usePauseSales() {
 	const qc = useQueryClient()
 	return useMutation({
@@ -206,6 +216,20 @@ export function useUpdateBatch(eventId: string) {
 		},
 		onError: (err: Error) => {
 			toast.error(err.message || 'Erro ao atualizar lote')
+		},
+	})
+}
+
+export function useStartEvent() {
+	const qc = useQueryClient()
+	return useMutation({
+		mutationFn: (eventId: string) => organizerApi.startEvent(eventId),
+		onSuccess: () => {
+			toast.success('Evento iniciado com sucesso')
+			qc.invalidateQueries({ queryKey: ['organizer', 'events'] })
+		},
+		onError: (err: Error) => {
+			toast.error(err.message || 'Erro ao iniciar evento')
 		},
 	})
 }

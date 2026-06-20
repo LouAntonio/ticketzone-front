@@ -8,6 +8,7 @@ import {
 	useCreateBatch,
 	useUpdateBatch,
 	useRemoveBatch,
+	useStartEvent,
 } from '../../api/hooks/useOrganizer'
 import {
 	useAddons,
@@ -107,6 +108,8 @@ export function EventForm() {
 	}, [])
 
 	const [initialized, setInitialized] = useState(false)
+	const [showStartConfirm, setShowStartConfirm] = useState(false)
+	const startEvent = useStartEvent()
 
 	if (isEdit && eventData?.event && !initialized) {
 		setInitialized(true)
@@ -914,6 +917,92 @@ export function EventForm() {
 					</Button>
 				</div>
 			</form>
+
+			{/* Start Event Section */}
+			{isEdit && eventData?.event && (
+				<>
+					{eventData.event.startedAt ? (
+						<Card className="p-4 bg-emerald-50 border-emerald-200">
+							<div className="flex items-center gap-3">
+								<div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center shrink-0">
+									<svg
+										width="20"
+										height="20"
+										viewBox="0 0 24 24"
+										fill="none"
+										stroke="#059669"
+										strokeWidth="2"
+										strokeLinecap="round"
+									>
+										<path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+									</svg>
+								</div>
+								<div>
+									<p className="font-heading font-600 text-sm text-emerald-700">
+										Evento Iniciado
+									</p>
+									<p className="text-xs text-emerald-600">
+										{new Date(eventData.event.startedAt).toLocaleString(
+											'pt-AO',
+										)}
+									</p>
+								</div>
+							</div>
+						</Card>
+					) : (
+						eventData.event.isApproved &&
+						eventData.event.status === 'PUBLISHED' && (
+							<Card className="p-4">
+								<div className="flex items-center justify-between">
+									<div>
+										<p className="font-heading font-600 text-sm">
+											Iniciar Evento
+										</p>
+										<p className="text-xs text-text-secondary">
+											Ao iniciar o evento, os validadores poderão consumir
+											entradas dos bilhetes
+										</p>
+									</div>
+									<Button
+										variant="brand"
+										onClick={() => setShowStartConfirm(true)}
+									>
+										Iniciar Evento
+									</Button>
+								</div>
+							</Card>
+						)
+					)}
+				</>
+			)}
+
+			{/* Start Event Confirmation Modal */}
+			{showStartConfirm && (
+				<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+					<Card className="p-6 max-w-sm w-full mx-4">
+						<h3 className="font-heading font-600 text-lg mb-2">Iniciar Evento?</h3>
+						<p className="text-sm text-text-secondary mb-6">
+							Tens a certeza que queres iniciar este evento? Após iniciado, os
+							validadores poderão consumir entradas dos bilhetes. Esta ação é
+							irreversível.
+						</p>
+						<div className="flex items-center gap-3">
+							<Button
+								onClick={async () => {
+									await startEvent.mutateAsync(id!)
+									setShowStartConfirm(false)
+								}}
+								loading={startEvent.isPending}
+							>
+								Sim, Iniciar Evento
+							</Button>
+							<Button variant="ghost" onClick={() => setShowStartConfirm(false)}>
+								Cancelar
+							</Button>
+						</div>
+					</Card>
+				</div>
+			)}
 		</div>
 	)
 }

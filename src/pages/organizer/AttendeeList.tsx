@@ -1,4 +1,5 @@
-import { useOrganizerAttendees } from '../../api/hooks/useOrganizer'
+import { useState } from 'react'
+import { useOrganizerAttendees, useOrganizerEvents } from '../../api/hooks/useOrganizer'
 import { Card } from '../../components/ui/Card'
 import { Badge } from '../../components/ui/Badge'
 import { Skeleton, SkeletonTable } from '../../components/ui/Skeleton'
@@ -6,7 +7,9 @@ import { formatDate, formatKwanza } from '../../lib/format'
 import type { SalesOrder } from '../../types/event'
 
 export function AttendeeList() {
-	const { data, isLoading } = useOrganizerAttendees()
+	const [selectedEventId, setSelectedEventId] = useState<string>('')
+	const { data: eventsData } = useOrganizerEvents()
+	const { data, isLoading } = useOrganizerAttendees(selectedEventId || undefined)
 
 	if (isLoading) {
 		return (
@@ -16,7 +19,7 @@ export function AttendeeList() {
 					<Skeleton className="h-4 w-36" />
 				</div>
 				<div className="rounded-xl border border-border overflow-hidden p-5">
-					<SkeletonTable rows={6} cols={6} />
+					<SkeletonTable rows={6} cols={7} />
 				</div>
 			</div>
 		)
@@ -26,11 +29,25 @@ export function AttendeeList() {
 
 	return (
 		<div className="space-y-6">
-			<div>
-				<h1 className="font-heading font-700 text-2xl">Participantes</h1>
-				<p className="text-text-secondary text-sm">
-					{attendees.length} participante{attendees.length !== 1 ? 's' : ''}
-				</p>
+			<div className="flex items-center justify-between">
+				<div>
+					<h1 className="font-heading font-700 text-2xl">Participantes</h1>
+					<p className="text-text-secondary text-sm">
+						{attendees.length} participante{attendees.length !== 1 ? 's' : ''}
+					</p>
+				</div>
+				<select
+					value={selectedEventId}
+					onChange={(e) => setSelectedEventId(e.target.value)}
+					className="rounded-lg border border-border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+				>
+					<option value="">Todos os eventos</option>
+					{eventsData?.events?.map((event) => (
+						<option key={event.id} value={event.id}>
+							{event.title}
+						</option>
+					))}
+				</select>
 			</div>
 
 			{attendees.length === 0 ? (
@@ -51,6 +68,9 @@ export function AttendeeList() {
 									</th>
 									<th className="text-left px-4 py-3 font-heading font-600 text-xs uppercase tracking-wider text-text-secondary">
 										Ingressos
+									</th>
+									<th className="text-left px-4 py-3 font-heading font-600 text-xs uppercase tracking-wider text-text-secondary">
+										Add-ons
 									</th>
 									<th className="text-left px-4 py-3 font-heading font-600 text-xs uppercase tracking-wider text-text-secondary">
 										Total
@@ -76,12 +96,37 @@ export function AttendeeList() {
 											{order.eventTitle}
 										</td>
 										<td className="px-4 py-3">
-											{order.items
-												?.map((i) => `${i.quantity}x ${i.ticketTypeName}`)
-												.join(', ')}
+											<div className="space-y-0.5">
+												{order.items?.map((i, idx) => (
+													<div
+														key={idx}
+														className="text-sm whitespace-nowrap"
+													>
+														{i.quantity}x {i.ticketTypeName}
+													</div>
+												))}
+											</div>
 										</td>
-										<td className="px-4 py-3 font-heading font-600">
-											{formatKwanza((order as any).totalAmount ?? 0)}
+										<td className="px-4 py-3">
+											{order.addons?.length ? (
+												<div className="space-y-0.5">
+													{order.addons.map((a, idx) => (
+														<div
+															key={idx}
+															className="text-xs text-text-secondary whitespace-nowrap"
+														>
+															{a.quantity}x {a.name}
+														</div>
+													))}
+												</div>
+											) : (
+												<span className="text-xs text-text-secondary">
+													—
+												</span>
+											)}
+										</td>
+										<td className="px-4 py-3 font-heading font-600 whitespace-nowrap">
+											{formatKwanza(order.total)}
 										</td>
 										<td className="px-4 py-3">
 											<Badge
@@ -102,7 +147,7 @@ export function AttendeeList() {
 														: 'Cancelado'}
 											</Badge>
 										</td>
-										<td className="px-4 py-3 text-text-secondary text-xs">
+										<td className="px-4 py-3 text-text-secondary text-xs whitespace-nowrap">
 											{formatDate(order.createdAt)}
 										</td>
 									</tr>

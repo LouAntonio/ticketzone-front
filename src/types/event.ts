@@ -73,6 +73,7 @@ export interface Event {
 	salesPaused: boolean
 	promoterId: string
 	featured: boolean
+	startedAt?: string | null
 	shortDescription?: string
 	eventCategories: EventCategoryRelation[]
 	batches: TicketBatch[]
@@ -144,6 +145,11 @@ export interface SalesOrder {
 	buyerName?: string
 	buyerId?: string
 	items?: SalesOrderItem[]
+	addons?: Array<{
+		name: string
+		quantity: number
+		unitPrice: number
+	}>
 	total: number
 	status: string
 	createdAt: string

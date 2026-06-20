@@ -25,6 +25,14 @@ export function useCar(id: string) {
 	})
 }
 
+export function useCarBySlug(slug: string) {
+	return useQuery({
+		queryKey: ['cars', 'slug', slug],
+		queryFn: () => rentalsApi.getCarBySlug(slug),
+		enabled: !!slug,
+	})
+}
+
 export function useCreateBooking() {
 	return useMutation({
 		mutationFn: (data: CreateBookingData) => rentalsApi.createBooking(data),

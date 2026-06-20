@@ -1,5 +1,5 @@
 import { useParams, Link, useNavigate } from 'react-router-dom'
-import { useOrder, usePayOrder, useCancelOrder } from '../../api/hooks/useAccount'
+import { useOrder, useCancelOrder } from '../../api/hooks/useAccount'
 import { Badge } from '../../components/ui/Badge'
 import { Skeleton } from '../../components/ui/Skeleton'
 import { Button } from '../../components/ui/Button'
@@ -8,7 +8,6 @@ import { QRCodeSVG } from 'qrcode.react'
 import { toast } from 'react-hot-toast'
 
 const statusVariant: Record<string, 'emerald' | 'amber' | 'red' | 'gray'> = {
-	confirmed: 'emerald',
 	paid: 'emerald',
 	pending: 'amber',
 	cancelled: 'red',
@@ -16,7 +15,6 @@ const statusVariant: Record<string, 'emerald' | 'amber' | 'red' | 'gray'> = {
 }
 
 const statusLabel: Record<string, string> = {
-	confirmed: 'Confirmado',
 	paid: 'Pago',
 	pending: 'Pendente',
 	cancelled: 'Cancelado',
@@ -24,7 +22,8 @@ const statusLabel: Record<string, string> = {
 }
 
 const paymentMethodLabel: Record<string, string> = {
-	multicaixa: 'Multicaixa Express',
+	multicaixa_express: 'Multicaixa Express',
+	multicaixa_reference: 'Referência Multicaixa',
 	paypay: 'PayPay',
 	reference: 'Referência Multicaixa',
 }
@@ -33,18 +32,7 @@ export function OrderDetailPage() {
 	const { id } = useParams<{ id: string }>()
 	const navigate = useNavigate()
 	const { data: order, isLoading, error } = useOrder(id ?? '')
-	const payOrder = usePayOrder()
 	const cancelOrder = useCancelOrder()
-
-	const handlePay = async () => {
-		if (!id) return
-		try {
-			await payOrder.mutateAsync(id)
-			toast.success('Pagamento confirmado!')
-		} catch {
-			toast.error('Erro ao processar pagamento')
-		}
-	}
 
 	const handleCancel = async () => {
 		if (!id) return
@@ -109,9 +97,7 @@ export function OrderDetailPage() {
 					<p className="text-text-secondary text-sm">
 						{order.eventTitle
 							? `${order.eventTitle} · ${formatDate(order.eventDate ?? '')}`
-							: (order as any).rentals?.[0]?.vehicle
-								? `Aluguer: ${(order as any).rentals[0].vehicle.make} ${(order as any).rentals[0].vehicle.model}`
-								: 'Aluguer de viatura'}
+							: 'Aluguer de viatura'}
 					</p>
 				</div>
 				<div className="ml-auto">
@@ -194,8 +180,9 @@ export function OrderDetailPage() {
 							<div className="flex justify-between">
 								<span className="text-text-secondary">Método</span>
 								<span className="font-heading font-600 text-warm-text">
-									{paymentMethodLabel[order.paymentMethod ?? ''] ??
-										order.paymentMethod}
+									{paymentMethodLabel[
+										(order.paymentMethod ?? '').toLowerCase()
+									] ?? order.paymentMethod}
 								</span>
 							</div>
 							{order.paymentRef && (
@@ -209,7 +196,7 @@ export function OrderDetailPage() {
 							<div className="flex justify-between pt-2 border-t border-warm-border">
 								<span className="font-heading font-600 text-warm-text">Total</span>
 								<span className="font-heading font-700 text-lg text-brand">
-									{formatKwanza((order as any).totalAmount ?? 0)}
+									{formatKwanza(order.totalAmount ?? 0)}
 								</span>
 							</div>
 						</div>
@@ -217,7 +204,7 @@ export function OrderDetailPage() {
 				</div>
 			</div>
 
-			{/* Items */}
+			{/* Items + Addons */}
 			<div className="card-account stagger-4">
 				<div className="p-6 sm:p-8">
 					<h3 className="font-heading font-700 text-lg text-warm-text mb-4">Itens</h3>
@@ -243,11 +230,29 @@ export function OrderDetailPage() {
 								</p>
 							</div>
 						))}
+						{order.addons?.map((addon, i) => (
+							<div
+								key={`a-${i}`}
+								className="flex items-center justify-between p-4 rounded-xl bg-warm-bg/50 border border-dashed border-warm-border"
+							>
+								<div>
+									<p className="text-sm font-heading font-600 text-warm-text">
+										{addon.name}
+									</p>
+									<p className="text-xs text-text-secondary">
+										{addon.quantity}x · {formatKwanza(addon.unitPrice)} cada
+									</p>
+								</div>
+								<p className="text-sm font-heading font-600 text-warm-text">
+									{formatKwanza(addon.unitPrice * addon.quantity)}
+								</p>
+							</div>
+						))}
 					</div>
 					<div className="mt-4 pt-4 border-t border-warm-border flex items-center justify-between">
 						<span className="font-heading font-700 text-warm-text">Total</span>
 						<span className="font-display-alt font-700 text-2xl text-brand">
-							{formatKwanza((order as any).totalAmount ?? 0)}
+							{formatKwanza(order.totalAmount ?? 0)}
 						</span>
 					</div>
 				</div>
@@ -273,9 +278,6 @@ export function OrderDetailPage() {
 										<p className="text-sm font-heading font-600 text-warm-text">
 											{ticket.ticketTypeName}
 										</p>
-										<p className="text-xs text-text-secondary truncate">
-											{ticket.qrCode}
-										</p>
 										{ticket.entriesAllowed > 1 && (
 											<p className="text-xs text-text-secondary">
 												{ticket.entriesUsed}/{ticket.entriesAllowed}{' '}
@@ -287,7 +289,45 @@ export function OrderDetailPage() {
 										to={`/account/tickets/${ticket.id}`}
 										className="text-xs font-heading font-600 text-brand hover:text-brand-dark link-underline shrink-0"
 									>
-										Ver
+										Ver QR
+									</Link>
+								</div>
+							))}
+						</div>
+					</div>
+				</div>
+			)}
+
+			{/* Addon Instances (if any) */}
+			{order.addonInstances && order.addonInstances.length > 0 && (
+				<div className="card-account stagger-5">
+					<div className="p-6 sm:p-8">
+						<h3 className="font-heading font-700 text-lg text-warm-text mb-4">
+							Add-ons (QR Codes)
+						</h3>
+						<div className="grid sm:grid-cols-2 gap-3">
+							{order.addonInstances.map((ai) => (
+								<div
+									key={ai.id}
+									className="flex items-center gap-4 p-4 rounded-xl border border-warm-border bg-white"
+								>
+									<div className="w-14 h-14 shrink-0 bg-white rounded-lg border-2 border-warm-border flex items-center justify-center overflow-hidden">
+										<QRCodeSVG value={ai.qrSecret} size={50} level="M" />
+									</div>
+									<div className="flex-1 min-w-0">
+										<p className="text-sm font-heading font-600 text-warm-text">
+											{ai.addon.name}
+										</p>
+										<p className="text-xs text-text-secondary">
+											{ai.entriesUsed}/{ai.entriesAllowed} usados ·{' '}
+											{ai.status}
+										</p>
+									</div>
+									<Link
+										to={`/account/addons/${ai.id}`}
+										className="text-xs font-heading font-600 text-brand hover:text-brand-dark link-underline shrink-0"
+									>
+										Ver QR
 									</Link>
 								</div>
 							))}
@@ -297,14 +337,14 @@ export function OrderDetailPage() {
 			)}
 
 			{/* Rentals (if any) */}
-			{(order as any).rentals && (order as any).rentals.length > 0 && (
+			{order.rentals && order.rentals.length > 0 && (
 				<div className="card-account stagger-5">
 					<div className="p-6 sm:p-8">
 						<h3 className="font-heading font-700 text-lg text-warm-text mb-4">
 							Alugueres
 						</h3>
 						<div className="space-y-3">
-							{(order as any).rentals.map((rental: any) => (
+							{order.rentals.map((rental) => (
 								<Link
 									key={rental.id}
 									to={`/account/rentals/${rental.id}`}
@@ -368,21 +408,6 @@ export function OrderDetailPage() {
 			{/* Actions */}
 			{isPending && (
 				<div className="flex items-center gap-3 stagger-5">
-					<Button onClick={handlePay} loading={payOrder.isPending} className="flex-1">
-						<svg
-							width="16"
-							height="16"
-							viewBox="0 0 24 24"
-							fill="none"
-							stroke="currentColor"
-							strokeWidth="2"
-							strokeLinecap="round"
-							strokeLinejoin="round"
-						>
-							<path d="M12 1v22M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" />
-						</svg>
-						Pagar Agora
-					</Button>
 					<Button
 						variant="outline"
 						onClick={handleCancel}

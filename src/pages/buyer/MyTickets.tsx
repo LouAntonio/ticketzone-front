@@ -1,4 +1,6 @@
-import { useTickets } from '../../api/hooks/useTickets'
+import { useEffect, useRef, useMemo } from 'react'
+import { useTickets, useRotateQrCode } from '../../api/hooks/useTickets'
+import type { Ticket } from '../../types/ticket'
 import { Card } from '../../components/ui/Card'
 import { Badge } from '../../components/ui/Badge'
 import { Skeleton } from '../../components/ui/Skeleton'
@@ -12,9 +14,79 @@ const statusVariant: Record<string, 'emerald' | 'gray' | 'red'> = {
 	cancelled: 'red',
 }
 
+interface QrState {
+	qrCode: string
+	qrExpiresAt: string
+}
+
 export function MyTickets() {
 	const { data, isLoading } = useTickets()
 	const [selectedTicket, setSelectedTicket] = useState<string | null>(null)
+	const [now, setNow] = useState(() => Date.now())
+	const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+	const rotateMutation = useRotateQrCode()
+	const rotatingRef = useRef<Set<string>>(new Set())
+
+	const tickets = useMemo<Ticket[]>(() => data?.data ?? [], [data])
+
+	const baseQrStates = useMemo(() => {
+		const map: Record<string, QrState> = {}
+		for (const t of tickets) {
+			map[t.id] = { qrCode: t.qrCode, qrExpiresAt: t.qrExpiresAt }
+		}
+		return map
+	}, [tickets])
+
+	const [rotationUpdates, setRotationUpdates] = useState<Record<string, QrState>>({})
+	const qrStates = useMemo(
+		() => ({
+			...baseQrStates,
+			...rotationUpdates,
+		}),
+		[baseQrStates, rotationUpdates],
+	)
+
+	useEffect(() => {
+		intervalRef.current = setInterval(() => {
+			setNow(Date.now())
+		}, 1000)
+		return () => {
+			if (intervalRef.current) clearInterval(intervalRef.current)
+		}
+	}, [])
+
+	useEffect(() => {
+		if (!selectedTicket || !qrStates[selectedTicket]) return
+
+		const qs = qrStates[selectedTicket]
+		const expiresAt = new Date(qs.qrExpiresAt).getTime()
+
+		if (now >= expiresAt && !rotatingRef.current.has(selectedTicket)) {
+			rotatingRef.current.add(selectedTicket)
+			rotateMutation
+				.mutateAsync(selectedTicket)
+				.then((res) => {
+					setRotationUpdates((prev) => ({
+						...prev,
+						[selectedTicket]: { qrCode: res.qrCode, qrExpiresAt: res.qrExpiresAt },
+					}))
+				})
+				.finally(() => {
+					rotatingRef.current.delete(selectedTicket)
+				})
+		}
+	}, [now, selectedTicket, qrStates, rotateMutation])
+
+	const handleToggle = (ticketId: string) => {
+		setSelectedTicket((prev) => (prev === ticketId ? null : ticketId))
+	}
+
+	const getCountdown = (ticketId: string): number | null => {
+		const qs = qrStates[ticketId]
+		if (!qs) return null
+		const diff = new Date(qs.qrExpiresAt).getTime() - now
+		return diff > 0 ? Math.ceil(diff / 1000) : 0
+	}
 
 	if (isLoading) {
 		return (
@@ -56,8 +128,6 @@ export function MyTickets() {
 		)
 	}
 
-	const tickets = data?.tickets ?? []
-
 	return (
 		<div className="space-y-6">
 			<div>
@@ -86,121 +156,98 @@ export function MyTickets() {
 				</Card>
 			) : (
 				<div className="grid sm:grid-cols-2 gap-4">
-					{tickets.map((ticket) => (
-						<Card key={ticket.id} className="overflow-hidden">
-							<div className="flex gap-4">
-								<img
-									src={ticket.eventImage}
-									alt={ticket.eventTitle}
-									className="w-20 h-20 rounded-xl object-cover shrink-0"
-								/>
-								<div className="flex-1 min-w-0">
-									<p className="font-heading font-600 text-sm">
-										{ticket.eventTitle}
-									</p>
-									<p className="text-xs text-text-secondary mt-0.5">
-										{formatDate(ticket.eventDate)}
-									</p>
-									<p className="text-xs text-text-secondary">
-										{ticket.ticketTypeName}
-										{ticket.groupSize && ` · ${ticket.groupSize} pessoas`}
-									</p>
-									<div className="flex items-center gap-2 mt-2">
-										<Badge variant={statusVariant[ticket.status] ?? 'gray'}>
-											{ticket.status === 'active'
-												? 'Ativo'
-												: ticket.status === 'used'
-													? 'Usado'
-													: 'Cancelado'}
-										</Badge>
-										{ticket.groupSize && ticket.groupSize > 1 && (
-											<span className="text-xs text-text-secondary">
-												{ticket.used}/{ticket.groupSize} usados
-											</span>
-										)}
-									</div>
-								</div>
-							</div>
+					{tickets.map((ticket) => {
+						const qs = qrStates[ticket.id]
+						const countdown = getCountdown(ticket.id)
 
-							{/* QR Code */}
-							<div className="mt-4 pt-4 border-t border-border">
-								<button
-									onClick={() =>
-										setSelectedTicket(
-											selectedTicket === ticket.id ? null : ticket.id,
-										)
-									}
-									className="flex items-center gap-3 w-full text-left"
-								>
-									<div className="w-12 h-12 bg-white rounded-lg border-2 border-border flex items-center justify-center overflow-hidden shrink-0">
-										<QRCodeSVG value={ticket.qrCode} size={44} level="M" />
-									</div>
+						return (
+							<Card key={ticket.id} className="overflow-hidden">
+								<div className="flex gap-4">
+									<img
+										src={ticket.eventImage}
+										alt={ticket.eventTitle}
+										className="w-20 h-20 rounded-xl object-cover shrink-0"
+									/>
 									<div className="flex-1 min-w-0">
-										<p className="text-xs font-heading font-600">
-											{selectedTicket === ticket.id
-												? 'Clique para fechar'
-												: 'Ver QR Code completo'}
+										<p className="font-heading font-600 text-sm">
+											{ticket.eventTitle}
+										</p>
+										<p className="text-xs text-text-secondary mt-0.5">
+											{formatDate(ticket.eventDate)}
 										</p>
 										<p className="text-xs text-text-secondary">
-											Código: {ticket.qrCode}
+											{ticket.ticketTypeName}
+											{ticket.groupSize && ` · ${ticket.groupSize} pessoas`}
 										</p>
-									</div>
-								</button>
-
-								{selectedTicket === ticket.id && (
-									<div className="mt-4 flex flex-col items-center p-4 bg-gray-50 rounded-xl slide-up">
-										<QRCodeSVG
-											value={ticket.qrCode}
-											size={180}
-											level="H"
-											includeMargin
-										/>
-										<p className="mt-3 text-xs text-text-secondary font-heading font-600">
-											{ticket.qrCode}
-										</p>
-										<p className="text-xs text-text-secondary text-center mt-1">
-											Apresenta este código na entrada do evento
-										</p>
-										<div className="flex gap-2 mt-3">
-											<button className="btn-outline h-9 px-4 text-xs rounded-lg">
-												<svg
-													width="14"
-													height="14"
-													viewBox="0 0 24 24"
-													fill="none"
-													stroke="currentColor"
-													strokeWidth="2"
-													strokeLinecap="round"
-													strokeLinejoin="round"
-												>
-													<path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8" />
-													<polyline points="16 6 12 2 8 6" />
-													<line x1="12" y1="2" x2="12" y2="15" />
-												</svg>
-												Download
-											</button>
-											<button className="btn-ghost h-9 px-4 text-xs rounded-lg">
-												<svg
-													width="14"
-													height="14"
-													viewBox="0 0 24 24"
-													fill="none"
-													stroke="currentColor"
-													strokeWidth="2"
-													strokeLinecap="round"
-													strokeLinejoin="round"
-												>
-													<path d="M22 2L11 13" />
-													<path d="M22 2l-7 20-4-9-9-4 20-7z" />
-												</svg>
-												WhatsApp
-											</button>
+										<div className="flex items-center gap-2 mt-2">
+											<Badge variant={statusVariant[ticket.status] ?? 'gray'}>
+												{ticket.status === 'active'
+													? 'Ativo'
+													: ticket.status === 'used'
+														? 'Usado'
+														: 'Cancelado'}
+											</Badge>
+											{ticket.groupSize && ticket.groupSize > 1 && (
+												<span className="text-xs text-text-secondary">
+													{ticket.used}/{ticket.groupSize} usados
+												</span>
+											)}
 										</div>
 									</div>
-								)}
-							</div>
-						</Card>
-					))}
+								</div>
+
+								<div className="mt-4 pt-4 border-t border-border">
+									<button
+										onClick={() => handleToggle(ticket.id)}
+										className="flex items-center gap-3 w-full text-left"
+									>
+										<div className="w-12 h-12 bg-white rounded-lg border-2 border-border flex items-center justify-center overflow-hidden shrink-0">
+											{qs && (
+												<QRCodeSVG value={qs.qrCode} size={44} level="M" />
+											)}
+										</div>
+										<div className="flex-1 min-w-0">
+											<p className="text-xs font-heading font-600">
+												{selectedTicket === ticket.id
+													? 'Clique para fechar'
+													: 'Ver QR Code completo'}
+											</p>
+										</div>
+									</button>
+
+									{selectedTicket === ticket.id && qs && (
+										<div className="mt-4 flex flex-col items-center p-4 bg-gray-50 rounded-xl slide-up">
+											{countdown !== null && countdown > 0 && (
+												<div className="mb-3 flex items-center gap-2">
+													<div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+													<span className="text-xs text-emerald-600 font-heading font-600">
+														QR expira em {countdown}s
+													</span>
+												</div>
+											)}
+											{countdown !== null && countdown <= 0 && (
+												<div className="mb-3 flex items-center gap-2">
+													<div className="w-2 h-2 rounded-full bg-amber-500" />
+													<span className="text-xs text-amber-600 font-heading font-600">
+														A renovar QR Code...
+													</span>
+												</div>
+											)}
+											<QRCodeSVG
+												value={qs.qrCode}
+												size={180}
+												level="H"
+												includeMargin
+											/>
+											<p className="text-xs text-text-secondary text-center mt-3">
+												Apresenta este código na entrada do evento
+											</p>
+										</div>
+									)}
+								</div>
+							</Card>
+						)
+					})}
 				</div>
 			)}
 		</div>

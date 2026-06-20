@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { useTickets, useRotateQrCode } from '../../api/hooks/useTickets'
+import { useAddonInstance, useRotateAddonQrCode } from '../../api/hooks/useTickets'
 import { Badge } from '../../components/ui/Badge'
 import { Skeleton } from '../../components/ui/Skeleton'
 import { Button } from '../../components/ui/Button'
@@ -14,24 +14,23 @@ const statusVariant: Record<string, 'emerald' | 'gray' | 'red'> = {
 }
 
 const statusLabel: Record<string, string> = {
-	active: 'Ativo',
-	used: 'Usado',
-	cancelled: 'Cancelado',
+	ACTIVE: 'Ativo',
+	USED: 'Usado',
+	CANCELLED: 'Cancelado',
+	VOIDED: 'Anulado',
 }
 
-export function TicketDetailPage() {
+export function AddonDetailPage() {
 	const { id } = useParams<{ id: string }>()
 	const navigate = useNavigate()
-	const { data, isLoading } = useTickets()
-	const rotateMutation = useRotateQrCode()
+	const { data: instance, isLoading } = useAddonInstance(id ?? '')
+	const rotateMutation = useRotateAddonQrCode()
 	const rotatingRef = useRef(false)
 
-	const ticket = (data?.data ?? []).find((t: { id: string }) => t.id === id)
-
 	const qrState = useMemo(() => {
-		if (!ticket) return null
-		return { qrCode: ticket.qrCode, qrExpiresAt: ticket.qrExpiresAt }
-	}, [ticket])
+		if (!instance) return null
+		return { qrCode: instance.qrSecret, qrExpiresAt: instance.qrExpiresAt }
+	}, [instance])
 
 	const [now, setNow] = useState(() => Date.now())
 	const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
@@ -72,7 +71,7 @@ export function TicketDetailPage() {
 		)
 	}
 
-	if (!ticket) {
+	if (!instance) {
 		return (
 			<div className="max-w-2xl mx-auto text-center py-16">
 				<div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-brand-soft flex items-center justify-center">
@@ -85,21 +84,20 @@ export function TicketDetailPage() {
 						strokeWidth="1.5"
 						className="text-brand"
 					>
-						<path d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
+						<path d="M20 12H4M12 4v16" />
 					</svg>
 				</div>
-				<p className="font-heading font-600 text-warm-text mb-2">Bilhete não encontrado</p>
-				<Button onClick={() => navigate('/account/tickets')}>Voltar</Button>
+				<p className="font-heading font-600 text-warm-text mb-2">Add-on não encontrado</p>
+				<Button onClick={() => navigate('/account/orders')}>Voltar</Button>
 			</div>
 		)
 	}
 
 	return (
 		<div className="max-w-2xl mx-auto space-y-6">
-			{/* Back */}
 			<div className="flex items-center gap-4 stagger-1">
 				<button
-					onClick={() => navigate('/account/tickets')}
+					onClick={() => navigate(-1)}
 					className="w-9 h-9 rounded-xl border border-warm-border flex items-center justify-center hover:bg-gray-50 transition-colors"
 				>
 					<svg
@@ -117,21 +115,19 @@ export function TicketDetailPage() {
 				</button>
 				<div>
 					<h1 className="font-display-alt font-700 text-2xl text-warm-text">
-						Meu Bilhete
+						Meu Add-on
 					</h1>
-					<p className="text-text-secondary text-sm">{ticket.eventTitle}</p>
+					<p className="text-text-secondary text-sm">{instance.event?.title}</p>
 				</div>
 				<div className="ml-auto">
-					<Badge variant={statusVariant[ticket.status] ?? 'gray'}>
-						{statusLabel[ticket.status] ?? ticket.status}
+					<Badge variant={statusVariant[(instance.status ?? '').toLowerCase()] ?? 'gray'}>
+						{statusLabel[instance.status] ?? instance.status}
 					</Badge>
 				</div>
 			</div>
 
-			{/* Ticket Card */}
 			<div className="card-account stagger-2 overflow-hidden">
 				<div className="p-8 sm:p-10 flex flex-col items-center">
-					{/* QR Code */}
 					{qrState && (
 						<div className="relative mb-4">
 							<div className="w-64 h-64 bg-white rounded-2xl border-2 border-warm-border p-4 shadow-sm">
@@ -163,21 +159,38 @@ export function TicketDetailPage() {
 					)}
 
 					<p className="text-xs text-text-secondary text-center max-w-xs">
-						Apresenta este código na entrada do evento.
-						{ticket.groupSize &&
-							ticket.groupSize > 1 &&
-							` Este bilhete é válido para ${ticket.groupSize} pessoas.`}
+						Apresenta este código no evento para validar o teu add-on.
 					</p>
 				</div>
 			</div>
 
-			{/* Event Info */}
 			<div className="card-account stagger-3">
 				<div className="p-6 sm:p-8">
 					<h3 className="font-heading font-700 text-lg text-warm-text mb-4">
-						Informação do Evento
+						Informação do Add-on
 					</h3>
 					<div className="space-y-3">
+						<div className="flex items-center gap-3">
+							<div className="w-10 h-10 rounded-lg bg-brand-soft flex items-center justify-center shrink-0">
+								<svg
+									width="18"
+									height="18"
+									viewBox="0 0 24 24"
+									fill="none"
+									stroke="currentColor"
+									strokeWidth="1.5"
+									className="text-brand"
+								>
+									<path d="M20 12H4M12 4v16" />
+								</svg>
+							</div>
+							<div>
+								<p className="text-sm font-heading font-600 text-warm-text">
+									{instance.addonName}
+								</p>
+								<p className="text-xs text-text-secondary">Nome</p>
+							</div>
+						</div>
 						<div className="flex items-center gap-3">
 							<div className="w-10 h-10 rounded-lg bg-brand-soft flex items-center justify-center shrink-0">
 								<svg
@@ -197,10 +210,12 @@ export function TicketDetailPage() {
 							</div>
 							<div>
 								<p className="text-sm font-heading font-600 text-warm-text">
-									{ticket.eventTitle}
+									{instance.event?.title}
 								</p>
 								<p className="text-xs text-text-secondary">
-									{formatDate(ticket.eventDate)}
+									{instance.event?.startDate
+										? formatDate(instance.event.startDate)
+										: ''}
 								</p>
 							</div>
 						</div>
@@ -221,7 +236,7 @@ export function TicketDetailPage() {
 							</div>
 							<div>
 								<p className="text-sm font-heading font-600 text-warm-text">
-									{ticket.buyerName}
+									{instance.owner?.name ?? 'Desconhecido'}
 								</p>
 								<p className="text-xs text-text-secondary">Comprador</p>
 							</div>
@@ -242,36 +257,11 @@ export function TicketDetailPage() {
 							</div>
 							<div>
 								<p className="text-sm font-heading font-600 text-warm-text">
-									{ticket.ticketTypeName}
+									{instance.entriesUsed}/{instance.entriesAllowed} entradas usadas
 								</p>
-								<p className="text-xs text-text-secondary">Tipo de bilhete</p>
+								<p className="text-xs text-text-secondary">Consumo</p>
 							</div>
 						</div>
-						{ticket.groupSize && ticket.groupSize > 1 && (
-							<div className="flex items-center gap-3">
-								<div className="w-10 h-10 rounded-lg bg-brand-soft flex items-center justify-center shrink-0">
-									<svg
-										width="18"
-										height="18"
-										viewBox="0 0 24 24"
-										fill="none"
-										stroke="currentColor"
-										strokeWidth="1.5"
-										className="text-brand"
-									>
-										<path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
-										<circle cx="9" cy="7" r="4" />
-										<path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" />
-									</svg>
-								</div>
-								<div>
-									<p className="text-sm font-heading font-600 text-warm-text">
-										{ticket.used}/{ticket.groupSize} entradas usadas
-									</p>
-									<p className="text-xs text-text-secondary">Bilhete de grupo</p>
-								</div>
-							</div>
-						)}
 					</div>
 				</div>
 			</div>

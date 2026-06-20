@@ -1,14 +1,14 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useOrders } from '../../api/hooks/useOrders'
-import { usePayOrder, useCancelOrder } from '../../api/hooks/useAccount'
+import { useCancelOrder } from '../../api/hooks/useAccount'
 import { Badge } from '../../components/ui/Badge'
 import { Skeleton } from '../../components/ui/Skeleton'
 import { formatDate, formatKwanza } from '../../lib/format'
 import { toast } from 'react-hot-toast'
+import type { Order } from '../../types/order'
 
 const statusVariant: Record<string, 'emerald' | 'amber' | 'red' | 'gray'> = {
-	confirmed: 'emerald',
 	paid: 'emerald',
 	pending: 'amber',
 	cancelled: 'red',
@@ -16,7 +16,6 @@ const statusVariant: Record<string, 'emerald' | 'amber' | 'red' | 'gray'> = {
 }
 
 const statusLabel: Record<string, string> = {
-	confirmed: 'Confirmado',
 	paid: 'Pago',
 	pending: 'Pendente',
 	cancelled: 'Cancelado',
@@ -25,21 +24,11 @@ const statusLabel: Record<string, string> = {
 
 export function OrdersPage() {
 	const { data, isLoading } = useOrders()
-	const payOrder = usePayOrder()
 	const cancelOrder = useCancelOrder()
 	const [filter, setFilter] = useState<string>('all')
 
 	const orders = data?.orders ?? []
 	const filteredOrders = filter === 'all' ? orders : orders.filter((o) => o.status === filter)
-
-	const handlePay = async (id: string) => {
-		try {
-			await payOrder.mutateAsync(id)
-			toast.success('Pagamento confirmado!')
-		} catch {
-			toast.error('Erro ao processar pagamento')
-		}
-	}
 
 	const handleCancel = async (id: string) => {
 		if (!confirm('Tens a certeza que queres cancelar esta encomenda?')) return
@@ -53,7 +42,7 @@ export function OrdersPage() {
 
 	const filters = [
 		{ value: 'all', label: 'Todas' },
-		{ value: 'confirmed', label: 'Confirmadas' },
+		{ value: 'paid', label: 'Pagas' },
 		{ value: 'pending', label: 'Pendentes' },
 		{ value: 'cancelled', label: 'Canceladas' },
 	]
@@ -138,7 +127,7 @@ export function OrdersPage() {
 				</div>
 			) : (
 				<div className="space-y-3 stagger-3">
-					{filteredOrders.map((order) => (
+					{filteredOrders.map((order: Order) => (
 						<div
 							key={order.id}
 							className="rounded-xl border border-warm-border bg-white p-5 hover:shadow-md transition-shadow group"
@@ -174,31 +163,32 @@ export function OrdersPage() {
 												to={`/account/orders/${order.id}`}
 												className="font-heading font-600 text-sm text-warm-text hover:text-brand transition-colors"
 											>
-												{order.eventTitle ?? 'Aluguer de viatura'}
+												{order.eventTitle}
 											</Link>
 											<p className="text-xs text-text-secondary mt-0.5">
 												{order.eventDate
 													? formatDate(order.eventDate)
-													: (order as any).rentals?.[0]?.startDate
-														? `${formatDate((order as any).rentals[0].startDate)} — ${formatDate((order as any).rentals[0].endDate)}`
-														: '—'}
+													: '—'}
 											</p>
-											<p className="text-xs text-text-secondary mt-0.5">
-												{order.items?.length
-													? order.items
-															.map(
-																(i) =>
-																	`${i.quantity}x ${i.ticketTypeName}`,
-															)
-															.join(', ')
-													: (order as any).rentals?.length
-														? `${(order as any).rentals.length} aluguer${(order as any).rentals.length > 1 ? 'es' : ''}`
-														: ''}
+											<p className="text-xs text-text-secondary mt-0.5 space-y-0.5">
+												{order.items?.map((i, idx) => (
+													<span key={idx} className="block">
+														{i.quantity}x {i.ticketTypeName}
+													</span>
+												))}
+												{order.addons?.map((a, idx) => (
+													<span
+														key={`a-${idx}`}
+														className="block text-text-secondary/70"
+													>
+														+ {a.quantity}x {a.name}
+													</span>
+												))}
 											</p>
 										</div>
 										<div className="text-right shrink-0">
 											<p className="font-heading font-700 text-sm text-warm-text">
-												{formatKwanza((order as any).totalAmount ?? 0)}
+												{formatKwanza(order.totalAmount ?? 0)}
 											</p>
 											<Badge
 												variant={
@@ -219,14 +209,6 @@ export function OrdersPage() {
 										</Link>
 										{order.status === 'pending' && (
 											<>
-												<span className="text-warm-border">|</span>
-												<button
-													onClick={() => handlePay(order.id ?? '')}
-													disabled={payOrder.isPending}
-													className="text-xs font-heading font-600 text-emerald-600 hover:text-emerald-700 disabled:opacity-50"
-												>
-													Pagar Agora
-												</button>
 												<span className="text-warm-border">|</span>
 												<button
 													onClick={() => handleCancel(order.id ?? '')}

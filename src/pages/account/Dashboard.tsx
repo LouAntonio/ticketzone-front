@@ -2,16 +2,17 @@ import { Link } from 'react-router-dom'
 import { useAuthStore } from '../../stores/useAuthStore'
 import { useOrders } from '../../api/hooks/useOrders'
 import { useMyRentals } from '../../api/hooks/useRentals'
+import { useValidatorEvents } from '../../api/hooks/useAuth'
 import { Card } from '../../components/ui/Card'
 import { Badge } from '../../components/ui/Badge'
 import { Skeleton } from '../../components/ui/Skeleton'
 import { formatDate, formatKwanza } from '../../lib/format'
 import { EmailVerificationBanner } from '../../components/account/EmailVerificationBanner'
+import type { Order } from '../../types/order'
 
 const statusVariant: Record<string, 'emerald' | 'amber' | 'red'> = {
-	confirmed: 'emerald',
-	pending: 'amber',
 	paid: 'emerald',
+	pending: 'amber',
 	cancelled: 'red',
 	refunded: 'red',
 }
@@ -19,17 +20,13 @@ const statusVariant: Record<string, 'emerald' | 'amber' | 'red'> = {
 export function AccountDashboard() {
 	const user = useAuthStore((s) => s.user)
 	const { data, isLoading } = useOrders()
+	const { data: validatorEventsData } = useValidatorEvents()
 
-	const confirmedOrders =
-		data?.orders?.filter((o: OrderDisplay) => o.status === 'confirmed') ?? []
-	const pendingOrders = data?.orders?.filter((o: OrderDisplay) => o.status === 'pending') ?? []
-	const totalSpent = confirmedOrders.reduce(
-		(s: number, o: OrderDisplay) => s + ((o as any).totalAmount ?? 0),
-		0,
-	)
-	const totalTickets = confirmedOrders.reduce(
-		(s: number, o: OrderDisplay) =>
-			s + (o.items?.reduce((s2, i) => s2 + (i.quantity ?? 0), 0) ?? 0),
+	const paidOrders = data?.orders?.filter((o: Order) => o.status === 'paid') ?? []
+	const pendingOrders = data?.orders?.filter((o: Order) => o.status === 'pending') ?? []
+	const totalSpent = paidOrders.reduce((s: number, o: Order) => s + (o.totalAmount ?? 0), 0)
+	const totalTickets = paidOrders.reduce(
+		(s: number, o: Order) => s + (o.items?.reduce((s2, i) => s2 + (i.quantity ?? 0), 0) ?? 0),
 		0,
 	)
 
@@ -38,6 +35,10 @@ export function AccountDashboard() {
 
 	const isPromoter = user?.role === 'PROMOTER'
 	const isStaff = user?.role === 'STAFF' || user?.role === 'ADMIN'
+	const canValidate =
+		isPromoter ||
+		isStaff ||
+		(Array.isArray(validatorEventsData) && validatorEventsData.length > 0)
 	return (
 		<div className="max-w-4xl mx-auto space-y-8">
 			{/* Email Verification Banner */}
@@ -85,8 +86,8 @@ export function AccountDashboard() {
 						{isLoading ? <Skeleton className="h-7 w-28" /> : formatKwanza(totalSpent)}
 					</p>
 					<p className="text-xs text-text-secondary mt-1">
-						{confirmedOrders.length} compra{confirmedOrders.length !== 1 ? 's' : ''}{' '}
-						confirmada{confirmedOrders.length !== 1 ? 's' : ''}
+						{paidOrders.length} compra{paidOrders.length !== 1 ? 's' : ''} paga
+						{paidOrders.length !== 1 ? 's' : ''}
 					</p>
 				</Card>
 				<Card className="!p-5">
@@ -97,11 +98,8 @@ export function AccountDashboard() {
 						{isLoading ? <Skeleton className="h-7 w-20" /> : totalTickets}
 					</p>
 					<p className="text-xs text-text-secondary mt-1">
-						em {new Set(confirmedOrders.map((o: OrderDisplay) => o.eventId)).size}{' '}
-						evento
-						{new Set(confirmedOrders.map((o: OrderDisplay) => o.eventId)).size !== 1
-							? 's'
-							: ''}
+						em {new Set(paidOrders.map((o) => o.eventId)).size} evento
+						{new Set(paidOrders.map((o) => o.eventId)).size !== 1 ? 's' : ''}
 					</p>
 				</Card>
 				<Card className="!p-5">
@@ -200,6 +198,27 @@ export function AccountDashboard() {
 						</svg>
 						Os Meus Alugueres
 					</Link>
+					{canValidate && (
+						<Link
+							to="/validate"
+							className="inline-flex items-center gap-2 h-11 px-5 border-2 border-brand text-brand font-heading font-600 text-sm rounded-xl hover:bg-brand-soft transition-all active:scale-[0.97]"
+						>
+							<svg
+								width="16"
+								height="16"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								strokeWidth="2"
+								strokeLinecap="round"
+								strokeLinejoin="round"
+							>
+								<path d="M22 11.08V12a10 10 0 11-5.93-9.14" />
+								<polyline points="22 4 12 14.01 9 11.01" />
+							</svg>
+							Validar Bilhetes/Add-ons
+						</Link>
+					)}
 					{!isPromoter && !isStaff && (
 						<Link
 							to="/account/become-promoter"
@@ -261,7 +280,7 @@ export function AccountDashboard() {
 					</div>
 				) : data?.orders && data.orders.length > 0 ? (
 					<div className="space-y-3">
-						{data.orders.slice(0, 5).map((order: OrderDisplay) => (
+						{data.orders.slice(0, 5).map((order: Order) => (
 							<Link
 								key={order.id}
 								to={`/account/orders/${order.id}`}
@@ -282,22 +301,19 @@ export function AccountDashboard() {
 										</p>
 										<p className="text-xs text-text-secondary">
 											{order.items
-												?.map(
-													(i: OrderItemDisplay) =>
-														`${i.quantity}x ${i.ticketTypeName}`,
-												)
+												.map((i) => `${i.quantity}x ${i.ticketTypeName}`)
 												.join(', ')}
 										</p>
 									</div>
 									<div className="text-right shrink-0">
 										<p className="font-heading font-700 text-sm text-warm-text">
-											{formatKwanza((order as any).totalAmount ?? 0)}
+											{formatKwanza(order.totalAmount ?? 0)}
 										</p>
 										<Badge
 											variant={statusVariant[order.status ?? ''] ?? 'gray'}
 											className="mt-1"
 										>
-											{order.status === 'confirmed' || order.status === 'paid'
+											{order.status === 'paid'
 												? 'Confirmado'
 												: order.status === 'pending'
 													? 'Pendente'
@@ -501,8 +517,3 @@ export function AccountDashboard() {
 		</div>
 	)
 }
-
-// Need to import the types used locally
-import type { OrderDisplay as _OD, OrderItemDisplay as _OID } from '../../api/hooks/useOrders'
-type OrderDisplay = _OD
-type OrderItemDisplay = _OID

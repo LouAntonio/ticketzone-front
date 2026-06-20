@@ -119,30 +119,47 @@ export function OrganizerDashboard() {
 					Gerir Eventos
 				</Link>
 				<Link to="/validate" className="btn-outline h-11 px-6 text-sm">
-					Validar Bilhetes
+					Validar Bilhetes/Add-ons
 				</Link>
 			</div>
 
 			<Card>
 				<h3 className="font-heading font-600 text-base mb-4">Últimas Vendas</h3>
 				{data?.orders && data.orders.length > 0 ? (
-					<div className="space-y-2">
+					<div className="space-y-3">
 						{data.orders.slice(0, 10).map((order: SalesOrder) => (
 							<div
 								key={order.id}
-								className="flex items-center justify-between py-2 border-b border-border last:border-0"
+								className="flex items-start justify-between py-3 border-b border-border last:border-0"
 							>
-								<div>
-									<p className="text-sm font-heading font-600">
+								<div className="min-w-0">
+									<p className="text-sm font-heading font-600 truncate">
 										{order.eventTitle}
 									</p>
-									<p className="text-xs text-text-secondary">
+									<p className="text-xs text-text-secondary mb-1.5">
 										{order.buyerName} · {formatDate(order.createdAt)}
 									</p>
+									<div className="text-xs text-text-secondary space-y-0.5">
+										{order.items?.map((i, idx) => (
+											<div key={idx}>
+												{i.quantity}x {i.ticketTypeName} —{' '}
+												{formatKwanza(i.quantity * i.unitPrice)}
+											</div>
+										))}
+										{order.addons?.map((a, idx) => (
+											<div
+												key={`a-${idx}`}
+												className="text-text-secondary/70"
+											>
+												+ {a.quantity}x {a.name} —{' '}
+												{formatKwanza(a.quantity * a.unitPrice)}
+											</div>
+										))}
+									</div>
 								</div>
-								<div className="text-right">
+								<div className="text-right shrink-0 ml-4">
 									<p className="text-sm font-heading font-600">
-										{formatKwanza((order as any).totalAmount ?? 0)}
+										{formatKwanza(order.total)}
 									</p>
 									<span
 										className={`text-xs ${

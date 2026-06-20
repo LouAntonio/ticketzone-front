@@ -116,6 +116,7 @@ export function mapEvent(raw: RawEvent): Event {
 export interface RawVehicle {
 	id: string
 	ownerId: string
+	slug?: string | null
 	make: string
 	model: string
 	plate: string
@@ -138,6 +139,7 @@ export function mapVehicle(raw: RawVehicle): Car {
 		.filter(Boolean)
 	return {
 		id: raw.id,
+		slug: raw.slug ?? raw.id,
 		make: raw.make,
 		model: raw.model,
 		year: raw.year ?? new Date().getFullYear(),

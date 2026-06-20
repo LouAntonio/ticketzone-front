@@ -434,6 +434,9 @@ export const handlers = [
 		for (const item of body.items) {
 			for (let i = 0; i < item.quantity; i++) {
 				ticketIds.push(`ticket-${++ticketCounter}`)
+				const validateUntil = new Date(
+					new Date(event.date ?? Date.now()).getTime() + 86400000,
+				).toISOString()
 				db.tickets.push({
 					id: `ticket-${ticketCounter}`,
 					orderId: `ord-${++orderCounter}`,
@@ -445,11 +448,11 @@ export const handlers = [
 					buyerName: user?.name ?? '',
 					qrCode: `TICKET-${event.id.toUpperCase()}-${String(ticketCounter).padStart(3, '0')}`,
 					groupSize: item.peoplePerTicket > 1 ? item.peoplePerTicket : undefined,
+					qrExpiresAt: validateUntil,
+					entriesAllowed: item.peoplePerTicket > 1 ? item.peoplePerTicket : 1,
 					status: 'active',
 					used: 0,
-					validateUntil: new Date(
-						new Date(event.date ?? Date.now()).getTime() + 86400000,
-					).toISOString(),
+					validateUntil,
 				})
 			}
 		}
@@ -467,7 +470,7 @@ export const handlers = [
 			buyerName: user?.name ?? '',
 			items: body.items,
 			totalAmount: total,
-			status: 'pending' as const,
+			status: 'confirmed' as const,
 			paymentMethod: body.paymentMethod as 'multicaixa' | 'paypay' | 'reference',
 			paymentRef:
 				body.paymentMethod === 'multicaixa'
@@ -480,12 +483,6 @@ export const handlers = [
 			createdAt: new Date().toISOString(),
 		}
 		db.orders.push(order)
-
-		// Simulate payment confirmation after a bit
-		setTimeout(() => {
-			const ord = db.orders.find((o) => o.id === order.id)
-			if (ord) ord.status = 'confirmed'
-		}, 3000)
 
 		return HttpResponse.json({ order })
 	}),

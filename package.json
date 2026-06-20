@@ -21,6 +21,7 @@
 		"@fontsource/staatliches": "^5.2.8",
 		"@react-oauth/google": "^0.13.5",
 		"@tanstack/react-query": "^5.101.0",
+		"@yudiel/react-qr-scanner": "^2.6.0",
 		"@zodios/core": "^10.9.6",
 		"axios": "^1.17.0",
 		"date-fns": "^4.4.0",

@@ -2,6 +2,7 @@ export type Transmission = 'manual' | 'auto'
 
 export interface Car {
 	id: string
+	slug: string
 	make: string
 	model: string
 	year: number
