@@ -278,9 +278,6 @@ export function OrderDetailPage() {
 										<p className="text-sm font-heading font-600 text-warm-text">
 											{ticket.ticketTypeName}
 										</p>
-										<p className="text-xs text-text-secondary truncate">
-											{ticket.qrCode}
-										</p>
 										{ticket.entriesAllowed > 1 && (
 											<p className="text-xs text-text-secondary">
 												{ticket.entriesUsed}/{ticket.entriesAllowed}{' '}
