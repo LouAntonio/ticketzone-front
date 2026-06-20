@@ -145,6 +145,11 @@ export interface SalesOrder {
 	buyerName?: string
 	buyerId?: string
 	items?: SalesOrderItem[]
+	addons?: Array<{
+		name: string
+		quantity: number
+		unitPrice: number
+	}>
 	total: number
 	status: string
 	createdAt: string

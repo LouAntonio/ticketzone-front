@@ -16,7 +16,7 @@ export function AttendeeList() {
 					<Skeleton className="h-4 w-36" />
 				</div>
 				<div className="rounded-xl border border-border overflow-hidden p-5">
-					<SkeletonTable rows={6} cols={6} />
+					<SkeletonTable rows={6} cols={7} />
 				</div>
 			</div>
 		)
@@ -53,6 +53,9 @@ export function AttendeeList() {
 										Ingressos
 									</th>
 									<th className="text-left px-4 py-3 font-heading font-600 text-xs uppercase tracking-wider text-text-secondary">
+										Add-ons
+									</th>
+									<th className="text-left px-4 py-3 font-heading font-600 text-xs uppercase tracking-wider text-text-secondary">
 										Total
 									</th>
 									<th className="text-left px-4 py-3 font-heading font-600 text-xs uppercase tracking-wider text-text-secondary">
@@ -76,12 +79,29 @@ export function AttendeeList() {
 											{order.eventTitle}
 										</td>
 										<td className="px-4 py-3">
-											{order.items
-												?.map((i) => `${i.quantity}x ${i.ticketTypeName}`)
-												.join(', ')}
+											<div className="space-y-0.5">
+												{order.items?.map((i, idx) => (
+													<div key={idx} className="text-sm whitespace-nowrap">
+														{i.quantity}x {i.ticketTypeName}
+													</div>
+												))}
+											</div>
 										</td>
-										<td className="px-4 py-3 font-heading font-600">
-											{formatKwanza((order as any).totalAmount ?? 0)}
+										<td className="px-4 py-3">
+											{order.addons?.length ? (
+												<div className="space-y-0.5">
+													{order.addons.map((a, idx) => (
+														<div key={idx} className="text-xs text-text-secondary whitespace-nowrap">
+															{a.quantity}x {a.name}
+														</div>
+													))}
+												</div>
+											) : (
+												<span className="text-xs text-text-secondary">—</span>
+											)}
+										</td>
+										<td className="px-4 py-3 font-heading font-600 whitespace-nowrap">
+											{formatKwanza(order.total)}
 										</td>
 										<td className="px-4 py-3">
 											<Badge
@@ -102,7 +122,7 @@ export function AttendeeList() {
 														: 'Cancelado'}
 											</Badge>
 										</td>
-										<td className="px-4 py-3 text-text-secondary text-xs">
+										<td className="px-4 py-3 text-text-secondary text-xs whitespace-nowrap">
 											{formatDate(order.createdAt)}
 										</td>
 									</tr>
