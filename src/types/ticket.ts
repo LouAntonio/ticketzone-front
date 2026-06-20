@@ -16,12 +16,6 @@ export interface Ticket {
 	validateUntil: string
 }
 
-export interface AddonInfo {
-	name: string
-	quantity: number
-	unitPrice: number
-}
-
 export interface VerificationTicketData {
 	id: string
 	status: string
@@ -34,24 +28,38 @@ export interface VerificationTicketData {
 	entriesAllowed: number
 	isGroupTicket: boolean
 	groupSize: number | null
-	addons: AddonInfo[]
+}
+
+export interface VerificationAddonData {
+	id: string
+	status: string
+	addonName: string
+	addonDescription: string | null
+	eventTitle: string
+	eventStarted: boolean
+	ownerName: string
+	ownerEmail: string
+	entriesUsed: number
+	entriesAllowed: number
 }
 
 export interface VerifyQrResponse {
-	type: 'verification'
+	type: 'ticket' | 'addon'
 	status: 'valid' | 'invalid' | 'expired'
 	msg: string
 	note?: string
-	ticket: VerificationTicketData | null
+	ticket?: VerificationTicketData | null
+	addon?: VerificationAddonData | null
 }
 
 export interface ValidationResult {
-	type: 'verification' | 'validation'
+	type: 'verification' | 'validation' | 'addon-verification' | 'addon-validation'
 	msg: string
 	note?: string
 	entry?: number
 	total?: number
 	event?: string
+	addonName?: string
 	ticket?: {
 		status: string
 		event: string
@@ -64,4 +72,48 @@ export interface ValidationResult {
 export interface RotateQrResponse {
 	qrCode: string
 	qrExpiresAt: string
+}
+
+export interface AddonInstance {
+	id: string
+	orderId: string
+	eventId: string
+	addonId: string
+	ticketId?: string | null
+	ownerId: string
+	status: string
+	qrSecret: string
+	qrExpiresAt: string
+	entriesUsed: number
+	entriesAllowed: number
+	addonName: string
+	addonDescription: string | null
+	unitPrice: number
+	createdAt: string
+	event?: {
+		id: string
+		title: string
+		startDate: string
+		bannerUrl: string | null
+	}
+}
+
+export interface AddonInstanceDetail extends AddonInstance {
+	validations: Array<{
+		id: string
+		result: string
+		validatedAt: string
+	}>
+	event: {
+		id: string
+		title: string
+		startDate: string
+		endDate: string
+		location: string
+		bannerUrl: string | null
+	}
+	owner: {
+		id: string
+		name: string | null
+	}
 }

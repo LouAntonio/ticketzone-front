@@ -298,6 +298,37 @@ export function OrderDetailPage() {
 				</div>
 			)}
 
+			{/* Addon Instances (if any) */}
+			{order.addonInstances && order.addonInstances.length > 0 && (
+				<div className="card-account stagger-5">
+					<div className="p-6 sm:p-8">
+						<h3 className="font-heading font-700 text-lg text-warm-text mb-4">
+							Add-ons (QR Codes)
+						</h3>
+						<div className="grid sm:grid-cols-2 gap-3">
+							{order.addonInstances.map((ai) => (
+								<div
+									key={ai.id}
+									className="flex items-center gap-4 p-4 rounded-xl border border-warm-border bg-white"
+								>
+									<div className="w-14 h-14 shrink-0 bg-white rounded-lg border-2 border-warm-border flex items-center justify-center overflow-hidden">
+										<QRCodeSVG value={ai.qrSecret} size={50} level="M" />
+									</div>
+									<div className="flex-1 min-w-0">
+										<p className="text-sm font-heading font-600 text-warm-text">
+											{ai.addon.name}
+										</p>
+										<p className="text-xs text-text-secondary">
+											{ai.entriesUsed}/{ai.entriesAllowed} usados · {ai.status}
+										</p>
+									</div>
+								</div>
+							))}
+						</div>
+					</div>
+				</div>
+			)}
+
 			{/* Rentals (if any) */}
 			{order.rentals && order.rentals.length > 0 && (
 				<div className="card-account stagger-5">

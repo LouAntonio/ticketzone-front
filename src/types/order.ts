@@ -49,6 +49,16 @@ export interface OrderDetail extends Order {
 		entriesUsed: number
 		entriesAllowed: number
 	}>
+	addonInstances?: Array<{
+		id: string
+		addonId: string
+		status: string
+		qrSecret: string
+		qrExpiresAt: string
+		entriesUsed: number
+		entriesAllowed: number
+		addon: { name: string }
+	}>
 	rentals?: Array<{
 		id: string
 		vehicleId: string

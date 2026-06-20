@@ -33,3 +33,43 @@ export function useRotateQrCode() {
 		},
 	})
 }
+
+export function useVerifyQrUnified() {
+	return useMutation({
+		mutationFn: (qrCode: string) => ticketsApi.verifyQrUnified(qrCode),
+	})
+}
+
+export function useValidateAddon() {
+	return useMutation({
+		mutationFn: (addonId: string) => ticketsApi.validateAddon(addonId),
+	})
+}
+
+export function useRotateAddonQrCode() {
+	const qc = useQueryClient()
+	return useMutation({
+		mutationFn: (addonId: string) => ticketsApi.rotateAddonQr(addonId),
+		onSuccess: () => {
+			qc.invalidateQueries({ queryKey: ['my-addons'] })
+		},
+		onError: (err: Error) => {
+			toast.error(err.message || 'Erro ao renovar QR Code do add-on')
+		},
+	})
+}
+
+export function useMyAddons() {
+	return useQuery({
+		queryKey: ['my-addons'],
+		queryFn: ticketsApi.myAddons,
+	})
+}
+
+export function useAddonInstance(addonId: string) {
+	return useQuery({
+		queryKey: ['addon', addonId],
+		queryFn: () => ticketsApi.getAddon(addonId),
+		enabled: !!addonId,
+	})
+}

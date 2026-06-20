@@ -1,5 +1,12 @@
 import { api } from '../client'
-import type { Ticket, VerifyQrResponse, ValidationResult, RotateQrResponse } from '../../types/ticket'
+import type {
+	Ticket,
+	VerifyQrResponse,
+	ValidationResult,
+	RotateQrResponse,
+	AddonInstance,
+	AddonInstanceDetail,
+} from '../../types/ticket'
 
 interface RawTicket {
 	id: string
@@ -64,9 +71,28 @@ export const ticketsApi = {
 	verifyQr: (qrCode: string) =>
 		api.post<VerifyQrResponse>('/tickets/verify-qr', { qrCode }).then((r) => r.data),
 
+	verifyQrUnified: (qrCode: string) =>
+		api.post<VerifyQrResponse>('/verify-qr', { qrCode }).then((r) => r.data),
+
 	validate: (ticketId: string) =>
 		api.post<ValidationResult>(`/tickets/${ticketId}/validate`).then((r) => r.data),
 
 	rotateQr: (ticketId: string) =>
 		api.post<RotateQrResponse>(`/tickets/${ticketId}/rotate-qr`).then((r) => r.data),
+
+	// Addon endpoints
+	validateAddon: (addonId: string) =>
+		api.post<ValidationResult>(`/addons/${addonId}/validate`).then((r) => r.data),
+
+	rotateAddonQr: (addonId: string) =>
+		api.post<RotateQrResponse>(`/addons/${addonId}/rotate-qr`).then((r) => r.data),
+
+	verifyAddonQr: (qrCode: string) =>
+		api.post<VerifyQrResponse>('/addons/verify-qr', { qrCode }).then((r) => r.data),
+
+	myAddons: () =>
+		api.get<{ data: AddonInstance[] }>('/my-addons').then((r) => r.data),
+
+	getAddon: (addonId: string) =>
+		api.get<AddonInstanceDetail>(`/addons/${addonId}`).then((r) => r.data),
 }

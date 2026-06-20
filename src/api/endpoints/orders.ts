@@ -41,7 +41,19 @@ interface RawOrder {
 	user?: { id: string; name: string | null; email: string; phoneNumber?: string | null }
 }
 
+interface RawAddonInstance {
+	id: string
+	addonId: string
+	status: string
+	qrSecret: string
+	qrExpiresAt: string
+	entriesUsed: number
+	entriesAllowed: number
+	addon: { name: string }
+}
+
 interface RawOrderDetail extends RawOrder {
+	addonInstances: RawAddonInstance[]
 	rentals: Array<{
 		id: string
 		startDate: string | null
@@ -125,6 +137,16 @@ function mapOrderDetail(raw: RawOrderDetail): OrderDetail {
 		paymentRef: raw.multicaixaReference ?? raw.paypayReference ?? undefined,
 		createdAt: raw.createdAt,
 		ticketIds: raw.tickets.map((t) => t.id),
+		addonInstances: raw.addonInstances?.map((ai) => ({
+			id: ai.id,
+			addonId: ai.addonId,
+			status: ai.status.toLowerCase(),
+			qrSecret: ai.qrSecret,
+			qrExpiresAt: ai.qrExpiresAt,
+			entriesUsed: ai.entriesUsed,
+			entriesAllowed: ai.entriesAllowed,
+			addon: ai.addon,
+		})),
 		tickets: raw.tickets.map((t) => ({
 			id: t.id,
 			qrCode: t.qrSecret,
