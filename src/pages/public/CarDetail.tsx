@@ -58,7 +58,7 @@ export function CarDetail() {
 		}
 		try {
 			const result = await createBooking.mutateAsync({
-				carId: car.id,
+				carId: car!.id,
 				startDate,
 				endDate,
 			})

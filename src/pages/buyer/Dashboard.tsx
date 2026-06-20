@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 import { useAuthStore } from '../../stores/useAuthStore'
 import { useOrders } from '../../api/hooks/useOrders'
-import type { OrderDisplay } from '../../api/hooks/useOrders'
+import type { Order } from '../../types/order'
 import { Card } from '../../components/ui/Card'
 import { Badge } from '../../components/ui/Badge'
 import { Skeleton } from '../../components/ui/Skeleton'
@@ -17,10 +17,9 @@ export function BuyerDashboard() {
 	const user = useAuthStore((s) => s.user)
 	const { data, isLoading } = useOrders()
 
-	const confirmedOrders =
-		data?.orders?.filter((o: OrderDisplay) => o.status === 'confirmed') ?? []
+	const confirmedOrders = data?.orders?.filter((o: Order) => o.status === 'confirmed') ?? []
 	const totalSpent = confirmedOrders.reduce(
-		(s: number, o: OrderDisplay) => s + ((o as any).totalAmount ?? 0),
+		(s: number, o: Order) => s + ((o as any).totalAmount ?? 0),
 		0,
 	)
 
@@ -44,7 +43,7 @@ export function BuyerDashboard() {
 					<p className="text-xs text-text-secondary mb-1">Bilhetes Comprados</p>
 					<p className="font-heading font-700 text-2xl">
 						{confirmedOrders.reduce(
-							(s: number, o: OrderDisplay) =>
+							(s: number, o: Order) =>
 								s + (o.items?.reduce((s2, i) => s2 + (i.quantity ?? 0), 0) ?? 0),
 							0,
 						)}
@@ -93,7 +92,7 @@ export function BuyerDashboard() {
 					</div>
 				) : data?.orders && data.orders.length > 0 ? (
 					<div className="space-y-3">
-						{data.orders.slice(0, 5).map((order: OrderDisplay) => (
+						{data.orders.slice(0, 5).map((order: Order) => (
 							<Card key={order.id} className="flex items-center gap-4">
 								<img
 									src={order.eventImage}

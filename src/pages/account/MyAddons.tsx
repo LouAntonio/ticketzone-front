@@ -21,7 +21,7 @@ const statusLabel: Record<string, string> = {
 export function MyAddonsPage() {
 	const { data, isLoading } = useMyAddons()
 
-	const instances: AddonInstance[] = data ?? []
+	const instances: AddonInstance[] = data?.data ?? []
 
 	return (
 		<div className="max-w-4xl mx-auto space-y-6">

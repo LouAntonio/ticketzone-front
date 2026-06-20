@@ -1,5 +1,6 @@
-import { useEffect, useRef, useCallback } from 'react'
+import { useEffect, useRef, useMemo } from 'react'
 import { useTickets, useRotateQrCode } from '../../api/hooks/useTickets'
+import type { Ticket } from '../../types/ticket'
 import { Card } from '../../components/ui/Card'
 import { Badge } from '../../components/ui/Badge'
 import { Skeleton } from '../../components/ui/Skeleton'
@@ -21,32 +22,29 @@ interface QrState {
 export function MyTickets() {
 	const { data, isLoading } = useTickets()
 	const [selectedTicket, setSelectedTicket] = useState<string | null>(null)
-	const [qrStates, setQrStates] = useState<Record<string, QrState>>({})
-	const [now, setNow] = useState(Date.now())
+	const [now, setNow] = useState(() => Date.now())
 	const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
 	const rotateMutation = useRotateQrCode()
 	const rotatingRef = useRef<Set<string>>(new Set())
 
-	const tickets = data?.data ?? []
+	const tickets = useMemo<Ticket[]>(() => data?.data ?? [], [data])
 
-	const updateQrFromTicket = useCallback(
-		(ticket: { id: string; qrCode: string; qrExpiresAt: string }) => {
-			setQrStates((prev) => {
-				if (prev[ticket.id]) return prev
-				return {
-					...prev,
-					[ticket.id]: { qrCode: ticket.qrCode, qrExpiresAt: ticket.qrExpiresAt },
-				}
-			})
-		},
-		[],
-	)
-
-	useEffect(() => {
+	const baseQrStates = useMemo(() => {
+		const map: Record<string, QrState> = {}
 		for (const t of tickets) {
-			updateQrFromTicket(t)
+			map[t.id] = { qrCode: t.qrCode, qrExpiresAt: t.qrExpiresAt }
 		}
-	}, [tickets, updateQrFromTicket])
+		return map
+	}, [tickets])
+
+	const [rotationUpdates, setRotationUpdates] = useState<Record<string, QrState>>({})
+	const qrStates = useMemo(
+		() => ({
+			...baseQrStates,
+			...rotationUpdates,
+		}),
+		[baseQrStates, rotationUpdates],
+	)
 
 	useEffect(() => {
 		intervalRef.current = setInterval(() => {
@@ -68,7 +66,7 @@ export function MyTickets() {
 			rotateMutation
 				.mutateAsync(selectedTicket)
 				.then((res) => {
-					setQrStates((prev) => ({
+					setRotationUpdates((prev) => ({
 						...prev,
 						[selectedTicket]: { qrCode: res.qrCode, qrExpiresAt: res.qrExpiresAt },
 					}))

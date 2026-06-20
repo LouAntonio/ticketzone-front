@@ -194,7 +194,7 @@ export function ValidationPortal() {
 									constraints={{ facingMode: 'environment' }}
 									paused={scannerPaused}
 									sound
-									components={{ tracker: true }}
+									components={{}}
 									styles={{
 										container: { borderRadius: '12px', overflow: 'hidden' },
 										video: { width: '100%', display: 'block' },

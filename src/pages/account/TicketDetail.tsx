@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useTickets, useRotateQrCode } from '../../api/hooks/useTickets'
 import { Badge } from '../../components/ui/Badge'
@@ -6,11 +6,6 @@ import { Skeleton } from '../../components/ui/Skeleton'
 import { Button } from '../../components/ui/Button'
 import { formatDate } from '../../lib/format'
 import { QRCodeSVG } from 'qrcode.react'
-
-interface QrState {
-	qrCode: string
-	qrExpiresAt: string
-}
 
 const statusVariant: Record<string, 'emerald' | 'gray' | 'red'> = {
 	active: 'emerald',
@@ -33,14 +28,13 @@ export function TicketDetailPage() {
 
 	const ticket = (data?.data ?? []).find((t: { id: string }) => t.id === id)
 
-	const [qrState, setQrState] = useState<QrState | null>(null)
-	const [now, setNow] = useState(Date.now())
-	const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+	const qrState = useMemo(() => {
+		if (!ticket) return null
+		return { qrCode: ticket.qrCode, qrExpiresAt: ticket.qrExpiresAt }
+	}, [ticket])
 
-	useEffect(() => {
-		if (!ticket) return
-		setQrState({ qrCode: ticket.qrCode, qrExpiresAt: ticket.qrExpiresAt })
-	}, [ticket?.id])
+	const [now, setNow] = useState(() => Date.now())
+	const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
 	useEffect(() => {
 		intervalRef.current = setInterval(() => {
@@ -57,14 +51,9 @@ export function TicketDetailPage() {
 		const expiresAt = new Date(qrState.qrExpiresAt).getTime()
 		if (now >= expiresAt) {
 			rotatingRef.current = true
-			rotateMutation
-				.mutateAsync(id)
-				.then((res) => {
-					setQrState({ qrCode: res.qrCode, qrExpiresAt: res.qrExpiresAt })
-				})
-				.finally(() => {
-					rotatingRef.current = false
-				})
+			rotateMutation.mutateAsync(id).finally(() => {
+				rotatingRef.current = false
+			})
 		}
 	}, [now, qrState, id, rotateMutation])
 

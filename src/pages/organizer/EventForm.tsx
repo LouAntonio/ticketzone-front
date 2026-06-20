@@ -964,7 +964,7 @@ export function EventForm() {
 										</p>
 									</div>
 									<Button
-										variant="primary"
+										variant="brand"
 										onClick={() => setShowStartConfirm(true)}
 									>
 										Iniciar Evento

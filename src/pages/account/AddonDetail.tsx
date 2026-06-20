@@ -50,14 +50,9 @@ export function AddonDetailPage() {
 		const expiresAt = new Date(qrState.qrExpiresAt).getTime()
 		if (now >= expiresAt) {
 			rotatingRef.current = true
-			rotateMutation
-				.mutateAsync(id)
-				.then((res) => {
-					rotatingRef.current = false
-				})
-				.catch(() => {
-					rotatingRef.current = false
-				})
+			rotateMutation.mutateAsync(id).finally(() => {
+				rotatingRef.current = false
+			})
 		}
 	}, [now, qrState, id, rotateMutation])
 
@@ -80,7 +75,15 @@ export function AddonDetailPage() {
 		return (
 			<div className="max-w-2xl mx-auto text-center py-16">
 				<div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-brand-soft flex items-center justify-center">
-					<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-brand">
+					<svg
+						width="28"
+						height="28"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						strokeWidth="1.5"
+						className="text-brand"
+					>
 						<path d="M20 12H4M12 4v16" />
 					</svg>
 				</div>
@@ -97,7 +100,16 @@ export function AddonDetailPage() {
 					onClick={() => navigate(-1)}
 					className="w-9 h-9 rounded-xl border border-warm-border flex items-center justify-center hover:bg-gray-50 transition-colors"
 				>
-					<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+					<svg
+						width="16"
+						height="16"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						strokeWidth="2"
+						strokeLinecap="round"
+						strokeLinejoin="round"
+					>
 						<path d="M19 12H5M12 19l-7-7 7-7" />
 					</svg>
 				</button>
@@ -160,7 +172,15 @@ export function AddonDetailPage() {
 					<div className="space-y-3">
 						<div className="flex items-center gap-3">
 							<div className="w-10 h-10 rounded-lg bg-brand-soft flex items-center justify-center shrink-0">
-								<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-brand">
+								<svg
+									width="18"
+									height="18"
+									viewBox="0 0 24 24"
+									fill="none"
+									stroke="currentColor"
+									strokeWidth="1.5"
+									className="text-brand"
+								>
 									<path d="M20 12H4M12 4v16" />
 								</svg>
 							</div>
@@ -173,7 +193,15 @@ export function AddonDetailPage() {
 						</div>
 						<div className="flex items-center gap-3">
 							<div className="w-10 h-10 rounded-lg bg-brand-soft flex items-center justify-center shrink-0">
-								<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-brand">
+								<svg
+									width="18"
+									height="18"
+									viewBox="0 0 24 24"
+									fill="none"
+									stroke="currentColor"
+									strokeWidth="1.5"
+									className="text-brand"
+								>
 									<rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
 									<line x1="16" y1="2" x2="16" y2="6" />
 									<line x1="8" y1="2" x2="8" y2="6" />
@@ -185,13 +213,23 @@ export function AddonDetailPage() {
 									{instance.event?.title}
 								</p>
 								<p className="text-xs text-text-secondary">
-									{instance.event?.startDate ? formatDate(instance.event.startDate) : ''}
+									{instance.event?.startDate
+										? formatDate(instance.event.startDate)
+										: ''}
 								</p>
 							</div>
 						</div>
 						<div className="flex items-center gap-3">
 							<div className="w-10 h-10 rounded-lg bg-brand-soft flex items-center justify-center shrink-0">
-								<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-brand">
+								<svg
+									width="18"
+									height="18"
+									viewBox="0 0 24 24"
+									fill="none"
+									stroke="currentColor"
+									strokeWidth="1.5"
+									className="text-brand"
+								>
 									<path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
 									<circle cx="12" cy="7" r="4" />
 								</svg>
@@ -205,7 +243,15 @@ export function AddonDetailPage() {
 						</div>
 						<div className="flex items-center gap-3">
 							<div className="w-10 h-10 rounded-lg bg-brand-soft flex items-center justify-center shrink-0">
-								<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-brand">
+								<svg
+									width="18"
+									height="18"
+									viewBox="0 0 24 24"
+									fill="none"
+									stroke="currentColor"
+									strokeWidth="1.5"
+									className="text-brand"
+								>
 									<path d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
 								</svg>
 							</div>
