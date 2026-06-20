@@ -289,7 +289,7 @@ export function OrderDetailPage() {
 										to={`/account/tickets/${ticket.id}`}
 										className="text-xs font-heading font-600 text-brand hover:text-brand-dark link-underline shrink-0"
 									>
-										Ver
+										Ver QR
 									</Link>
 								</div>
 							))}
@@ -322,6 +322,12 @@ export function OrderDetailPage() {
 											{ai.entriesUsed}/{ai.entriesAllowed} usados · {ai.status}
 										</p>
 									</div>
+									<Link
+										to={`/account/addons/${ai.id}`}
+										className="text-xs font-heading font-600 text-brand hover:text-brand-dark link-underline shrink-0"
+									>
+										Ver QR
+									</Link>
 								</div>
 							))}
 						</div>
