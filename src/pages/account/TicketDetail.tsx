@@ -1,10 +1,16 @@
+import { useEffect, useRef, useCallback, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { useTickets } from '../../api/hooks/useTickets'
+import { useTickets, useRotateQrCode } from '../../api/hooks/useTickets'
 import { Badge } from '../../components/ui/Badge'
 import { Skeleton } from '../../components/ui/Skeleton'
 import { Button } from '../../components/ui/Button'
 import { formatDate } from '../../lib/format'
 import { QRCodeSVG } from 'qrcode.react'
+
+interface QrState {
+	qrCode: string
+	qrExpiresAt: string
+}
 
 const statusVariant: Record<string, 'emerald' | 'gray' | 'red'> = {
 	active: 'emerald',
@@ -22,28 +28,48 @@ export function TicketDetailPage() {
 	const { id } = useParams<{ id: string }>()
 	const navigate = useNavigate()
 	const { data, isLoading } = useTickets()
+	const rotateMutation = useRotateQrCode()
+	const rotatingRef = useRef(false)
 
-	const ticket = data?.tickets?.find((t) => t.id === id)
+	const ticket = (data?.data ?? []).find((t: { id: string }) => t.id === id)
 
-	const handleDownload = () => {
-		const canvas = document.getElementById('qr-canvas') as HTMLCanvasElement | null
-		if (!canvas) return
-		const url = canvas.toDataURL('image/png')
-		const a = document.createElement('a')
-		a.href = url
-		a.download = `bilhete-${ticket!.id}.png`
-		a.click()
-	}
+	const [qrState, setQrState] = useState<QrState | null>(null)
+	const [now, setNow] = useState(Date.now())
+	const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
-	const handleShare = () => {
+	useEffect(() => {
 		if (!ticket) return
-		const text = `Bilhete para ${ticket.eventTitle}\nCódigo: ${ticket.qrCode}\nData: ${formatDate(ticket.eventDate)}`
-		if (navigator.share) {
-			navigator.share({ title: 'Meu Bilhete Ticketzone', text })
-		} else {
-			navigator.clipboard.writeText(text)
+		setQrState({ qrCode: ticket.qrCode, qrExpiresAt: ticket.qrExpiresAt })
+	}, [ticket?.id])
+
+	useEffect(() => {
+		intervalRef.current = setInterval(() => {
+			setNow(Date.now())
+		}, 1000)
+		return () => {
+			if (intervalRef.current) clearInterval(intervalRef.current)
 		}
-	}
+	}, [])
+
+	useEffect(() => {
+		if (!qrState || !id || rotatingRef.current) return
+
+		const expiresAt = new Date(qrState.qrExpiresAt).getTime()
+		if (now >= expiresAt) {
+			rotatingRef.current = true
+			rotateMutation.mutateAsync(id).then((res) => {
+				setQrState({ qrCode: res.qrCode, qrExpiresAt: res.qrExpiresAt })
+			}).finally(() => {
+				rotatingRef.current = false
+			})
+		}
+	}, [now, qrState, id, rotateMutation])
+
+	const countdown = (() => {
+		if (!qrState) return null
+		const diff = new Date(qrState.qrExpiresAt).getTime() - now
+		return diff > 0 ? Math.ceil(diff / 1000) : 0
+	})()
 
 	if (isLoading) {
 		return (
@@ -114,34 +140,35 @@ export function TicketDetailPage() {
 			<div className="card-account stagger-2 overflow-hidden">
 				<div className="p-8 sm:p-10 flex flex-col items-center">
 					{/* QR Code */}
-					<div className="relative mb-6">
-						<div className="w-64 h-64 bg-white rounded-2xl border-2 border-warm-border p-4 shadow-sm">
-							<QRCodeSVG
-								id="qr-canvas"
-								value={ticket.qrCode}
-								size={224}
-								level="H"
-								includeMargin
-							/>
+					{qrState && (
+						<div className="relative mb-4">
+							<div className="w-64 h-64 bg-white rounded-2xl border-2 border-warm-border p-4 shadow-sm">
+								<QRCodeSVG
+									value={qrState.qrCode}
+									size={224}
+									level="H"
+									includeMargin
+								/>
+							</div>
 						</div>
-						<div className="absolute -top-2 -right-2 w-8 h-8 rounded-full bg-white border-2 border-warm-border flex items-center justify-center">
-							<svg
-								width="16"
-								height="16"
-								viewBox="0 0 24 24"
-								fill="none"
-								stroke="currentColor"
-								strokeWidth="1.5"
-								className="text-brand"
-							>
-								<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-							</svg>
-						</div>
-					</div>
+					)}
 
-					<p className="font-mono text-sm text-text-secondary tracking-wider mb-6">
-						{ticket.qrCode}
-					</p>
+					{countdown !== null && countdown > 0 && (
+						<div className="mb-4 flex items-center gap-2">
+							<div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+							<span className="text-xs text-emerald-600 font-heading font-600">
+								QR expira em {countdown}s
+							</span>
+						</div>
+					)}
+					{countdown !== null && countdown <= 0 && (
+						<div className="mb-4 flex items-center gap-2">
+							<div className="w-2 h-2 rounded-full bg-amber-500" />
+							<span className="text-xs text-amber-600 font-heading font-600">
+								A renovar QR Code...
+							</span>
+						</div>
+					)}
 
 					<p className="text-xs text-text-secondary text-center max-w-xs">
 						Apresenta este código na entrada do evento.
@@ -149,48 +176,6 @@ export function TicketDetailPage() {
 							ticket.groupSize > 1 &&
 							` Este bilhete é válido para ${ticket.groupSize} pessoas.`}
 					</p>
-
-					{/* Actions */}
-					{ticket.status === 'active' && (
-						<div className="flex gap-3 mt-6">
-							<button
-								onClick={handleDownload}
-								className="inline-flex items-center gap-2 h-10 px-5 bg-brand text-white font-heading font-600 text-sm rounded-xl hover:bg-brand-dark transition-all"
-							>
-								<svg
-									width="16"
-									height="16"
-									viewBox="0 0 24 24"
-									fill="none"
-									stroke="currentColor"
-									strokeWidth="2"
-									strokeLinecap="round"
-									strokeLinejoin="round"
-								>
-									<path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" />
-								</svg>
-								Download QR
-							</button>
-							<button
-								onClick={handleShare}
-								className="inline-flex items-center gap-2 h-10 px-5 border-2 border-brand text-brand font-heading font-600 text-sm rounded-xl hover:bg-brand-soft transition-all"
-							>
-								<svg
-									width="16"
-									height="16"
-									viewBox="0 0 24 24"
-									fill="none"
-									stroke="currentColor"
-									strokeWidth="2"
-									strokeLinecap="round"
-									strokeLinejoin="round"
-								>
-									<path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" />
-								</svg>
-								Partilhar
-							</button>
-						</div>
-					)}
 				</div>
 			</div>
 
@@ -298,20 +283,6 @@ export function TicketDetailPage() {
 					</div>
 				</div>
 			</div>
-
-			{/* Valid Until */}
-			{ticket.validateUntil && (
-				<div className="card-account stagger-4">
-					<div className="p-6">
-						<div className="flex items-center justify-between text-sm">
-							<span className="text-text-secondary">Válido até</span>
-							<span className="font-heading font-600 text-warm-text">
-								{formatDate(ticket.validateUntil)}
-							</span>
-						</div>
-					</div>
-				</div>
-			)}
 		</div>
 	)
 }
