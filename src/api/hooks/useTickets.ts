@@ -51,7 +51,6 @@ export function useRotateAddonQrCode() {
 	return useMutation({
 		mutationFn: (addonId: string) => ticketsApi.rotateAddonQr(addonId),
 		onSuccess: async () => {
-			await qc.invalidateQueries({ queryKey: ['my-addons'] })
 			await qc.invalidateQueries({ queryKey: ['addon'] })
 		},
 		onError: (err: Error) => {
