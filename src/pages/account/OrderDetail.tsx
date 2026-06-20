@@ -6,9 +6,9 @@ import { Button } from '../../components/ui/Button'
 import { formatDate, formatKwanza } from '../../lib/format'
 import { QRCodeSVG } from 'qrcode.react'
 import { toast } from 'react-hot-toast'
+import type { OrderDetail } from '../../types/order'
 
 const statusVariant: Record<string, 'emerald' | 'amber' | 'red' | 'gray'> = {
-	confirmed: 'emerald',
 	paid: 'emerald',
 	pending: 'amber',
 	cancelled: 'red',
@@ -16,7 +16,6 @@ const statusVariant: Record<string, 'emerald' | 'amber' | 'red' | 'gray'> = {
 }
 
 const statusLabel: Record<string, string> = {
-	confirmed: 'Confirmado',
 	paid: 'Pago',
 	pending: 'Pendente',
 	cancelled: 'Cancelado',
@@ -24,7 +23,8 @@ const statusLabel: Record<string, string> = {
 }
 
 const paymentMethodLabel: Record<string, string> = {
-	multicaixa: 'Multicaixa Express',
+	multicaixa_express: 'Multicaixa Express',
+	multicaixa_reference: 'Referência Multicaixa',
 	paypay: 'PayPay',
 	reference: 'Referência Multicaixa',
 }
@@ -98,9 +98,7 @@ export function OrderDetailPage() {
 					<p className="text-text-secondary text-sm">
 						{order.eventTitle
 							? `${order.eventTitle} · ${formatDate(order.eventDate ?? '')}`
-							: (order as any).rentals?.[0]?.vehicle
-								? `Aluguer: ${(order as any).rentals[0].vehicle.make} ${(order as any).rentals[0].vehicle.model}`
-								: 'Aluguer de viatura'}
+							: 'Aluguer de viatura'}
 					</p>
 				</div>
 				<div className="ml-auto">
@@ -183,7 +181,7 @@ export function OrderDetailPage() {
 							<div className="flex justify-between">
 								<span className="text-text-secondary">Método</span>
 								<span className="font-heading font-600 text-warm-text">
-									{paymentMethodLabel[order.paymentMethod ?? ''] ??
+									{paymentMethodLabel[(order.paymentMethod ?? '').toLowerCase()] ??
 										order.paymentMethod}
 								</span>
 							</div>
@@ -198,7 +196,7 @@ export function OrderDetailPage() {
 							<div className="flex justify-between pt-2 border-t border-warm-border">
 								<span className="font-heading font-600 text-warm-text">Total</span>
 								<span className="font-heading font-700 text-lg text-brand">
-									{formatKwanza((order as any).totalAmount ?? 0)}
+									{formatKwanza(order.totalAmount ?? 0)}
 								</span>
 							</div>
 						</div>
@@ -206,7 +204,7 @@ export function OrderDetailPage() {
 				</div>
 			</div>
 
-			{/* Items */}
+			{/* Items + Addons */}
 			<div className="card-account stagger-4">
 				<div className="p-6 sm:p-8">
 					<h3 className="font-heading font-700 text-lg text-warm-text mb-4">Itens</h3>
@@ -232,11 +230,29 @@ export function OrderDetailPage() {
 								</p>
 							</div>
 						))}
+						{order.addons?.map((addon, i) => (
+							<div
+								key={`a-${i}`}
+								className="flex items-center justify-between p-4 rounded-xl bg-warm-bg/50 border border-dashed border-warm-border"
+							>
+								<div>
+									<p className="text-sm font-heading font-600 text-warm-text">
+										{addon.name}
+									</p>
+									<p className="text-xs text-text-secondary">
+										{addon.quantity}x · {formatKwanza(addon.unitPrice)} cada
+									</p>
+								</div>
+								<p className="text-sm font-heading font-600 text-warm-text">
+									{formatKwanza(addon.unitPrice * addon.quantity)}
+								</p>
+							</div>
+						))}
 					</div>
 					<div className="mt-4 pt-4 border-t border-warm-border flex items-center justify-between">
 						<span className="font-heading font-700 text-warm-text">Total</span>
 						<span className="font-display-alt font-700 text-2xl text-brand">
-							{formatKwanza((order as any).totalAmount ?? 0)}
+							{formatKwanza(order.totalAmount ?? 0)}
 						</span>
 					</div>
 				</div>
@@ -286,14 +302,14 @@ export function OrderDetailPage() {
 			)}
 
 			{/* Rentals (if any) */}
-			{(order as any).rentals && (order as any).rentals.length > 0 && (
+			{order.rentals && order.rentals.length > 0 && (
 				<div className="card-account stagger-5">
 					<div className="p-6 sm:p-8">
 						<h3 className="font-heading font-700 text-lg text-warm-text mb-4">
 							Alugueres
 						</h3>
 						<div className="space-y-3">
-							{(order as any).rentals.map((rental: any) => (
+							{order.rentals.map((rental) => (
 								<Link
 									key={rental.id}
 									to={`/account/rentals/${rental.id}`}

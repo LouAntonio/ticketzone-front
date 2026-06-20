@@ -205,9 +205,7 @@ export function MyTickets() {
 													? 'Clique para fechar'
 													: 'Ver QR Code completo'}
 											</p>
-											<p className="text-xs text-text-secondary">
-												{qs ? `Código: ${qs.qrCode.slice(0, 8)}...` : 'A carregar...'}
-											</p>
+										
 										</div>
 									</button>
 
@@ -235,10 +233,7 @@ export function MyTickets() {
 												level="H"
 												includeMargin
 											/>
-											<p className="mt-3 text-xs text-text-secondary font-heading font-600">
-												{qs.qrCode}
-											</p>
-											<p className="text-xs text-text-secondary text-center mt-1">
+											<p className="text-xs text-text-secondary text-center mt-3">
 												Apresenta este código na entrada do evento
 											</p>
 										</div>
