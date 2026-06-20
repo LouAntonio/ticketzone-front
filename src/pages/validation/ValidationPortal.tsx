@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback } from 'react'
 import { toast } from 'react-hot-toast'
 import { Scanner } from '@yudiel/react-qr-scanner'
 import { useVerifyQrCode, useValidateTicket } from '../../api/hooks/useTickets'
@@ -8,19 +8,12 @@ import { Button } from '../../components/ui/Button'
 import type { VerifyQrResponse, ValidationResult } from '../../types/ticket'
 
 export function ValidationPortal() {
-	const [qrCode, setQrCode] = useState('')
-	const [mode, setMode] = useState<'camera' | 'manual'>('camera')
 	const [scannerPaused, setScannerPaused] = useState(false)
 	const [scannerError, setScannerError] = useState<string | null>(null)
 	const verify = useVerifyQrCode()
 	const validate = useValidateTicket()
 	const [result, setResult] = useState<VerifyQrResponse | null>(null)
 	const [validateResult, setValidateResult] = useState<ValidationResult | null>(null)
-
-	useEffect(() => {
-		setScannerPaused(false)
-		setScannerError(null)
-	}, [mode])
 
 	const handleVerify = useCallback(async (code: string) => {
 		if (!code.trim()) return
@@ -48,13 +41,8 @@ export function ValidationPortal() {
 		const code = detectedCodes[0].rawValue
 		if (!code) return
 		setScannerPaused(true)
-		setQrCode(code)
 		handleVerify(code)
 	}, [scannerPaused, handleVerify])
-
-	const handleManualVerify = () => {
-		handleVerify(qrCode)
-	}
 
 	const handleValidate = async () => {
 		if (!result?.ticket?.id) return
@@ -69,7 +57,6 @@ export function ValidationPortal() {
 	}
 
 	const handleReset = () => {
-		setQrCode('')
 		setResult(null)
 		setValidateResult(null)
 		setScannerPaused(false)
@@ -123,17 +110,10 @@ export function ValidationPortal() {
 				<p className="text-text-secondary text-sm mt-1">Portal de verificação de ingressos</p>
 			</div>
 
-			{/* Mode Toggle */}
+			{/* Scanner always active when no result */}
 			{!result && !validateResult && (
 				<div className="flex items-center justify-center gap-2">
-					<button
-						onClick={() => setMode('camera')}
-						className={`px-4 py-2 text-sm font-heading font-600 rounded-lg border transition-all ${
-							mode === 'camera'
-								? 'bg-brand text-white border-brand'
-								: 'bg-transparent text-text-secondary border-border hover:border-brand hover:text-brand'
-						}`}
-					>
+					<span className="px-4 py-2 text-sm font-heading font-600 rounded-lg border bg-brand text-white border-brand">
 						<svg
 							width="16"
 							height="16"
@@ -148,106 +128,57 @@ export function ValidationPortal() {
 							<circle cx="12" cy="13" r="4" />
 						</svg>
 						Câmara
-					</button>
-					<button
-						onClick={() => setMode('manual')}
-						className={`px-4 py-2 text-sm font-heading font-600 rounded-lg border transition-all ${
-							mode === 'manual'
-								? 'bg-brand text-white border-brand'
-								: 'bg-transparent text-text-secondary border-border hover:border-brand hover:text-brand'
-						}`}
-					>
-						<svg
-							width="16"
-							height="16"
-							className="inline mr-1.5 -mt-0.5"
-							viewBox="0 0 24 24"
-							fill="none"
-							stroke="currentColor"
-							strokeWidth="2"
-							strokeLinecap="round"
-						>
-							<path d="M4 7V4h3M4 17v3h3M20 7V4h-3M20 17v3h-3" />
-							<rect x="6" y="10" width="12" height="4" rx="1" />
-						</svg>
-						Manual
-					</button>
+					</span>
 				</div>
 			)}
 
 			{!result ? (
 				<Card className="p-6">
-					{mode === 'camera' ? (
-						<div className="flex flex-col items-center gap-4">
-							{scannerError ? (
-								<div className="w-full p-6 text-center">
-									<div className="w-16 h-16 mx-auto mb-3 rounded-full bg-red-100 flex items-center justify-center">
-										<svg
-											width="28"
-											height="28"
-											viewBox="0 0 24 24"
-											fill="none"
-											stroke="#DC2626"
-											strokeWidth="1.5"
-										>
-											<path d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-										</svg>
-									</div>
-									<p className="text-sm text-red-600 font-heading font-600 mb-1">
-										Câmara indisponível
-									</p>
-									<p className="text-xs text-text-secondary mb-4">{scannerError}</p>
-									<Button variant="outline" size="sm" onClick={() => setMode('manual')}>
-										Usar modo manual
-									</Button>
+					<div className="flex flex-col items-center gap-4">
+						{scannerError ? (
+							<div className="w-full p-6 text-center">
+								<div className="w-16 h-16 mx-auto mb-3 rounded-full bg-red-100 flex items-center justify-center">
+									<svg
+										width="28"
+										height="28"
+										viewBox="0 0 24 24"
+										fill="none"
+										stroke="#DC2626"
+										strokeWidth="1.5"
+									>
+										<path d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+									</svg>
 								</div>
-							) : (
-								<div className="w-full max-w-sm mx-auto overflow-hidden rounded-xl">
-									<Scanner
-										onScan={handleScan}
-										onError={(err) => {
-											setScannerError(err?.message ?? 'Erro ao aceder à câmara')
-										}}
-										constraints={{ facingMode: 'environment' }}
-										paused={scannerPaused}
-										sound
-										components={{ tracker: true }}
-										styles={{
-											container: { borderRadius: '12px', overflow: 'hidden' },
-											video: { width: '100%', display: 'block' },
-										}}
-									/>
-								</div>
-							)}
-							<p className="text-xs text-text-secondary text-center max-w-xs">
-								Aponte a câmara para o QR Code do bilhete. A verificação é automática.
-							</p>
-						</div>
-					) : (
-						<div className="flex flex-col items-center gap-4">
-							<div className="w-full max-w-sm flex gap-2">
-								<div className="flex-1">
-									<input
-										className="input-field text-center font-heading font-600 tracking-widest uppercase"
-										placeholder="Código do bilhete"
-										value={qrCode}
-										onChange={(e) => setQrCode(e.target.value.toUpperCase())}
-										onKeyDown={(e) => e.key === 'Enter' && handleManualVerify()}
-									/>
-								</div>
-								<Button
-									onClick={handleManualVerify}
-									loading={verify.isPending}
-									disabled={!qrCode.trim()}
-								>
-									Verificar
+								<p className="text-sm text-red-600 font-heading font-600 mb-1">
+									Câmara indisponível
+								</p>
+								<p className="text-xs text-text-secondary mb-4">{scannerError}</p>
+								<Button variant="outline" size="sm" onClick={() => setScannerError(null)}>
+									Tentar novamente
 								</Button>
 							</div>
-							<p className="text-xs text-text-secondary text-center">
-								Insere o código alfanumérico do bilhete manualmente
-							</p>
-						</div>
-					)}
+						) : (
+							<div className="w-full max-w-sm mx-auto overflow-hidden rounded-xl">
+								<Scanner
+									onScan={handleScan}
+									onError={(err) => {
+										setScannerError(err?.message ?? 'Erro ao aceder à câmara')
+									}}
+									constraints={{ facingMode: 'environment' }}
+									paused={scannerPaused}
+									sound
+									components={{ tracker: true }}
+									styles={{
+										container: { borderRadius: '12px', overflow: 'hidden' },
+										video: { width: '100%', display: 'block' },
+									}}
+								/>
+							</div>
+						)}
+						<p className="text-xs text-text-secondary text-center max-w-xs">
+							Aponte a câmara para o QR Code do bilhete. A verificação é automática.
+						</p>
+					</div>
 				</Card>
 			) : (
 				<>
@@ -423,8 +354,7 @@ export function ValidationPortal() {
 			<Card className="p-4">
 				<h4 className="font-heading font-600 text-sm mb-2">Como validar bilhetes</h4>
 				<ol className="text-xs text-text-secondary space-y-1 list-decimal list-inside">
-					<li>Escolhe o modo "Câmara" e aponta para o QR Code do bilhete</li>
-					<li>Ou insere manualmente o código alfanumérico no modo "Manual"</li>
+					<li>Aponta a câmara para o QR Code do bilhete</li>
 					<li>O sistema verifica a autenticidade do código automaticamente</li>
 					<li>Confirma os dados do bilhete e add-ons</li>
 					<li>Clica em "Validar Entrada" para consumir uma entrada</li>
