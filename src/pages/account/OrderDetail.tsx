@@ -324,7 +324,7 @@ export function OrderDetailPage() {
 										</p>
 									</div>
 									<Link
-										to={`/account/addons/${ai.id}`}
+										to="/account/addons"
 										className="text-xs font-heading font-600 text-brand hover:text-brand-dark link-underline shrink-0"
 									>
 										Ver QR

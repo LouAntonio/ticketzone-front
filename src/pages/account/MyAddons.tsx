@@ -1,9 +1,10 @@
 import { Link } from 'react-router-dom'
-import { useMyAddons } from '../../api/hooks/useTickets'
+import { useMyAddons, useRotateAddonQrCode } from '../../api/hooks/useTickets'
+import type { AddonInstance } from '../../types/ticket'
 import { Badge } from '../../components/ui/Badge'
 import { Skeleton } from '../../components/ui/Skeleton'
 import { QRCodeSVG } from 'qrcode.react'
-import type { AddonInstance } from '../../types/ticket'
+import { useState, useEffect, useRef, useMemo } from 'react'
 
 const statusVariant: Record<string, 'emerald' | 'gray' | 'red'> = {
 	active: 'emerald',
@@ -18,10 +19,82 @@ const statusLabel: Record<string, string> = {
 	VOIDED: 'Anulado',
 }
 
+interface QrState {
+	qrCode: string
+	qrExpiresAt: string
+}
+
 export function MyAddonsPage() {
 	const { data, isLoading } = useMyAddons()
+	const [selectedAddon, setSelectedAddon] = useState<string | null>(null)
+	const [now, setNow] = useState(() => Date.now())
+	const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+	const rotateMutation = useRotateAddonQrCode()
+	const rotatingRef = useRef<Set<string>>(new Set())
 
-	const instances: AddonInstance[] = Array.isArray(data) ? data : (data?.data ?? [])
+	const instances: AddonInstance[] = useMemo(
+		() => (Array.isArray(data) ? data : (data?.data ?? [])),
+		[data],
+	)
+
+	const baseQrStates = useMemo(() => {
+		const map: Record<string, QrState> = {}
+		for (const inst of instances) {
+			map[inst.id] = { qrCode: inst.qrSecret, qrExpiresAt: inst.qrExpiresAt }
+		}
+		return map
+	}, [instances])
+
+	const [rotationUpdates, setRotationUpdates] = useState<Record<string, QrState>>({})
+	const qrStates = useMemo(
+		() => ({
+			...baseQrStates,
+			...rotationUpdates,
+		}),
+		[baseQrStates, rotationUpdates],
+	)
+
+	useEffect(() => {
+		intervalRef.current = setInterval(() => {
+			setNow(Date.now())
+		}, 1000)
+		return () => {
+			if (intervalRef.current) clearInterval(intervalRef.current)
+		}
+	}, [])
+
+	useEffect(() => {
+		if (!selectedAddon || !qrStates[selectedAddon]) return
+
+		const qs = qrStates[selectedAddon]
+		const expiresAt = new Date(qs.qrExpiresAt).getTime()
+
+		if (now >= expiresAt && !rotatingRef.current.has(selectedAddon)) {
+			rotatingRef.current.add(selectedAddon)
+			rotateMutation
+				.mutateAsync(selectedAddon)
+				.then((res) => {
+					setRotationUpdates((prev) => ({
+						...prev,
+						[selectedAddon]: { qrCode: res.qrCode, qrExpiresAt: res.qrExpiresAt },
+					}))
+				})
+				.finally(() => {
+					rotatingRef.current.delete(selectedAddon)
+				})
+		}
+	}, [now, selectedAddon, qrStates, rotateMutation])
+
+	const handleToggle = (addonId: string) => {
+		setSelectedAddon((prev) => (prev === addonId ? null : addonId))
+	}
+
+	const getCountdown = (addonId: string): number | null => {
+		const qs = qrStates[addonId]
+		if (!qs) return null
+		const diff = new Date(qs.qrExpiresAt).getTime() - now
+		return diff > 0 ? Math.ceil(diff / 1000) : 0
+	}
 
 	return (
 		<div className="max-w-4xl mx-auto space-y-6">
@@ -30,14 +103,42 @@ export function MyAddonsPage() {
 					<h1 className="font-display-alt font-700 text-2xl text-warm-text mb-1">
 						Os Meus Add-ons
 					</h1>
-					<p className="text-text-secondary text-sm">Gerir os add-ons adquiridos</p>
+					<p className="text-text-secondary text-sm">
+						{isLoading
+							? 'A carregar...'
+							: `${instances.length} add-on${instances.length !== 1 ? 's' : ''}`}
+					</p>
 				</div>
 			</div>
 
 			{isLoading ? (
-				<div className="space-y-3">
-					{[1, 2, 3].map((i) => (
-						<Skeleton key={i} className="h-20 w-full rounded-xl" />
+				<div className="grid sm:grid-cols-2 gap-4">
+					{[...Array(4)].map((_, i) => (
+						<div
+							key={i}
+							className="rounded-xl border border-border overflow-hidden p-4"
+						>
+							<div className="flex gap-4">
+								<Skeleton className="w-14 h-14 rounded-xl shrink-0" />
+								<div className="flex-1 space-y-2">
+									<Skeleton className="h-4 w-40" />
+									<Skeleton className="h-3 w-28" />
+									<Skeleton className="h-3 w-24" />
+									<div className="flex gap-2 mt-2">
+										<Skeleton className="h-5 w-14 rounded-full" />
+									</div>
+								</div>
+							</div>
+							<div className="mt-4 pt-4 border-t border-border">
+								<div className="flex items-center gap-3">
+									<Skeleton className="w-12 h-12 rounded-lg" />
+									<div className="space-y-1.5 flex-1">
+										<Skeleton className="h-3 w-32" />
+										<Skeleton className="h-3 w-24" />
+									</div>
+								</div>
+							</div>
+						</div>
 					))}
 				</div>
 			) : instances.length === 0 ? (
@@ -71,57 +172,99 @@ export function MyAddonsPage() {
 					</div>
 				</div>
 			) : (
-				<div className="grid sm:grid-cols-2 gap-3">
-					{instances.map((instance) => (
-						<Link
-							key={instance.id}
-							to={`/account/addons/${instance.id}`}
-							className="card-account hover:shadow-md hover:border-brand/20 transition-all group"
-						>
-							<div className="p-4 flex items-center gap-4">
-								<div className="w-16 h-16 shrink-0 bg-white rounded-xl border-2 border-warm-border flex items-center justify-center overflow-hidden">
-									<QRCodeSVG value={instance.qrSecret} size={56} level="M" />
-								</div>
-								<div className="flex-1 min-w-0">
-									<div className="flex items-center gap-2 mb-1">
-										<p className="font-heading font-600 text-sm text-warm-text group-hover:text-brand transition-colors truncate">
-											{instance.addonName}
-										</p>
-										<Badge
-											variant={
-												statusVariant[
-													instance.status.toLowerCase() as keyof typeof statusVariant
-												] ?? 'gray'
-											}
-											className="text-xs shrink-0"
-										>
-											{statusLabel[instance.status] ?? instance.status}
-										</Badge>
+				<div className="grid sm:grid-cols-2 gap-4">
+					{instances.map((instance) => {
+						const qs = qrStates[instance.id]
+						const countdown = getCountdown(instance.id)
+
+						return (
+							<div key={instance.id} className="card-account overflow-hidden">
+								<div className="p-4">
+									<div className="flex items-center gap-4">
+										<div className="w-14 h-14 shrink-0 bg-white rounded-xl border-2 border-warm-border flex items-center justify-center overflow-hidden">
+											{qs && (
+												<QRCodeSVG value={qs.qrCode} size={50} level="M" />
+											)}
+										</div>
+										<div className="flex-1 min-w-0">
+											<div className="flex items-center gap-2 mb-1">
+												<p className="font-heading font-600 text-sm text-warm-text truncate">
+													{instance.addonName}
+												</p>
+												<Badge
+													variant={
+														statusVariant[
+															instance.status.toLowerCase() as keyof typeof statusVariant
+														] ?? 'gray'
+													}
+													className="text-xs shrink-0"
+												>
+													{statusLabel[instance.status] ?? instance.status}
+												</Badge>
+											</div>
+											<p className="text-xs text-text-secondary truncate">
+												{instance.event?.title ?? 'Evento'}
+											</p>
+											<p className="text-xs text-text-secondary">
+												{instance.entriesUsed}/{instance.entriesAllowed} entradas
+												usadas
+											</p>
+										</div>
 									</div>
-									<p className="text-xs text-text-secondary truncate">
-										{instance.event?.title ?? 'Evento'}
-									</p>
-									<p className="text-xs text-text-secondary">
-										{instance.entriesUsed}/{instance.entriesAllowed} entradas
-										usadas
-									</p>
+
+									<div className="mt-4 pt-4 border-t border-warm-border">
+										<button
+											onClick={() => handleToggle(instance.id)}
+											className="flex items-center gap-3 w-full text-left"
+										>
+											<div className="w-12 h-12 bg-white rounded-lg border-2 border-warm-border flex items-center justify-center overflow-hidden shrink-0">
+												{qs && (
+													<QRCodeSVG value={qs.qrCode} size={44} level="M" />
+												)}
+											</div>
+											<div className="flex-1 min-w-0">
+												<p className="text-xs font-heading font-600 text-warm-text">
+													{selectedAddon === instance.id
+														? 'Clique para fechar'
+														: 'Ver QR Code completo'}
+												</p>
+											</div>
+										</button>
+
+										{selectedAddon === instance.id && qs && (
+											<div className="mt-4 flex flex-col items-center p-4 bg-gray-50 rounded-xl slide-up">
+												{countdown !== null && countdown > 0 && (
+													<div className="mb-3 flex items-center gap-2">
+														<div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+														<span className="text-xs text-emerald-600 font-heading font-600">
+															QR expira em {countdown}s
+														</span>
+													</div>
+												)}
+												{countdown !== null && countdown <= 0 && (
+													<div className="mb-3 flex items-center gap-2">
+														<div className="w-2 h-2 rounded-full bg-amber-500" />
+														<span className="text-xs text-amber-600 font-heading font-600">
+															A renovar QR Code...
+														</span>
+													</div>
+												)}
+												<QRCodeSVG
+													value={qs.qrCode}
+													size={180}
+													level="H"
+													includeMargin
+												/>
+												<p className="text-xs text-text-secondary text-center mt-3">
+													Apresenta este código no evento para validar o teu add-on.
+												</p>
+											</div>
+										)}
+									</div>
 								</div>
-								<svg
-									width="16"
-									height="16"
-									viewBox="0 0 24 24"
-									fill="none"
-									stroke="currentColor"
-									strokeWidth="2"
-									strokeLinecap="round"
-									strokeLinejoin="round"
-									className="text-text-secondary shrink-0 group-hover:text-brand transition-colors"
-								>
-									<path d="M9 18l6-6-6-6" />
-								</svg>
 							</div>
-						</Link>
-					))}
+						)
+					})}
 				</div>
 			)}
 		</div>

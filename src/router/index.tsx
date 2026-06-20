@@ -33,7 +33,7 @@ import { ProfilePage } from '../pages/account/Profile'
 import { OrdersPage } from '../pages/account/Orders'
 import { OrderDetailPage } from '../pages/account/OrderDetail'
 import { TicketDetailPage } from '../pages/account/TicketDetail'
-import { AddonDetailPage } from '../pages/account/AddonDetail'
+
 import { MyAddonsPage } from '../pages/account/MyAddons'
 import { BecomePromoterPage } from '../pages/account/BecomePromoter'
 import { SecurityPage } from '../pages/account/Security'
@@ -111,7 +111,6 @@ export const router = createBrowserRouter([
 							{ path: '/account/tickets', element: <MyTickets /> },
 							{ path: '/account/tickets/:id', element: <TicketDetailPage /> },
 							{ path: '/account/addons', element: <MyAddonsPage /> },
-							{ path: '/account/addons/:id', element: <AddonDetailPage /> },
 							{ path: '/account/orders', element: <OrdersPage /> },
 							{ path: '/account/orders/:id', element: <OrderDetailPage /> },
 							{ path: '/account/rentals', element: <MyRentalsPage /> },
