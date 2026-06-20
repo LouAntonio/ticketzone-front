@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { useAuthStore } from '../../stores/useAuthStore'
 import { useOrders } from '../../api/hooks/useOrders'
 import { useMyRentals } from '../../api/hooks/useRentals'
+import { useValidatorEvents } from '../../api/hooks/useAuth'
 import { Card } from '../../components/ui/Card'
 import { Badge } from '../../components/ui/Badge'
 import { Skeleton } from '../../components/ui/Skeleton'
@@ -19,6 +20,7 @@ const statusVariant: Record<string, 'emerald' | 'amber' | 'red'> = {
 export function AccountDashboard() {
 	const user = useAuthStore((s) => s.user)
 	const { data, isLoading } = useOrders()
+	const { data: validatorEventsData } = useValidatorEvents()
 
 	const paidOrders =
 		data?.orders?.filter((o: Order) => o.status === 'paid') ?? []
@@ -38,6 +40,10 @@ export function AccountDashboard() {
 
 	const isPromoter = user?.role === 'PROMOTER'
 	const isStaff = user?.role === 'STAFF' || user?.role === 'ADMIN'
+	const canValidate =
+		isPromoter ||
+		isStaff ||
+		(Array.isArray(validatorEventsData) && validatorEventsData.length > 0)
 	return (
 		<div className="max-w-4xl mx-auto space-y-8">
 			{/* Email Verification Banner */}
@@ -200,6 +206,27 @@ export function AccountDashboard() {
 						</svg>
 						Os Meus Alugueres
 					</Link>
+					{canValidate && (
+						<Link
+							to="/validate"
+							className="inline-flex items-center gap-2 h-11 px-5 border-2 border-brand text-brand font-heading font-600 text-sm rounded-xl hover:bg-brand-soft transition-all active:scale-[0.97]"
+						>
+							<svg
+								width="16"
+								height="16"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								strokeWidth="2"
+								strokeLinecap="round"
+								strokeLinejoin="round"
+							>
+								<path d="M22 11.08V12a10 10 0 11-5.93-9.14" />
+								<polyline points="22 4 12 14.01 9 11.01" />
+							</svg>
+							Validar Bilhetes
+						</Link>
+					)}
 					{!isPromoter && !isStaff && (
 						<Link
 							to="/account/become-promoter"

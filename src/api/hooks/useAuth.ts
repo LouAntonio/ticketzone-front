@@ -1,7 +1,8 @@
-import { useMutation } from '@tanstack/react-query'
+import { useMutation, useQuery } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
 import { authApi } from '../endpoints/auth'
 import { useAuthStore } from '../../stores/useAuthStore'
+import { api } from '../client'
 import type { LoginCredentials, RegisterData } from '../../types/auth'
 
 export function useLogin() {
@@ -52,6 +53,14 @@ export function useLogout() {
 		onSettled: () => {
 			clear()
 		},
+	})
+}
+
+export function useValidatorEvents() {
+	return useQuery({
+		queryKey: ['auth', 'validator-events'],
+		queryFn: () => api.get('/auth/me/validator-events').then((r) => r.data),
+		staleTime: 5 * 60 * 1000,
 	})
 }
 
