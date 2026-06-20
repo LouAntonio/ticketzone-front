@@ -5,6 +5,7 @@ import {
 	useResendVerification,
 	useChangePassword,
 	useChangeEmail,
+	useUserProfile,
 } from '../../api/hooks/useAccount'
 import { Badge } from '../../components/ui/Badge'
 import { Input } from '../../components/ui/Input'
@@ -33,7 +34,28 @@ export function SecurityPage() {
 	const [newEmail, setNewEmail] = useState('')
 	const [emailPassword, setEmailPassword] = useState('')
 
+	const [showPhoneForm, setShowPhoneForm] = useState(false)
+	const [phoneInput, setPhoneInput] = useState('')
+
+	const updateProfile = useUserProfile()
+
 	const hasPassword = user?.hasPassword ?? false
+
+	const handleSavePhone = async () => {
+		const num = phoneInput.trim()
+		if (!num) {
+			toast.error('Insere um número de telefone')
+			return
+		}
+		try {
+			await updateProfile.mutateAsync({ phoneNumber: num })
+			setShowPhoneForm(false)
+			setPhoneInput('')
+			toast.success('Número de telefone atualizado')
+		} catch {
+			toast.error('Erro ao atualizar número')
+		}
+	}
 
 	const handleSetPassword = async () => {
 		if (newPassword !== confirmPassword) {
@@ -404,6 +426,87 @@ export function SecurityPage() {
 											setShowEmailForm(false)
 											setNewEmail('')
 											setEmailPassword('')
+										}}
+									>
+										Cancelar
+									</Button>
+								</div>
+							</div>
+						</div>
+					)}
+				</div>
+			</div>
+
+			{/* Phone Number */}
+			<div className="card-account stagger-4">
+				<div className="p-6 sm:p-8">
+					<h3 className="font-heading font-700 text-lg text-warm-text mb-4">
+						Número de Telefone
+					</h3>
+					<div className="flex items-center justify-between p-4 rounded-xl bg-warm-bg border border-warm-border">
+						<div className="flex items-center gap-3">
+							<div className="w-12 h-12 rounded-xl bg-brand/10 flex items-center justify-center">
+								<svg
+									width="22"
+									height="22"
+									viewBox="0 0 24 24"
+									fill="none"
+									stroke="currentColor"
+									strokeWidth="1.5"
+									className="text-brand"
+								>
+									<path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z" />
+								</svg>
+							</div>
+							<div>
+								<p className="text-sm font-heading font-600 text-warm-text">
+									{user?.phoneNumber || '—'}
+								</p>
+								<p className="text-xs text-text-secondary">
+									{user?.phoneNumber
+										? 'Número registado'
+										: 'Nenhum número registado'}
+								</p>
+							</div>
+						</div>
+						<Button
+							variant="outline"
+							size="sm"
+							onClick={() => {
+								setShowPhoneForm(!showPhoneForm)
+								if (!showPhoneForm) setPhoneInput(user?.phoneNumber ?? '')
+							}}
+						>
+							{user?.phoneNumber ? 'Alterar' : 'Adicionar'}
+						</Button>
+					</div>
+
+					{showPhoneForm && (
+						<div className="mt-4 p-4 rounded-xl bg-brand-soft border border-brand/20 slide-up">
+							<h4 className="font-heading font-600 text-sm text-warm-text mb-3">
+								{user?.phoneNumber ? 'Alterar' : 'Adicionar'} Número
+							</h4>
+							<div className="space-y-3 max-w-sm">
+								<Input
+									type="tel"
+									placeholder="+244 923 456 789"
+									value={phoneInput}
+									onChange={(e) => setPhoneInput(e.target.value)}
+								/>
+								<div className="flex gap-3">
+									<Button
+										onClick={handleSavePhone}
+										loading={updateProfile.isPending}
+										size="sm"
+									>
+										Guardar
+									</Button>
+									<Button
+										variant="ghost"
+										size="sm"
+										onClick={() => {
+											setShowPhoneForm(false)
+											setPhoneInput('')
 										}}
 									>
 										Cancelar

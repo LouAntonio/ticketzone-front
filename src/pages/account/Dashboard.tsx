@@ -7,11 +7,11 @@ import { Badge } from '../../components/ui/Badge'
 import { Skeleton } from '../../components/ui/Skeleton'
 import { formatDate, formatKwanza } from '../../lib/format'
 import { EmailVerificationBanner } from '../../components/account/EmailVerificationBanner'
+import type { Order } from '../../types/order'
 
 const statusVariant: Record<string, 'emerald' | 'amber' | 'red'> = {
-	confirmed: 'emerald',
-	pending: 'amber',
 	paid: 'emerald',
+	pending: 'amber',
 	cancelled: 'red',
 	refunded: 'red',
 }
@@ -20,15 +20,15 @@ export function AccountDashboard() {
 	const user = useAuthStore((s) => s.user)
 	const { data, isLoading } = useOrders()
 
-	const confirmedOrders =
-		data?.orders?.filter((o: OrderDisplay) => o.status === 'confirmed') ?? []
-	const pendingOrders = data?.orders?.filter((o: OrderDisplay) => o.status === 'pending') ?? []
-	const totalSpent = confirmedOrders.reduce(
-		(s: number, o: OrderDisplay) => s + ((o as any).totalAmount ?? 0),
+	const paidOrders =
+		data?.orders?.filter((o: Order) => o.status === 'paid') ?? []
+	const pendingOrders = data?.orders?.filter((o: Order) => o.status === 'pending') ?? []
+	const totalSpent = paidOrders.reduce(
+		(s: number, o: Order) => s + (o.totalAmount ?? 0),
 		0,
 	)
-	const totalTickets = confirmedOrders.reduce(
-		(s: number, o: OrderDisplay) =>
+	const totalTickets = paidOrders.reduce(
+		(s: number, o: Order) =>
 			s + (o.items?.reduce((s2, i) => s2 + (i.quantity ?? 0), 0) ?? 0),
 		0,
 	)
@@ -85,8 +85,8 @@ export function AccountDashboard() {
 						{isLoading ? <Skeleton className="h-7 w-28" /> : formatKwanza(totalSpent)}
 					</p>
 					<p className="text-xs text-text-secondary mt-1">
-						{confirmedOrders.length} compra{confirmedOrders.length !== 1 ? 's' : ''}{' '}
-						confirmada{confirmedOrders.length !== 1 ? 's' : ''}
+						{paidOrders.length} compra{paidOrders.length !== 1 ? 's' : ''}{' '}
+						paga{paidOrders.length !== 1 ? 's' : ''}
 					</p>
 				</Card>
 				<Card className="!p-5">
@@ -97,9 +97,9 @@ export function AccountDashboard() {
 						{isLoading ? <Skeleton className="h-7 w-20" /> : totalTickets}
 					</p>
 					<p className="text-xs text-text-secondary mt-1">
-						em {new Set(confirmedOrders.map((o: OrderDisplay) => o.eventId)).size}{' '}
+						em {new Set(paidOrders.map((o) => o.eventId)).size}{' '}
 						evento
-						{new Set(confirmedOrders.map((o: OrderDisplay) => o.eventId)).size !== 1
+						{new Set(paidOrders.map((o) => o.eventId)).size !== 1
 							? 's'
 							: ''}
 					</p>
@@ -261,7 +261,7 @@ export function AccountDashboard() {
 					</div>
 				) : data?.orders && data.orders.length > 0 ? (
 					<div className="space-y-3">
-						{data.orders.slice(0, 5).map((order: OrderDisplay) => (
+						{data.orders.slice(0, 5).map((order: Order) => (
 							<Link
 								key={order.id}
 								to={`/account/orders/${order.id}`}
@@ -282,22 +282,19 @@ export function AccountDashboard() {
 										</p>
 										<p className="text-xs text-text-secondary">
 											{order.items
-												?.map(
-													(i: OrderItemDisplay) =>
-														`${i.quantity}x ${i.ticketTypeName}`,
-												)
+												.map((i) => `${i.quantity}x ${i.ticketTypeName}`)
 												.join(', ')}
 										</p>
 									</div>
 									<div className="text-right shrink-0">
 										<p className="font-heading font-700 text-sm text-warm-text">
-											{formatKwanza((order as any).totalAmount ?? 0)}
+											{formatKwanza(order.totalAmount ?? 0)}
 										</p>
 										<Badge
 											variant={statusVariant[order.status ?? ''] ?? 'gray'}
 											className="mt-1"
 										>
-											{order.status === 'confirmed' || order.status === 'paid'
+											{order.status === 'paid'
 												? 'Confirmado'
 												: order.status === 'pending'
 													? 'Pendente'
@@ -502,7 +499,3 @@ export function AccountDashboard() {
 	)
 }
 
-// Need to import the types used locally
-import type { OrderDisplay as _OD, OrderItemDisplay as _OID } from '../../api/hooks/useOrders'
-type OrderDisplay = _OD
-type OrderItemDisplay = _OID
