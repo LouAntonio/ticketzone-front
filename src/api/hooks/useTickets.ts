@@ -25,8 +25,8 @@ export function useRotateQrCode() {
 	const qc = useQueryClient()
 	return useMutation({
 		mutationFn: (ticketId: string) => ticketsApi.rotateQr(ticketId),
-		onSuccess: () => {
-			qc.invalidateQueries({ queryKey: ['tickets'] })
+		onSuccess: async () => {
+			await qc.invalidateQueries({ queryKey: ['tickets'] })
 		},
 		onError: (err: Error) => {
 			toast.error(err.message || 'Erro ao renovar QR Code')
@@ -50,8 +50,9 @@ export function useRotateAddonQrCode() {
 	const qc = useQueryClient()
 	return useMutation({
 		mutationFn: (addonId: string) => ticketsApi.rotateAddonQr(addonId),
-		onSuccess: () => {
-			qc.invalidateQueries({ queryKey: ['my-addons'] })
+		onSuccess: async () => {
+			await qc.invalidateQueries({ queryKey: ['my-addons'] })
+			await qc.invalidateQueries({ queryKey: ['addon'] })
 		},
 		onError: (err: Error) => {
 			toast.error(err.message || 'Erro ao renovar QR Code do add-on')
