@@ -6,9 +6,9 @@ import { Badge } from '../../components/ui/Badge'
 import { Skeleton } from '../../components/ui/Skeleton'
 import { formatDate, formatKwanza } from '../../lib/format'
 import { toast } from 'react-hot-toast'
+import type { Order } from '../../types/order'
 
 const statusVariant: Record<string, 'emerald' | 'amber' | 'red' | 'gray'> = {
-	confirmed: 'emerald',
 	paid: 'emerald',
 	pending: 'amber',
 	cancelled: 'red',
@@ -16,7 +16,6 @@ const statusVariant: Record<string, 'emerald' | 'amber' | 'red' | 'gray'> = {
 }
 
 const statusLabel: Record<string, string> = {
-	confirmed: 'Confirmado',
 	paid: 'Pago',
 	pending: 'Pendente',
 	cancelled: 'Cancelado',
@@ -43,7 +42,7 @@ export function OrdersPage() {
 
 	const filters = [
 		{ value: 'all', label: 'Todas' },
-		{ value: 'confirmed', label: 'Confirmadas' },
+		{ value: 'paid', label: 'Pagas' },
 		{ value: 'pending', label: 'Pendentes' },
 		{ value: 'cancelled', label: 'Canceladas' },
 	]
@@ -128,7 +127,7 @@ export function OrdersPage() {
 				</div>
 			) : (
 				<div className="space-y-3 stagger-3">
-					{filteredOrders.map((order) => (
+					{filteredOrders.map((order: Order) => (
 						<div
 							key={order.id}
 							className="rounded-xl border border-warm-border bg-white p-5 hover:shadow-md transition-shadow group"
@@ -164,36 +163,30 @@ export function OrdersPage() {
 												to={`/account/orders/${order.id}`}
 												className="font-heading font-600 text-sm text-warm-text hover:text-brand transition-colors"
 											>
-												{order.eventTitle ?? 'Aluguer de viatura'}
+												{order.eventTitle}
 											</Link>
 											<p className="text-xs text-text-secondary mt-0.5">
-												{order.eventDate
-													? formatDate(order.eventDate)
-													: (order as any).rentals?.[0]?.startDate
-														? `${formatDate((order as any).rentals[0].startDate)} — ${formatDate((order as any).rentals[0].endDate)}`
-														: '—'}
+												{order.eventDate ? formatDate(order.eventDate) : '—'}
 											</p>
-											<p className="text-xs text-text-secondary mt-0.5">
-												{order.items?.length
-													? order.items
-															.map(
-																(i) =>
-																	`${i.quantity}x ${i.ticketTypeName}`,
-															)
-															.join(', ')
-													: (order as any).rentals?.length
-														? `${(order as any).rentals.length} aluguer${(order as any).rentals.length > 1 ? 'es' : ''}`
-														: ''}
+											<p className="text-xs text-text-secondary mt-0.5 space-y-0.5">
+												{order.items?.map((i, idx) => (
+													<span key={idx} className="block">
+														{i.quantity}x {i.ticketTypeName}
+													</span>
+												))}
+												{order.addons?.map((a, idx) => (
+													<span key={`a-${idx}`} className="block text-text-secondary/70">
+														+ {a.quantity}x {a.name}
+													</span>
+												))}
 											</p>
 										</div>
 										<div className="text-right shrink-0">
 											<p className="font-heading font-700 text-sm text-warm-text">
-												{formatKwanza((order as any).totalAmount ?? 0)}
+												{formatKwanza(order.totalAmount ?? 0)}
 											</p>
 											<Badge
-												variant={
-													statusVariant[order.status ?? ''] ?? 'gray'
-												}
+												variant={statusVariant[order.status ?? ''] ?? 'gray'}
 												className="mt-1"
 											>
 												{statusLabel[order.status ?? ''] ?? order.status}

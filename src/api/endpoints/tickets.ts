@@ -51,10 +51,15 @@ function mapTicket(t: RawTicket): Ticket {
 export const ticketsApi = {
 	list: () =>
 		api.get<{ data: RawTicket[]; total: number }>('/tickets')
-			.then((r) => ({
-				data: (r.data.data ?? []).map(mapTicket),
-				total: r.data.total ?? 0,
-			})),
+			.then((r) => {
+				const raw = Array.isArray(r.data)
+					? r.data
+					: (r.data as any)?.data ?? []
+				const total = Array.isArray(r.data)
+					? raw.length
+					: (r.data as any)?.total ?? 0
+				return { data: raw.map(mapTicket), total }
+			}),
 
 	verifyQr: (qrCode: string) =>
 		api.post<VerifyQrResponse>('/tickets/verify-qr', { qrCode }).then((r) => r.data),
