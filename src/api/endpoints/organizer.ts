@@ -12,7 +12,12 @@ import type {
 export const organizerApi = {
 	sales: () => api.get<SalesData>('/organizer/sales').then((r) => r.data),
 
-	attendees: () => api.get<AttendeesData>('/organizer/attendees').then((r) => r.data),
+	attendees: (eventId?: string) =>
+		api
+			.get<AttendeesData>(
+				`/organizer/attendees${eventId ? `?eventId=${eventId}` : ''}`,
+			)
+			.then((r) => r.data),
 
 	settings: () =>
 		api

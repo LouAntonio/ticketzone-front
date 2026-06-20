@@ -10,10 +10,10 @@ export function useOrganizerSales() {
 	})
 }
 
-export function useOrganizerAttendees() {
+export function useOrganizerAttendees(eventId?: string) {
 	return useQuery({
-		queryKey: ['organizer', 'attendees'],
-		queryFn: organizerApi.attendees,
+		queryKey: ['organizer', 'attendees', eventId],
+		queryFn: () => organizerApi.attendees(eventId),
 	})
 }
 

@@ -1,4 +1,5 @@
-import { useOrganizerAttendees } from '../../api/hooks/useOrganizer'
+import { useState } from 'react'
+import { useOrganizerAttendees, useOrganizerEvents } from '../../api/hooks/useOrganizer'
 import { Card } from '../../components/ui/Card'
 import { Badge } from '../../components/ui/Badge'
 import { Skeleton, SkeletonTable } from '../../components/ui/Skeleton'
@@ -6,7 +7,9 @@ import { formatDate, formatKwanza } from '../../lib/format'
 import type { SalesOrder } from '../../types/event'
 
 export function AttendeeList() {
-	const { data, isLoading } = useOrganizerAttendees()
+	const [selectedEventId, setSelectedEventId] = useState<string>('')
+	const { data: eventsData } = useOrganizerEvents()
+	const { data, isLoading } = useOrganizerAttendees(selectedEventId || undefined)
 
 	if (isLoading) {
 		return (
@@ -26,11 +29,25 @@ export function AttendeeList() {
 
 	return (
 		<div className="space-y-6">
-			<div>
-				<h1 className="font-heading font-700 text-2xl">Participantes</h1>
-				<p className="text-text-secondary text-sm">
-					{attendees.length} participante{attendees.length !== 1 ? 's' : ''}
-				</p>
+			<div className="flex items-center justify-between">
+				<div>
+					<h1 className="font-heading font-700 text-2xl">Participantes</h1>
+					<p className="text-text-secondary text-sm">
+						{attendees.length} participante{attendees.length !== 1 ? 's' : ''}
+					</p>
+				</div>
+				<select
+					value={selectedEventId}
+					onChange={(e) => setSelectedEventId(e.target.value)}
+					className="rounded-lg border border-border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+				>
+					<option value="">Todos os eventos</option>
+					{eventsData?.events?.map((event) => (
+						<option key={event.id} value={event.id}>
+							{event.title}
+						</option>
+					))}
+				</select>
 			</div>
 
 			{attendees.length === 0 ? (
