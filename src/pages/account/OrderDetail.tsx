@@ -288,7 +288,12 @@ export function OrderDetailPage() {
 												style: 'rounded',
 												color: '#f16522',
 											}}
-											imageSettings={{ src: '/tz.png', width: 14, height: 14, excavate: true }}
+											imageSettings={{
+												src: '/tz.png',
+												width: 14,
+												height: 14,
+												excavate: true,
+											}}
 										/>
 									</div>
 									<div className="flex-1 min-w-0">
@@ -345,7 +350,12 @@ export function OrderDetailPage() {
 												style: 'rounded',
 												color: '#f16522',
 											}}
-											imageSettings={{ src: '/tz.png', width: 14, height: 14, excavate: true }}
+											imageSettings={{
+												src: '/tz.png',
+												width: 14,
+												height: 14,
+												excavate: true,
+											}}
 										/>
 									</div>
 									<div className="flex-1 min-w-0">

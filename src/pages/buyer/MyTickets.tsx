@@ -219,7 +219,12 @@ export function MyTickets() {
 														style: 'rounded',
 														color: '#f16522',
 													}}
-													imageSettings={{ src: '/tz.png', width: 12, height: 12, excavate: true }}
+													imageSettings={{
+														src: '/tz.png',
+														width: 12,
+														height: 12,
+														excavate: true,
+													}}
 												/>
 											)}
 										</div>
@@ -267,7 +272,12 @@ export function MyTickets() {
 													style: 'rounded',
 													color: '#f16522',
 												}}
-												imageSettings={{ src: '/tz.png', width: 40, height: 40, excavate: true }}
+												imageSettings={{
+													src: '/tz.png',
+													width: 40,
+													height: 40,
+													excavate: true,
+												}}
 											/>
 											<p className="text-xs text-text-secondary text-center mt-3">
 												Apresenta este código na entrada do evento

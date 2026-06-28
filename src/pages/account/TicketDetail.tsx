@@ -149,7 +149,12 @@ export function TicketDetailPage() {
 										style: 'rounded',
 										color: '#f16522',
 									}}
-									imageSettings={{ src: '/tz.png', width: 48, height: 48, excavate: true }}
+									imageSettings={{
+										src: '/tz.png',
+										width: 48,
+										height: 48,
+										excavate: true,
+									}}
 								/>
 							</div>
 						</div>
