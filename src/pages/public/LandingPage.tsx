@@ -260,8 +260,9 @@ Explora, escolhe, garante o teu lugar. Milhares de eventos à tua espera com com
 							Queres organizar eventos?
 						</h2>
 						<p className="text-text-secondary max-w-md mx-auto mb-8">
-							Cria a tua conta de promotor e começa a vender bilhetes com a plataforma
-							mais confiável de Angola.
+							Para organizar eventos, ativa a tua conta de promotor no painel de
+							administração. O processo de verificação é rápido e garante mais
+							credibilidade aos teus eventos.
 						</p>
 						<Link to="/register">
 							<Button size="lg">Criar Conta de Promotor</Button>
