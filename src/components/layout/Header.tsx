@@ -1,14 +1,28 @@
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useAuthStore } from '../../stores/useAuthStore'
 import { authApi } from '../../api/endpoints/auth'
 import { toast } from 'react-hot-toast'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 export function Header() {
 	const { user, isOrganizer, clear } = useAuthStore()
 	const navigate = useNavigate()
 	const [menuOpen, setMenuOpen] = useState(false)
 	const [mobileOpen, setMobileOpen] = useState(false)
+
+	const location = useLocation()
+	const [overHero, setOverHero] = useState(true)
+
+	useEffect(() => {
+		const handleScroll = () => {
+			setOverHero(window.scrollY < window.innerHeight - 64)
+		}
+		handleScroll()
+		window.addEventListener('scroll', handleScroll, { passive: true })
+		return () => window.removeEventListener('scroll', handleScroll)
+	}, [])
+
+	const isTransparent = location.pathname === '/' && overHero
 
 	const handleLogout = async () => {
 		try {
@@ -25,37 +39,55 @@ export function Header() {
 	}
 
 	return (
-		<header className="sticky top-0 z-40 bg-surface-card/90 backdrop-blur-md border-b border-border">
+		<header
+			className={`sticky top-0 z-40 transition-all duration-300 ${
+				isTransparent
+					? 'bg-transparent border-transparent'
+					: 'bg-surface-card/90 backdrop-blur-md border-b border-border'
+			}`}
+		>
 			<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 				<div className="flex items-center justify-between h-16 gap-4">
 					{/* Logo */}
 					<Link to="/" className="flex items-center shrink-0">
-						<img src="/logo.png" alt="TicketZone" className="h-9 w-auto" />
+						<img
+							src={isTransparent ? '/logoWhite.png' : '/logo.png'}
+							alt="TicketZone"
+							className="h-9 w-auto"
+						/>
 					</Link>
 
 					{/* Desktop Nav */}
 					<nav className="hidden md:flex items-center justify-center gap-8 flex-1">
 						<Link
 							to="/events"
-							className="text-sm font-heading font-500 text-text-secondary hover:text-text transition-colors"
+							className={`text-sm font-heading font-500 transition-colors ${
+								isTransparent ? 'text-white/80 hover:text-white' : 'text-text-secondary hover:text-text'
+							}`}
 						>
 							Eventos
 						</Link>
 						<Link
 							to="/rentals"
-							className="text-sm font-heading font-500 text-text-secondary hover:text-text transition-colors"
+							className={`text-sm font-heading font-500 transition-colors ${
+								isTransparent ? 'text-white/80 hover:text-white' : 'text-text-secondary hover:text-text'
+							}`}
 						>
 							Rent-a-Car
 						</Link>
 						<Link
 							to="/como-funciona"
-							className="text-sm font-heading font-500 text-text-secondary hover:text-text transition-colors"
+							className={`text-sm font-heading font-500 transition-colors ${
+								isTransparent ? 'text-white/80 hover:text-white' : 'text-text-secondary hover:text-text'
+							}`}
 						>
 							Como Funciona
 						</Link>
 						<Link
 							to="/contacto"
-							className="text-sm font-heading font-500 text-text-secondary hover:text-text transition-colors"
+							className={`text-sm font-heading font-500 transition-colors ${
+								isTransparent ? 'text-white/80 hover:text-white' : 'text-text-secondary hover:text-text'
+							}`}
 						>
 							Contacto
 						</Link>
@@ -63,14 +95,18 @@ export function Header() {
 							<>
 								<Link
 									to="/account"
-									className="text-sm font-heading font-500 text-text-secondary hover:text-text transition-colors"
+									className={`text-sm font-heading font-500 transition-colors ${
+										isTransparent ? 'text-white/80 hover:text-white' : 'text-text-secondary hover:text-text'
+									}`}
 								>
 									Os Meus Bilhetes
 								</Link>
 								{isOrganizer() && (
 									<Link
 										to="/organizer"
-										className="text-sm font-heading font-500 text-brand hover:text-brand-dark transition-colors"
+										className={`text-sm font-heading font-500 transition-colors ${
+											isTransparent ? 'text-white hover:text-white/80' : 'text-brand hover:text-brand-dark'
+										}`}
 									>
 										Painel Organizador
 									</Link>
@@ -87,7 +123,9 @@ export function Header() {
 								<div className="relative">
 									<button
 										onClick={() => setMenuOpen(!menuOpen)}
-										className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-100 transition-colors"
+										className={`flex items-center gap-2 p-2 rounded-lg transition-colors ${
+											isTransparent ? 'text-white hover:bg-white/10' : 'hover:bg-gray-100'
+										}`}
 									>
 										<img
 											src={user.image || '/user.png'}
@@ -213,10 +251,24 @@ export function Header() {
 								</div>
 							) : (
 								<>
-									<Link to="/login" className="btn-ghost text-sm h-10 px-4">
+									<Link
+										to="/login"
+										className={`text-sm h-10 px-4 rounded-xl font-heading font-600 transition-all duration-200 inline-flex items-center justify-center gap-2 ${
+											isTransparent
+												? 'text-white border border-white/30 hover:bg-white/10'
+												: 'btn-ghost'
+										}`}
+									>
 										Entrar
 									</Link>
-									<Link to="/register" className="btn-brand text-sm h-10 px-5">
+									<Link
+										to="/register"
+										className={`text-sm h-10 px-5 rounded-xl font-heading font-600 transition-all duration-200 inline-flex items-center justify-center gap-2 ${
+											isTransparent
+												? 'bg-white text-brand hover:bg-gray-100'
+												: 'btn-brand'
+										}`}
+									>
 										Criar Conta
 									</Link>
 								</>
@@ -225,7 +277,9 @@ export function Header() {
 
 						{/* Hamburger */}
 						<button
-							className="md:hidden relative z-50 p-2 text-text-secondary hover:text-text transition-colors"
+							className={`md:hidden relative z-50 p-2 transition-colors ${
+								isTransparent ? 'text-white/80 hover:text-white' : 'text-text-secondary hover:text-text'
+							}`}
 							onClick={() => setMobileOpen(!mobileOpen)}
 							aria-label={mobileOpen ? 'Fechar menu' : 'Abrir menu'}
 						>

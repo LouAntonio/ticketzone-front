@@ -16,57 +16,48 @@ export function LandingPage() {
 	return (
 		<div>
 			{/* Hero */}
-			<section className="relative overflow-hidden bg-gradient-to-br from-brand via-brand-dark to-brand-dark">
+			<section
+				className="relative overflow-hidden min-h-screen -mt-16 bg-cover bg-center bg-no-repeat"
+				style={{
+					backgroundImage:
+						"url('https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?w=1600&q=80')",
+				}}
+			>
+				{/* Dark overlay */}
+				<div className="absolute inset-0 bg-black/65" />
 				<div
-					className="absolute inset-0 opacity-[0.08]"
+					className="absolute inset-0 opacity-[0.06]"
 					style={{
 						backgroundImage:
 							"url(\"data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Cpath d='M20 0v40M0 20h40'/%3E%3C/g%3E%3C/svg%3E\")",
 					}}
 				/>
-				<div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-32">
-					<div className="grid lg:grid-cols-2 gap-12 items-center">
-						<div className="fade-in">
-							<h1 className="font-display text-5xl sm:text-6xl lg:text-7xl leading-tight text-white mb-6">
-								O teu bilhete
-								<br />
-								para o melhor
-								<br />
-								de Angola.
-							</h1>
-							<p className="text-white/70 text-lg sm:text-xl max-w-lg mb-8 font-body">
-								Descobre eventos incríveis, compra bilhetes com segurança e recebe
-								tudo por email e WhatsApp.
-							</p>
-							<div className="flex flex-wrap gap-3">
-								<Link
-									to="/events"
-									className="btn bg-white text-brand hover:bg-gray-100 h-13 px-8 text-base font-heading font-700 rounded-xl"
-								>
-									Explorar Eventos
-								</Link>
-								<Link
-									to="/register"
-									className="btn border-2 border-white/30 text-white hover:bg-white/10 h-13 px-8 text-base font-heading font-700 rounded-xl"
-								>
-									Criar Evento
-								</Link>
-							</div>
-						</div>
-
-						<div className="hidden lg:flex justify-center">
-							<div className="relative">
-								<div className="w-80 h-80 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center">
-									<div className="text-center">
-										<div className="font-display text-8xl text-white mb-2">
-											TZ
-										</div>
-										<div className="text-white/50 text-sm tracking-widest uppercase">
-											Bilhetes Online
-										</div>
-									</div>
-								</div>
-							</div>
+				<div className="relative w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 sm:pt-32 pb-20 sm:pb-32">
+					<div className="fade-in max-w-2xl">
+						<h1 className="font-display text-5xl sm:text-6xl lg:text-7xl leading-tight text-white mb-6">
+							O teu bilhete
+							<br />
+							para o melhor
+							<br />
+							de Angola.
+						</h1>
+						<p className="text-white/70 text-lg sm:text-xl max-w-lg mb-8 font-body">
+							Descobre eventos incríveis, compra bilhetes com segurança e recebe
+							tudo por email e WhatsApp.
+						</p>
+						<div className="flex flex-wrap gap-3">
+							<Link
+								to="/events"
+								className="btn bg-white text-brand hover:bg-gray-100 h-13 px-8 text-base font-heading font-700 rounded-xl"
+							>
+								Explorar Eventos
+							</Link>
+							<Link
+								to="/register"
+								className="btn border-2 border-white/30 text-white hover:bg-white/10 h-13 px-8 text-base font-heading font-700 rounded-xl"
+							>
+								Criar Evento
+							</Link>
 						</div>
 					</div>
 				</div>
