@@ -1,8 +1,15 @@
 import { useRef } from 'react'
-import { QRCodeCanvas } from 'qrcode.react'
+import { ReactQRCode } from '@lglab/react-qr-code'
+import type { ReactQRCodeRef } from '@lglab/react-qr-code'
 import { Modal } from '../ui/Modal'
 import { toast } from 'react-hot-toast'
 import { FRONTEND_URL } from '../../lib/env'
+
+const qrStyle = {
+	dataModulesSettings: { style: 'rounded' as const, color: '#f16522' },
+	finderPatternOuterSettings: { style: 'rounded-lg' as const, color: '#f16522' },
+	finderPatternInnerSettings: { style: 'rounded' as const, color: '#f16522' },
+}
 
 interface ShareEventModalProps {
 	open: boolean
@@ -12,8 +19,7 @@ interface ShareEventModalProps {
 }
 
 export function ShareEventModal({ open, onClose, eventTitle, eventSlug }: ShareEventModalProps) {
-	const qrRef = useRef<HTMLCanvasElement>(null)
-	const downloadQrRef = useRef<HTMLCanvasElement>(null)
+	const qrRef = useRef<ReactQRCodeRef>(null)
 	const url = `${FRONTEND_URL}/events/${eventSlug}`
 
 	const copyLink = () => {
@@ -32,15 +38,8 @@ export function ShareEventModal({ open, onClose, eventTitle, eventSlug }: ShareE
 	}
 
 	const downloadQR = () => {
-		const canvas = downloadQrRef.current
-		if (!canvas) return
-		const png = canvas.toDataURL('image/png')
-		const link = document.createElement('a')
-		link.download = `qrcode-${eventSlug}.png`
-		link.href = png
-		document.body.appendChild(link)
-		link.click()
-		document.body.removeChild(link)
+		if (!qrRef.current) return
+		qrRef.current.download({ name: `qrcode-${eventSlug}`, format: 'png', size: 1080 })
 	}
 
 	return (
@@ -139,16 +138,21 @@ export function ShareEventModal({ open, onClose, eventTitle, eventSlug }: ShareE
 					</p>
 					<div className="flex flex-col items-center gap-4">
 						<div className="bg-white rounded-xl p-3 shadow-sm border border-border">
-							<QRCodeCanvas ref={qrRef} value={url} size={160} level="H" includeMargin />
+							<ReactQRCode
+								ref={qrRef}
+								value={url}
+								size={160}
+								level="H"
+								marginSize={4}
+								{...qrStyle}
+								imageSettings={{
+									src: '/tz.png',
+									width: 40,
+									height: 40,
+									excavate: true,
+								}}
+							/>
 						</div>
-						<QRCodeCanvas
-							ref={downloadQrRef}
-							value={url}
-							size={1080}
-							level="H"
-							includeMargin
-							className="hidden"
-						/>
 						<button
 							onClick={downloadQR}
 							className="btn-outline h-10 px-5 text-sm"

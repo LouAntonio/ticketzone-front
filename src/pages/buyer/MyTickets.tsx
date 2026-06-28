@@ -5,7 +5,7 @@ import { Card } from '../../components/ui/Card'
 import { Badge } from '../../components/ui/Badge'
 import { Skeleton } from '../../components/ui/Skeleton'
 import { formatDate } from '../../lib/format'
-import { QRCodeSVG } from 'qrcode.react'
+import { ReactQRCode } from '@lglab/react-qr-code'
 import { useState } from 'react'
 
 const statusVariant: Record<string, 'emerald' | 'gray' | 'red'> = {
@@ -203,7 +203,14 @@ export function MyTickets() {
 									>
 										<div className="w-12 h-12 bg-white rounded-lg border-2 border-border flex items-center justify-center overflow-hidden shrink-0">
 											{qs && (
-												<QRCodeSVG value={qs.qrCode} size={44} level="M" />
+												<ReactQRCode
+													value={qs.qrCode}
+													size={44}
+													level="M"
+													dataModulesSettings={{ style: 'rounded', color: '#f16522' }}
+													finderPatternOuterSettings={{ style: 'rounded-lg', color: '#f16522' }}
+													finderPatternInnerSettings={{ style: 'rounded', color: '#f16522' }}
+												/>
 											)}
 										</div>
 										<div className="flex-1 min-w-0">
@@ -233,11 +240,14 @@ export function MyTickets() {
 													</span>
 												</div>
 											)}
-											<QRCodeSVG
+											<ReactQRCode
 												value={qs.qrCode}
 												size={180}
 												level="H"
-												includeMargin
+												marginSize={4}
+												dataModulesSettings={{ style: 'rounded', color: '#f16522' }}
+												finderPatternOuterSettings={{ style: 'rounded-lg', color: '#f16522' }}
+												finderPatternInnerSettings={{ style: 'rounded', color: '#f16522' }}
 											/>
 											<p className="text-xs text-text-secondary text-center mt-3">
 												Apresenta este código na entrada do evento
