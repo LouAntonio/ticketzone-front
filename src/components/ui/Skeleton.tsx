@@ -74,7 +74,7 @@ export function SkeletonTable({
 export function SkeletonCard({ className = '', variant = 'light' }: SkeletonCardProps) {
 	return (
 		<div
-			className={`rounded-xl border ${variant === 'dark' ? 'border-[#2a2a2a]' : 'border-border'} overflow-hidden ${className}`}
+			className={`card overflow-hidden ${className}`}
 		>
 			<Skeleton variant={variant} className="aspect-[16/10] w-full rounded-none" />
 			<div className="p-4 space-y-3">

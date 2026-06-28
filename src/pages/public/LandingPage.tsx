@@ -20,7 +20,7 @@ export function LandingPage() {
 				className="relative overflow-hidden min-h-screen -mt-16 bg-cover bg-center bg-no-repeat"
 				style={{
 					backgroundImage:
-						"url('https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?w=1600&q=80')",
+						"url('./hero.jpg')",
 				}}
 			>
 				{/* Dark overlay */}

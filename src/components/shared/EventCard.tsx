@@ -27,7 +27,7 @@ export function EventCard({ event }: EventCardProps) {
 	return (
 		<Link
 			to={`/events/${event.slug}`}
-			className="group card overflow-hidden hover:shadow-lg transition-all duration-300 hover:-translate-y-1 fade-in"
+			className="group card overflow-hidden transition-all duration-300 hover:-translate-y-1.5 hover:border-brand/30 fade-in"
 		>
 			<div className="relative aspect-[16/10] overflow-hidden">
 				<img
