@@ -42,8 +42,7 @@ export function LandingPage() {
 							de Angola.
 						</h1>
 						<p className="text-white/70 text-lg sm:text-xl max-w-lg mb-8 font-body">
-							Descobre eventos incríveis, compra bilhetes com segurança e recebe
-							tudo por email e WhatsApp.
+Explora, escolhe, garante o teu lugar. Milhares de eventos à tua espera com compra segura e entrega instantânea.
 						</p>
 						<div className="flex flex-wrap gap-3">
 							<Link
@@ -53,7 +52,7 @@ export function LandingPage() {
 								Explorar Eventos
 							</Link>
 							<Link
-								to="/register"
+								to="/organizer"
 								className="btn border-2 border-white/30 text-white hover:bg-white/10 h-13 px-8 text-base font-heading font-700 rounded-xl"
 							>
 								Criar Evento
