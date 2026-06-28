@@ -19,8 +19,7 @@ export function LandingPage() {
 			<section
 				className="relative overflow-hidden min-h-screen -mt-16 bg-cover bg-center bg-no-repeat"
 				style={{
-					backgroundImage:
-						"url('./hero.jpg')",
+					backgroundImage: "url('./hero.jpg')",
 				}}
 			>
 				{/* Dark overlay */}
@@ -42,7 +41,8 @@ export function LandingPage() {
 							de Angola.
 						</h1>
 						<p className="text-white/70 text-lg sm:text-xl max-w-lg mb-8 font-body">
-Explora, escolhe, garante o teu lugar. Milhares de eventos à tua espera com compra segura e entrega instantânea.
+							Explora, escolhe, garante o teu lugar. Milhares de eventos à tua espera
+							com compra segura e entrega instantânea.
 						</p>
 						<div className="flex flex-wrap gap-3">
 							<Link

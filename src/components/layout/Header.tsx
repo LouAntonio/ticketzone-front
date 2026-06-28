@@ -62,7 +62,9 @@ export function Header() {
 						<Link
 							to="/events"
 							className={`text-sm font-heading font-500 transition-colors ${
-								isTransparent ? 'text-white/80 hover:text-white' : 'text-text-secondary hover:text-text'
+								isTransparent
+									? 'text-white/80 hover:text-white'
+									: 'text-text-secondary hover:text-text'
 							}`}
 						>
 							Eventos
@@ -70,7 +72,9 @@ export function Header() {
 						<Link
 							to="/rentals"
 							className={`text-sm font-heading font-500 transition-colors ${
-								isTransparent ? 'text-white/80 hover:text-white' : 'text-text-secondary hover:text-text'
+								isTransparent
+									? 'text-white/80 hover:text-white'
+									: 'text-text-secondary hover:text-text'
 							}`}
 						>
 							Rent-a-Car
@@ -78,7 +82,9 @@ export function Header() {
 						<Link
 							to="/como-funciona"
 							className={`text-sm font-heading font-500 transition-colors ${
-								isTransparent ? 'text-white/80 hover:text-white' : 'text-text-secondary hover:text-text'
+								isTransparent
+									? 'text-white/80 hover:text-white'
+									: 'text-text-secondary hover:text-text'
 							}`}
 						>
 							Como Funciona
@@ -86,7 +92,9 @@ export function Header() {
 						<Link
 							to="/contacto"
 							className={`text-sm font-heading font-500 transition-colors ${
-								isTransparent ? 'text-white/80 hover:text-white' : 'text-text-secondary hover:text-text'
+								isTransparent
+									? 'text-white/80 hover:text-white'
+									: 'text-text-secondary hover:text-text'
 							}`}
 						>
 							Contacto
@@ -96,7 +104,9 @@ export function Header() {
 								<Link
 									to="/account"
 									className={`text-sm font-heading font-500 transition-colors ${
-										isTransparent ? 'text-white/80 hover:text-white' : 'text-text-secondary hover:text-text'
+										isTransparent
+											? 'text-white/80 hover:text-white'
+											: 'text-text-secondary hover:text-text'
 									}`}
 								>
 									Os Meus Bilhetes
@@ -105,7 +115,9 @@ export function Header() {
 									<Link
 										to="/organizer"
 										className={`text-sm font-heading font-500 transition-colors ${
-											isTransparent ? 'text-white hover:text-white/80' : 'text-brand hover:text-brand-dark'
+											isTransparent
+												? 'text-white hover:text-white/80'
+												: 'text-brand hover:text-brand-dark'
 										}`}
 									>
 										Painel Organizador
@@ -124,7 +136,9 @@ export function Header() {
 									<button
 										onClick={() => setMenuOpen(!menuOpen)}
 										className={`flex items-center gap-2 p-2 rounded-lg transition-colors ${
-											isTransparent ? 'text-white hover:bg-white/10' : 'hover:bg-gray-100'
+											isTransparent
+												? 'text-white hover:bg-white/10'
+												: 'hover:bg-gray-100'
 										}`}
 									>
 										<img
@@ -278,7 +292,9 @@ export function Header() {
 						{/* Hamburger */}
 						<button
 							className={`md:hidden relative z-50 p-2 transition-colors ${
-								isTransparent ? 'text-white/80 hover:text-white' : 'text-text-secondary hover:text-text'
+								isTransparent
+									? 'text-white/80 hover:text-white'
+									: 'text-text-secondary hover:text-text'
 							}`}
 							onClick={() => setMobileOpen(!mobileOpen)}
 							aria-label={mobileOpen ? 'Fechar menu' : 'Abrir menu'}

@@ -73,9 +73,7 @@ export function SkeletonTable({
 
 export function SkeletonCard({ className = '', variant = 'light' }: SkeletonCardProps) {
 	return (
-		<div
-			className={`card overflow-hidden ${className}`}
-		>
+		<div className={`card overflow-hidden ${className}`}>
 			<Skeleton variant={variant} className="aspect-[16/10] w-full rounded-none" />
 			<div className="p-4 space-y-3">
 				<Skeleton variant={variant} className="h-4 w-3/4" />
