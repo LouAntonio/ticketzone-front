@@ -51,19 +51,19 @@ const faqData: FAQCategory[] = [
 		items: [
 			{
 				question: 'Como comprar bilhetes na TicketZone?',
-				answer: 'Navega até ao evento desejado, seleciona o tipo e quantidade de bilhetes, clica em "Comprar" e segue o processo de checkout. Escolhe o teu método de pagamento preferido e, após a confirmação, receberás os bilhetes no teu email e WhatsApp automaticamente.',
+				answer: 'Navega até ao evento desejado, seleciona o tipo e quantidade de bilhetes, clica em "Comprar" e segue o processo de checkout. Escolhe o teu método de pagamento preferido e, após a confirmação, os bilhetes ficam disponíveis na tua conta TicketZone para apresentar na entrada do evento.',
 			},
 			{
 				question: 'Posso cancelar ou pedir reembolso de um bilhete?',
 				answer: 'A política de cancelamento varia conforme o organizador do evento. Alguns eventos permitem cancelamento até 48 horas antes com reembolso parcial. Recomendamos verificar os termos específicos de cada evento antes de finalizar a compra. Para pedidos de reembolso, contacta o nosso suporte.',
 			},
 			{
-				question: 'Os bilhetes são enviados para o meu email?',
-				answer: 'Sim! Após a confirmação do pagamento, os teus bilhetes são enviados automaticamente para o email que usaste no registo. Também podes aceder aos teus bilhetes na secção "Os Meus Bilhetes" da tua conta.',
+				question: 'Onde posso ver os meus bilhetes?',
+				answer: 'Após a confirmação do pagamento, os teus bilhetes ficam disponíveis na secção "Os Meus Bilhetes" da tua conta TicketZone. No dia do evento, apresenta o QR Code diretamente da plataforma na entrada.',
 			},
 			{
-				question: 'Como recebo os meus bilhetes via WhatsApp?',
-				answer: 'Durante o checkout, podes optar por receber os bilhetes também por WhatsApp. Basta fornecer o teu número de telefone com o código do país (+244 para Angola) e os bilhetes serão enviados automaticamente após a confirmação do pagamento.',
+				question: 'Preciso de imprimir os bilhetes?',
+				answer: 'Não! Os teus bilhetes são 100% digitais e ficam armazenados na tua conta TicketZone. No dia do evento, basta abrires a plataforma no teu telemóvel e apresentares o QR Code na entrada. Não precisas de imprimir nada.',
 			},
 		],
 	},

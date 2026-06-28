@@ -523,8 +523,8 @@ export function EventDetail() {
 									{event.salesPaused
 										? 'Vendas Pausadas'
 										: user
-											? 'Comprar Bilhetes'
-											: 'Entrar para Comprar'}
+									? 'Comprar'
+										: 'Entrar para Comprar'}
 								</Button>
 							</div>
 						</div>
