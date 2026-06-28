@@ -8,11 +8,13 @@ import { Button } from '../../components/ui/Button'
 import { Badge } from '../../components/ui/Badge'
 import { Skeleton, SkeletonText } from '../../components/ui/Skeleton'
 import { formatDate, formatKwanza, getPeriodLabel } from '../../lib/format'
+import { ShareEventModal } from '../../components/shared/ShareEventModal'
 
 export function EventDetail() {
 	const { slug } = useParams<{ slug: string }>()
 	const { data, isLoading } = useEvent(slug!)
 	const navigate = useNavigate()
+	const [shareOpen, setShareOpen] = useState(false)
 	const user = useAuthStore((s) => s.user)
 	const { addItem, addAddon, setEvent } = useCartStore()
 	const [selectedTickets, setSelectedTickets] = useState<Record<string, number>>({})
@@ -172,6 +174,29 @@ export function EventDetail() {
 					className="w-full h-full object-cover"
 				/>
 				<div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
+				<button
+					onClick={() => setShareOpen(true)}
+					className="absolute top-4 right-4 sm:top-6 sm:right-6 w-10 h-10 rounded-full bg-white/10 hover:bg-white/25 backdrop-blur-sm flex items-center justify-center transition-all duration-200 z-10 group"
+					aria-label="Partilhar evento"
+				>
+					<svg
+						width="18"
+						height="18"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="white"
+						strokeWidth="2"
+						strokeLinecap="round"
+						strokeLinejoin="round"
+						className="group-hover:scale-110 transition-transform"
+					>
+						<circle cx="18" cy="5" r="3" />
+						<circle cx="6" cy="12" r="3" />
+						<circle cx="18" cy="19" r="3" />
+						<line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
+						<line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+					</svg>
+				</button>
 				<div className="absolute bottom-0 left-0 right-0 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8">
 					<div className="flex flex-wrap gap-2">
 						{event.eventCategories?.map((ec) => {
@@ -514,6 +539,13 @@ export function EventDetail() {
 			</div>
 
 			{/* Lightbox */}
+			<ShareEventModal
+				open={shareOpen}
+				onClose={() => setShareOpen(false)}
+				eventTitle={event.title}
+				eventSlug={slug!}
+			/>
+
 			{lightboxIndex !== null && gallery.length > 0 && (
 				<div
 					className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center"
