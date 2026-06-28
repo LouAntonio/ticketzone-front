@@ -11,14 +11,12 @@ function parseFiltersFromParams(params: URLSearchParams): Partial<EventFilters> 
 	const filters: Partial<EventFilters> = {}
 	const search = params.get('search')
 	const province = params.get('province')
-	const period = params.get('period')
 	const featured = params.get('featured')
 	const page = params.get('page')
 	const categoryIds = params.getAll('categoryIds')
 
 	if (search) filters.search = search
 	if (province) filters.province = province
-	if (period) filters.period = period as EventFilters['period']
 	if (featured === 'true') filters.featured = true
 	if (page) filters.page = Number(page)
 	if (categoryIds.length > 0) filters.categoryIds = categoryIds
@@ -41,7 +39,6 @@ function filtersToParams(filters: Partial<EventFilters>): URLSearchParams {
 	const params = new URLSearchParams()
 	if (filters.search) params.set('search', filters.search)
 	if (filters.province) params.set('province', filters.province)
-	if (filters.period) params.set('period', filters.period)
 	if (filters.featured) params.set('featured', 'true')
 	if (filters.page && filters.page > 1) params.set('page', String(filters.page))
 	if (filters.categoryIds?.length) {
@@ -110,7 +107,6 @@ export function EventCatalog() {
 	const hasActiveFilters =
 		!!appliedFilters.search ||
 		!!appliedFilters.province ||
-		!!appliedFilters.period ||
 		!!appliedFilters.featured ||
 		(appliedFilters.categoryIds?.length ?? 0) > 0
 
