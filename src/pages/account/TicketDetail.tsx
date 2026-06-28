@@ -141,8 +141,14 @@ export function TicketDetailPage() {
 									level="H"
 									marginSize={4}
 									dataModulesSettings={{ style: 'rounded', color: '#f16522' }}
-									finderPatternOuterSettings={{ style: 'rounded-lg', color: '#f16522' }}
-									finderPatternInnerSettings={{ style: 'rounded', color: '#f16522' }}
+									finderPatternOuterSettings={{
+										style: 'rounded-lg',
+										color: '#f16522',
+									}}
+									finderPatternInnerSettings={{
+										style: 'rounded',
+										color: '#f16522',
+									}}
 								/>
 							</div>
 						</div>

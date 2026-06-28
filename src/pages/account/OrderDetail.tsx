@@ -273,13 +273,22 @@ export function OrderDetailPage() {
 								>
 									<div className="w-14 h-14 shrink-0 bg-white rounded-lg border-2 border-warm-border flex items-center justify-center overflow-hidden">
 										<ReactQRCode
-													value={ticket.qrCode}
-													size={50}
-													level="M"
-													dataModulesSettings={{ style: 'rounded', color: '#f16522' }}
-													finderPatternOuterSettings={{ style: 'rounded-lg', color: '#f16522' }}
-													finderPatternInnerSettings={{ style: 'rounded', color: '#f16522' }}
-												/>
+											value={ticket.qrCode}
+											size={50}
+											level="M"
+											dataModulesSettings={{
+												style: 'rounded',
+												color: '#f16522',
+											}}
+											finderPatternOuterSettings={{
+												style: 'rounded-lg',
+												color: '#f16522',
+											}}
+											finderPatternInnerSettings={{
+												style: 'rounded',
+												color: '#f16522',
+											}}
+										/>
 									</div>
 									<div className="flex-1 min-w-0">
 										<p className="text-sm font-heading font-600 text-warm-text">
@@ -320,13 +329,22 @@ export function OrderDetailPage() {
 								>
 									<div className="w-14 h-14 shrink-0 bg-white rounded-lg border-2 border-warm-border flex items-center justify-center overflow-hidden">
 										<ReactQRCode
-													value={ai.qrSecret}
-													size={50}
-													level="M"
-													dataModulesSettings={{ style: 'rounded', color: '#f16522' }}
-													finderPatternOuterSettings={{ style: 'rounded-lg', color: '#f16522' }}
-													finderPatternInnerSettings={{ style: 'rounded', color: '#f16522' }}
-												/>
+											value={ai.qrSecret}
+											size={50}
+											level="M"
+											dataModulesSettings={{
+												style: 'rounded',
+												color: '#f16522',
+											}}
+											finderPatternOuterSettings={{
+												style: 'rounded-lg',
+												color: '#f16522',
+											}}
+											finderPatternInnerSettings={{
+												style: 'rounded',
+												color: '#f16522',
+											}}
+										/>
 									</div>
 									<div className="flex-1 min-w-0">
 										<p className="text-sm font-heading font-600 text-warm-text">

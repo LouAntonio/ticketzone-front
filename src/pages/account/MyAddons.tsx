@@ -187,9 +187,18 @@ export function MyAddonsPage() {
 													value={qs.qrCode}
 													size={50}
 													level="M"
-													dataModulesSettings={{ style: 'rounded', color: '#f16522' }}
-													finderPatternOuterSettings={{ style: 'rounded-lg', color: '#f16522' }}
-													finderPatternInnerSettings={{ style: 'rounded', color: '#f16522' }}
+													dataModulesSettings={{
+														style: 'rounded',
+														color: '#f16522',
+													}}
+													finderPatternOuterSettings={{
+														style: 'rounded-lg',
+														color: '#f16522',
+													}}
+													finderPatternInnerSettings={{
+														style: 'rounded',
+														color: '#f16522',
+													}}
 												/>
 											)}
 										</div>
@@ -231,9 +240,18 @@ export function MyAddonsPage() {
 														value={qs.qrCode}
 														size={44}
 														level="M"
-														dataModulesSettings={{ style: 'rounded', color: '#f16522' }}
-														finderPatternOuterSettings={{ style: 'rounded-lg', color: '#f16522' }}
-														finderPatternInnerSettings={{ style: 'rounded', color: '#f16522' }}
+														dataModulesSettings={{
+															style: 'rounded',
+															color: '#f16522',
+														}}
+														finderPatternOuterSettings={{
+															style: 'rounded-lg',
+															color: '#f16522',
+														}}
+														finderPatternInnerSettings={{
+															style: 'rounded',
+															color: '#f16522',
+														}}
 													/>
 												)}
 											</div>
@@ -269,9 +287,18 @@ export function MyAddonsPage() {
 													size={180}
 													level="H"
 													marginSize={4}
-													dataModulesSettings={{ style: 'rounded', color: '#f16522' }}
-													finderPatternOuterSettings={{ style: 'rounded-lg', color: '#f16522' }}
-													finderPatternInnerSettings={{ style: 'rounded', color: '#f16522' }}
+													dataModulesSettings={{
+														style: 'rounded',
+														color: '#f16522',
+													}}
+													finderPatternOuterSettings={{
+														style: 'rounded-lg',
+														color: '#f16522',
+													}}
+													finderPatternInnerSettings={{
+														style: 'rounded',
+														color: '#f16522',
+													}}
 												/>
 												<p className="text-xs text-text-secondary text-center mt-3">
 													Apresenta este código no evento para validar o

@@ -34,7 +34,11 @@ export function ShareEventModal({ open, onClose, eventTitle, eventSlug }: ShareE
 
 	const shareFacebook = () => {
 		const u = encodeURIComponent(url)
-		window.open(`https://www.facebook.com/sharer/sharer.php?u=${u}`, '_blank', 'noopener,noreferrer')
+		window.open(
+			`https://www.facebook.com/sharer/sharer.php?u=${u}`,
+			'_blank',
+			'noopener,noreferrer',
+		)
 	}
 
 	const downloadQR = () => {
@@ -62,7 +66,9 @@ export function ShareEventModal({ open, onClose, eventTitle, eventSlug }: ShareE
 						<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
 						<path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
 					</svg>
-					<p className="text-xs font-mono text-text-secondary truncate select-all">{url}</p>
+					<p className="text-xs font-mono text-text-secondary truncate select-all">
+						{url}
+					</p>
 				</div>
 
 				<div className="grid grid-cols-3 gap-3">
@@ -153,10 +159,7 @@ export function ShareEventModal({ open, onClose, eventTitle, eventSlug }: ShareE
 								}}
 							/>
 						</div>
-						<button
-							onClick={downloadQR}
-							className="btn-outline h-10 px-5 text-sm"
-						>
+						<button onClick={downloadQR} className="btn-outline h-10 px-5 text-sm">
 							<svg
 								width="16"
 								height="16"
