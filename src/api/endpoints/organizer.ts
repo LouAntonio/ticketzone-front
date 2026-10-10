@@ -1,7 +1,7 @@
 import { api } from '../client'
 import type {
 	Event,
-	EventFormData,
+	EventApiPayload,
 	SalesData,
 	EventSalesData,
 	AttendeesData,
@@ -41,13 +41,13 @@ export const organizerApi = {
 
 	events: () => api.get<{ events: Event[] }>('/organizer/events').then((r) => r.data),
 
-	createEvent: (data: EventFormData) =>
+	createEvent: (data: EventApiPayload) =>
 		api.post<{ event: Event }>('/organizer/events', data).then((r) => r.data),
 
 	getEvent: (id: string) =>
 		api.get<{ event: Event }>(`/organizer/events/${id}`).then((r) => r.data),
 
-	updateEvent: (id: string, data: Partial<EventFormData>) =>
+	updateEvent: (id: string, data: Partial<EventApiPayload>) =>
 		api.patch<{ event: Event }>(`/organizer/events/${id}`, data).then((r) => r.data),
 
 	deleteEvent: (id: string) => api.delete(`/organizer/events/${id}`).then((r) => r.data),

@@ -1,4 +1,4 @@
-import type { Event, EventCategory, EventPeriod, EventStatus } from '../types/event'
+import type { Event, EventCategory, EventFormat, EventPeriod, EventStatus } from '../types/event'
 import type { Car, Transmission } from '../types/rental'
 
 export interface RawEvent {
@@ -8,6 +8,14 @@ export interface RawEvent {
 	description: string
 	province: string
 	location: string
+	venue?: string | null
+	address?: string | null
+	language?: string | null
+	format?: string | null
+	minAge?: number | null
+	doorsOpenAt?: string | null
+	keywords?: string[] | null
+	attributes?: Record<string, unknown> | null
 	bannerUrl: string | null
 	cloudinaryId: string | null
 	gallery?: Array<{ url: string; idcloudinary: string }> | null
@@ -92,8 +100,8 @@ export function mapEvent(raw: RawEvent): Event {
 		date: raw.startDate,
 		time: formatTime(startDate),
 		period: inferPeriod(startDate),
-		venue: raw.location,
-		address: raw.location,
+		venue: raw.venue ?? raw.location,
+		address: raw.address ?? raw.location,
 		organizerId: raw.promoterId,
 		organizerName: raw.promoter?.companyName ?? raw.promoter?.user?.name ?? '',
 		ticketTypes: tts,
@@ -102,6 +110,12 @@ export function mapEvent(raw: RawEvent): Event {
 		bannerUrl: raw.bannerUrl,
 		startDate: raw.startDate,
 		endDate: raw.endDate,
+		format: (raw.format as EventFormat | null) ?? null,
+		language: raw.language ?? null,
+		minAge: raw.minAge ?? null,
+		doorsOpenAt: raw.doorsOpenAt ?? null,
+		keywords: raw.keywords ?? [],
+		attributes: raw.attributes ?? {},
 		eventCategories: (raw.eventCategories ?? []).map((ec) => ({
 			eventId: ec.eventId ?? '',
 			categoryId: ec.categoryId ?? '',

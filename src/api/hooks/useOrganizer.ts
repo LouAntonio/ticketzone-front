@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { organizerApi } from '../endpoints/organizer'
-import type { EventFormData } from '../../types/event'
+import type { EventApiPayload } from '../../types/event'
 import { toast } from 'react-hot-toast'
 
 export function useOrganizerSales() {
@@ -57,7 +57,7 @@ export function useOrganizerEvent(id: string) {
 export function useCreateOrganizerEvent() {
 	const qc = useQueryClient()
 	return useMutation({
-		mutationFn: (data: EventFormData) => organizerApi.createEvent(data),
+		mutationFn: (data: EventApiPayload) => organizerApi.createEvent(data),
 		onSuccess: () => {
 			toast.success('Evento criado com sucesso')
 			qc.invalidateQueries({ queryKey: ['organizer', 'events'] })
@@ -71,7 +71,7 @@ export function useCreateOrganizerEvent() {
 export function useUpdateOrganizerEvent(id: string) {
 	const qc = useQueryClient()
 	return useMutation({
-		mutationFn: (data: Partial<EventFormData>) => organizerApi.updateEvent(id, data),
+		mutationFn: (data: Partial<EventApiPayload>) => organizerApi.updateEvent(id, data),
 		onSuccess: () => {
 			toast.success('Evento atualizado com sucesso')
 			qc.invalidateQueries({ queryKey: ['organizer', 'events'] })

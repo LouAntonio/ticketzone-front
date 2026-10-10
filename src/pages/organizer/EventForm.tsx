@@ -22,13 +22,47 @@ import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
 import { Card } from '../../components/ui/Card'
 import { Skeleton } from '../../components/ui/Skeleton'
-import { PROVINCES } from '../../lib/constants'
+import { PROVINCES, AGE_RESTRICTIONS, EVENT_FORMATS, EVENT_LANGUAGES } from '../../lib/constants'
 import type { EventFormData, DocFile, Addon } from '../../types/event'
 
 interface Category {
 	id: string
 	name: string
 	slug: string
+}
+
+/**
+ * Converte o texto livre do campo de atributos num objecto chave/valor.
+ *
+ * Aceita `chave: valor` (ou `chave = valor`) por linha. Linhas sem separador
+ * são ignoradas, para não criar chaves vazias por engano.
+ */
+function parseAttributes(text: string): Record<string, string> {
+	const result: Record<string, string> = {}
+	for (const line of text.split('\n')) {
+		const match = line.match(/^\s*([^:=]+)\s*[:=]\s*(.+)$/)
+		if (!match) continue
+		const key = match[1].trim()
+		const value = match[2].trim()
+		if (key && value) result[key] = value
+	}
+	return result
+}
+
+/** Inverse de `parseAttributes`: `{ bar: 'aberto' }` → `bar: aberto`. */
+function serialiseAttributes(attributes?: Record<string, unknown> | null): string {
+	if (!attributes) return ''
+	return Object.entries(attributes)
+		.map(([key, value]) => `${key}: ${String(value)}`)
+		.join('\n')
+}
+
+/** Converte a lista de tags separada por vírgulas num array limpo. */
+function parseKeywords(text: string): string[] {
+	return text
+		.split(',')
+		.map((keyword) => keyword.trim())
+		.filter(Boolean)
 }
 
 const emptyBatch = {
@@ -70,6 +104,14 @@ export function EventForm() {
 		description: '',
 		province: 'Luanda',
 		location: '',
+		venue: '',
+		address: '',
+		language: 'pt',
+		format: 'IN_PERSON',
+		minAge: '',
+		doorsOpenAt: '',
+		keywords: '',
+		attributes: '',
 		bannerUrl: '',
 		cloudinaryId: '',
 		gallery: [],
@@ -119,6 +161,14 @@ export function EventForm() {
 			description: ev.description,
 			province: ev.province,
 			location: ev.location,
+			venue: ev.venue ?? '',
+			address: ev.address ?? '',
+			language: ev.language ?? 'pt',
+			format: ev.format ?? 'IN_PERSON',
+			minAge: ev.minAge != null ? String(ev.minAge) : '',
+			doorsOpenAt: ev.doorsOpenAt ? ev.doorsOpenAt.slice(0, 16) : '',
+			keywords: (ev.keywords ?? []).join(', '),
+			attributes: serialiseAttributes(ev.attributes),
 			bannerUrl: ev.bannerUrl ?? '',
 			cloudinaryId: ev.cloudinaryId ?? '',
 			gallery: ev.gallery ?? [],
@@ -351,6 +401,15 @@ export function EventForm() {
 				gallery,
 				startDate: new Date(form.startDate).toISOString(),
 				endDate: new Date(form.endDate).toISOString(),
+				// O form guarda texto livre; a API espera os tipos finais.
+				venue: form.venue.trim() || undefined,
+				address: form.address.trim() || undefined,
+				minAge: form.minAge === '' ? null : Number(form.minAge),
+				doorsOpenAt: form.doorsOpenAt
+					? new Date(form.doorsOpenAt).toISOString()
+					: undefined,
+				keywords: parseKeywords(form.keywords),
+				attributes: parseAttributes(form.attributes),
 				batches: validBatches,
 			}
 
@@ -405,9 +464,10 @@ export function EventForm() {
 					...toCreate.map((data) => createBatch.mutateAsync(data)),
 				])
 			} else {
-				// eslint-disable-next-line @typescript-eslint/no-unused-vars
+				// `addons` são geridos por endpoints próprios (CRUD separado).
 				const { addons, ...createPayload } = payload
-				await createEvent.mutateAsync(createPayload as EventFormData)
+				void addons
+				await createEvent.mutateAsync(createPayload)
 			}
 			navigate('/organizer/events')
 		} catch {
@@ -665,6 +725,117 @@ export function EventForm() {
 							className="sm:col-span-2"
 							required
 						/>
+					</div>
+				</Card>
+
+				{/* Detalhes adicionais */}
+				<Card>
+					<h3 className="font-heading font-600 text-base mb-4">Detalhes</h3>
+					<div className="grid sm:grid-cols-2 gap-4">
+						<div>
+							<label className="text-xs text-text-secondary block mb-1.5 font-heading font-600">
+								Formato
+							</label>
+							<select
+								className="input-field text-sm"
+								value={form.format}
+								onChange={(e) =>
+									updateField('format', e.target.value as EventFormData['format'])
+								}
+							>
+								{EVENT_FORMATS.map((option) => (
+									<option key={option.value} value={option.value}>
+										{option.label}
+									</option>
+								))}
+							</select>
+						</div>
+
+						<div>
+							<label className="text-xs text-text-secondary block mb-1.5 font-heading font-600">
+								Classificação etária
+							</label>
+							<select
+								className="input-field text-sm"
+								value={form.minAge}
+								onChange={(e) => updateField('minAge', e.target.value)}
+							>
+								{AGE_RESTRICTIONS.map((option) => (
+									<option key={option.value} value={option.value}>
+										{option.label}
+									</option>
+								))}
+							</select>
+						</div>
+
+						<Input
+							label="Nome do local"
+							placeholder="Ex: Palácio de Vidros"
+							value={form.venue}
+							onChange={(e) => updateField('venue', e.target.value)}
+						/>
+
+						<Input
+							label="Morada"
+							placeholder="Ex: Av. 4 de Fevereiro, Luanda"
+							value={form.address}
+							onChange={(e) => updateField('address', e.target.value)}
+						/>
+
+						<div>
+							<label className="text-xs text-text-secondary block mb-1.5 font-heading font-600">
+								Idioma
+							</label>
+							<select
+								className="input-field text-sm"
+								value={form.language}
+								onChange={(e) => updateField('language', e.target.value)}
+							>
+								{EVENT_LANGUAGES.map((option) => (
+									<option key={option.value} value={option.value}>
+										{option.label}
+									</option>
+								))}
+							</select>
+						</div>
+
+						<div>
+							<label className="text-xs text-text-secondary block mb-1.5 font-heading font-600">
+								Abertura de portas
+							</label>
+							<input
+								type="datetime-local"
+								className="input-field text-sm"
+								value={form.doorsOpenAt}
+								onChange={(e) => updateField('doorsOpenAt', e.target.value)}
+							/>
+						</div>
+
+						<Input
+							label="Tags"
+							placeholder="Separadas por vírgula: kizomba, luanda, ano-novo"
+							value={form.keywords}
+							onChange={(e) => updateField('keywords', e.target.value)}
+							className="sm:col-span-2"
+						/>
+
+						<div className="sm:col-span-2">
+							<label className="text-xs text-text-secondary block mb-1.5 font-heading font-600">
+								Características
+							</label>
+							<textarea
+								rows={3}
+								className="input-field text-sm"
+								placeholder={
+									'Uma por linha, no formato chave: valor\nEx:\nbar: aberto\nparque: gratuito'
+								}
+								value={form.attributes}
+								onChange={(e) => updateField('attributes', e.target.value)}
+							/>
+							<p className="text-xs text-text-secondary mt-1.5">
+								Mostradas aos compradores na página do evento.
+							</p>
+						</div>
 					</div>
 				</Card>
 

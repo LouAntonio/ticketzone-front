@@ -8,6 +8,7 @@ import { Button } from '../../components/ui/Button'
 import { Badge } from '../../components/ui/Badge'
 import { Skeleton, SkeletonText } from '../../components/ui/Skeleton'
 import { formatDate, formatKwanza, getPeriodLabel } from '../../lib/format'
+import { EVENT_FORMAT_LABELS, EVENT_LANGUAGE_LABELS } from '../../lib/constants'
 import { ShareEventModal } from '../../components/shared/ShareEventModal'
 
 export function EventDetail() {
@@ -95,6 +96,32 @@ export function EventDetail() {
 	const tickets = event.ticketTypes ?? []
 	const addons = event.addons ?? []
 	const totalSelected = Object.values(selectedTickets).reduce((sum, q) => sum + q, 0)
+
+	/**
+	 * Atributos livres do evento, já normalizados para uma lista de pares.
+	 * Só entram valores preenchidos — um atributo vazio não é informação útil.
+	 */
+	const attributeEntries = Object.entries(event.attributes ?? {})
+		.filter(([, value]) => value !== null && value !== undefined && String(value).trim() !== '')
+		.map(([key, value]) => [key.trim(), String(value).trim()] as const)
+
+	/** Badges condicionais: só mostra o que o organizador definiu. */
+	const detailBadges: Array<{ label: string; tone: 'brand' | 'gray' | 'amber' }> = []
+	if (event.minAge != null) {
+		detailBadges.push({ label: `${event.minAge}+ anos`, tone: 'amber' })
+	}
+	if (event.format && event.format !== 'IN_PERSON') {
+		detailBadges.push({
+			label: EVENT_FORMAT_LABELS[event.format] ?? event.format,
+			tone: 'brand',
+		})
+	}
+	if (event.language) {
+		detailBadges.push({
+			label: EVENT_LANGUAGE_LABELS[event.language] ?? event.language,
+			tone: 'gray',
+		})
+	}
 
 	const totalPrice =
 		tickets.reduce((sum, tt) => sum + (selectedTickets[tt.id] ?? 0) * tt.price, 0) +
@@ -224,6 +251,25 @@ export function EventDetail() {
 					<h1 className="font-display text-3xl sm:text-4xl lg:text-5xl text-white mt-2">
 						{event.title}
 					</h1>
+
+					{detailBadges.length > 0 && (
+						<div className="flex flex-wrap gap-2 mt-3">
+							{detailBadges.map((badge) => (
+								<span
+									key={badge.label}
+									className={`px-3 py-1 rounded-full text-xs font-heading font-600 backdrop-blur-sm ${
+										badge.tone === 'amber'
+											? 'bg-amber-500/90 text-white'
+											: badge.tone === 'brand'
+												? 'bg-brand text-white'
+												: 'bg-white/20 text-white'
+									}`}
+								>
+									{badge.label}
+								</span>
+							))}
+						</div>
+					)}
 				</div>
 			</div>
 
@@ -250,31 +296,43 @@ export function EventDetail() {
 									value: event.venue,
 								},
 								{
+									icon: 'M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z',
+									label: 'Portas abrem',
+									value: event.doorsOpenAt
+										? new Date(event.doorsOpenAt).toLocaleTimeString('pt-AO', {
+												hour: '2-digit',
+												minute: '2-digit',
+											})
+										: null,
+								},
+								{
 									icon: 'M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7',
 									label: 'Província',
 									value: event.province,
 								},
-							].map((item) => (
-								<div key={item.label} className="card p-4">
-									<svg
-										width="18"
-										height="18"
-										viewBox="0 0 24 24"
-										fill="none"
-										stroke="currentColor"
-										strokeWidth="1.5"
-										strokeLinecap="round"
-										strokeLinejoin="round"
-										className="text-brand mb-2"
-									>
-										<path d={item.icon} />
-									</svg>
-									<p className="text-xs text-text-secondary">{item.label}</p>
-									<p className="text-sm font-heading font-600 mt-0.5">
-										{item.value}
-									</p>
-								</div>
-							))}
+							]
+								.filter((item) => Boolean(item.value))
+								.map((item) => (
+									<div key={item.label} className="card p-4">
+										<svg
+											width="18"
+											height="18"
+											viewBox="0 0 24 24"
+											fill="none"
+											stroke="currentColor"
+											strokeWidth="1.5"
+											strokeLinecap="round"
+											strokeLinejoin="round"
+											className="text-brand mb-2"
+										>
+											<path d={item.icon} />
+										</svg>
+										<p className="text-xs text-text-secondary">{item.label}</p>
+										<p className="text-sm font-heading font-600 mt-0.5">
+											{item.value}
+										</p>
+									</div>
+								))}
 						</div>
 
 						{/* Description */}
@@ -284,6 +342,30 @@ export function EventDetail() {
 								{event.description}
 							</p>
 						</div>
+
+						{/* Características */}
+						{attributeEntries.length > 0 && (
+							<div className="slide-up">
+								<h2 className="font-heading font-700 text-xl mb-3">
+									Características
+								</h2>
+								<dl className="grid sm:grid-cols-2 gap-x-6 gap-y-2">
+									{attributeEntries.map(([key, value]) => (
+										<div
+											key={key}
+											className="flex items-baseline justify-between gap-3 border-b border-border pb-2"
+										>
+											<dt className="text-sm text-text-secondary capitalize">
+												{key}
+											</dt>
+											<dd className="text-sm font-heading font-600">
+												{value}
+											</dd>
+										</div>
+									))}
+								</dl>
+							</div>
+						)}
 
 						{/* Add-ons */}
 						{addons.length > 0 && (

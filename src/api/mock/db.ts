@@ -1,5 +1,5 @@
 ﻿import type { User, OrganizerProfile } from '../../types/auth'
-import type { Event } from '../../types/event'
+import type { Event as TicketzoneEvent } from '../../types/event'
 import type { Order as MockOrderType } from '../../types/order'
 
 /**
@@ -23,7 +23,7 @@ const today = new Date()
 export interface MockDB {
 	users: User[]
 	organizers: OrganizerProfile[]
-	events: Event[]
+	events: TicketzoneEvent[]
 	orders: MockOrder[]
 	tickets: Ticket[]
 	cars: Car[]
@@ -178,6 +178,16 @@ export const db: MockDB = {
 			period: 'night',
 			venue: 'Estádio 11 de Novembro',
 			address: 'Via Expressa, Luanda',
+			format: 'IN_PERSON',
+			minAge: 16,
+			language: 'pt',
+			doorsOpenAt: new Date(today.getTime() + 30 * 86400000).toISOString(),
+			keywords: ['festival', 'kizomba', 'luanda'],
+			attributes: {
+				bar: 'aberto no recinto',
+				parque: 'gratuito',
+				zonas: 'Pavilhão Principal, Palco B',
+			},
 			organizerId: 'org-1',
 			organizerName: 'Mendes Produções',
 			ticketTypes: [
@@ -249,6 +259,15 @@ export const db: MockDB = {
 			period: 'night',
 			venue: 'Teatro Nacional',
 			address: 'Rua 17 de Setembro, Luanda',
+			format: 'IN_PERSON',
+			minAge: 12,
+			language: 'pt',
+			keywords: ['teatro', 'drama'],
+			attributes: {
+				duração: '2h30',
+				intervalo: '20 minutos',
+				legendas: 'não disponíveis',
+			},
 			organizerId: 'org-1',
 			organizerName: 'Mendes Produções',
 			ticketTypes: [
@@ -292,6 +311,14 @@ export const db: MockDB = {
 			period: 'morning',
 			venue: 'Centro de Convenções do Huambo',
 			address: 'Bairro da Liberdade, Huambo',
+			format: 'HYBRID',
+			minAge: null,
+			language: 'pt',
+			keywords: ['workshop', 'empreendedorismo'],
+			attributes: {
+				certificado: 'incluído',
+				transmissão: 'Zoom com gravação',
+			},
 			organizerId: 'org-1',
 			organizerName: 'Mendes Produções',
 			ticketTypes: [
@@ -406,7 +433,10 @@ export const db: MockDB = {
 			status: 'PUBLISHED',
 			createdAt: '2025-04-20T10:00:00Z',
 		},
-	] as Event[],
+		// Os eventos pré-seeded usam o formato legado (ver nota acima) e só
+		// ficam completos depois de passarem por `mapEvent()`, que preenche os
+		// campos obrigatórios com fallbacks. O cast reflecte essa geometria.
+	] as unknown as TicketzoneEvent[],
 
 	orders: [
 		{

@@ -4,6 +4,9 @@ export type EventCategory = 'conference' | 'workshop' | 'theatre' | 'festival' |
 
 export type EventPeriod = 'morning' | 'afternoon' | 'night'
 
+/** Formato de realizacao de um evento. */
+export type EventFormat = 'IN_PERSON' | 'ONLINE' | 'HYBRID'
+
 export interface TicketType {
 	id: string
 	name: string
@@ -62,6 +65,14 @@ export interface Event {
 	description: string
 	province: string
 	location: string
+	venue?: string | null
+	address?: string | null
+	language?: string | null
+	format?: EventFormat | null
+	minAge?: number | null
+	doorsOpenAt?: string | null
+	keywords?: string[]
+	attributes?: Record<string, unknown> | null
 	bannerUrl: string | null
 	cloudinaryId: string | null
 	gallery?: DocFile[]
@@ -92,8 +103,6 @@ export interface Event {
 	date?: string
 	time?: string
 	period?: EventPeriod
-	venue?: string
-	address?: string
 	organizerId?: string
 	organizerName?: string
 	ticketTypes?: TicketType[]
@@ -104,6 +113,14 @@ export interface EventFormData {
 	description: string
 	province: string
 	location: string
+	venue: string
+	address: string
+	language: string
+	format: EventFormat
+	minAge: string
+	doorsOpenAt: string
+	keywords: string
+	attributes: string
 	bannerUrl: string
 	cloudinaryId: string
 	gallery?: DocFile[]
@@ -118,6 +135,32 @@ export interface EventFormData {
 		groupSize: number
 	}>
 	addons: Addon[]
+}
+
+/**
+ * Payload que o `EventForm` envia à API.
+ *
+ * Distinto de `EventFormData`: o formulário guarda texto livre (para os
+ * selects e inputs) e converte para os tipos finais no momento do envio.
+ */
+export type EventApiPayload = Omit<
+	EventFormData,
+	'minAge' | 'keywords' | 'attributes' | 'doorsOpenAt' | 'venue' | 'address' | 'addons'
+> & {
+	venue?: string
+	address?: string
+	/** `null` significa "sem restrição etária". */
+	minAge: number | null
+	doorsOpenAt?: string
+	keywords: string[]
+	attributes: Record<string, string>
+	batches: Array<{
+		name: string
+		price: number
+		capacity: number
+		isGroupTicket: boolean
+		groupSize: number
+	}>
 }
 
 export interface EventFilters {
