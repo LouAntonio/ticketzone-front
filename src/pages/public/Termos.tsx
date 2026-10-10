@@ -50,7 +50,7 @@ const sections: Section[] = [
 		content: [
 			'Ao efetuar uma compra na Plataforma, o comprador declara que tem capacidade legal para celebrar contratos de compra e venda.',
 			'O preço dos bilhetes é expresso em Kwanzas (AOA) e inclui todos os impostos aplicáveis, salvo indicação em contrário.',
-			'Após a confirmação do pagamento, o comprador receberá os bilhetes digitais por email e/ou WhatsApp.',
+			'Após a confirmação do pagamento, os bilhetes digitais ficam disponíveis na conta do comprador na Plataforma para apresentação na entrada do evento.',
 			'Os bilhetes são pessoais e intransmissíveis, podendo o organizador solicitar a apresentação de documento de identificação no acesso ao evento.',
 			'É proibida a revenda de bilhetes fora da Plataforma sem autorização expressa do organizador.',
 		],

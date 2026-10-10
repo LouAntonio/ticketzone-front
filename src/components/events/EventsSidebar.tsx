@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import type { EventFilters, CategoryInfo } from '../../types/event'
-import { PROVINCES, PERIODS } from '../../lib/constants'
+import { PROVINCES } from '../../lib/constants'
 
 interface EventsSidebarProps {
 	categories: CategoryInfo[]
@@ -18,7 +18,6 @@ export function EventsSidebar({
 	const [search, setSearch] = useState(initialFilters?.search ?? '')
 	const [categoryIds, setCategoryIds] = useState<string[]>(initialFilters?.categoryIds ?? [])
 	const [province, setProvince] = useState(initialFilters?.province ?? '')
-	const [period, setPeriod] = useState(initialFilters?.period ?? '')
 	const [featured, setFeatured] = useState(initialFilters?.featured ?? false)
 
 	const toggleCategory = (id: string) => {
@@ -34,7 +33,6 @@ export function EventsSidebar({
 		setSearch('')
 		setCategoryIds([])
 		setProvince('')
-		setPeriod('')
 		setFeatured(false)
 		onSearch({})
 	}
@@ -44,7 +42,6 @@ export function EventsSidebar({
 		if (search.trim()) filters.search = search.trim()
 		if (categoryIds.length > 0) filters.categoryIds = categoryIds
 		if (province) filters.province = province
-		if (period) filters.period = period as EventFilters['period']
 		if (featured) filters.featured = true
 		return filters
 	}
@@ -148,25 +145,6 @@ export function EventsSidebar({
 					{PROVINCES.map((p) => (
 						<option key={p} value={p}>
 							{p}
-						</option>
-					))}
-				</select>
-			</div>
-
-			{/* Period */}
-			<div>
-				<label className="block text-xs font-600 text-text-secondary uppercase tracking-wider mb-1.5">
-					Período
-				</label>
-				<select
-					value={period}
-					onChange={(e) => setPeriod(e.target.value)}
-					className="input-field w-full text-sm"
-				>
-					<option value="">Qualquer Período</option>
-					{PERIODS.map((p) => (
-						<option key={p.value} value={p.value}>
-							{p.label}
 						</option>
 					))}
 				</select>

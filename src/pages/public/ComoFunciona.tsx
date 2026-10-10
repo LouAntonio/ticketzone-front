@@ -58,9 +58,9 @@ const buyerSteps = [
 		desc: 'Escolhe o teu método de pagamento preferido: Multicaixa Express, PayPay ou Referências. A transação é 100% segura.',
 	},
 	{
-		icon: 'M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z',
-		title: 'Recebe e Entra',
-		desc: 'Os teus bilhetes chegam por email e WhatsApp. No dia do evento, apresenta o QR Code na entrada.',
+		icon: 'M3 3h7v7H3V3zm1 1v5h5V4H4zm1 1h3v3H5V5zm10-2h7v7h-7V3zm1 1v5h5V4h-5zM3 14h7v7H3v-7zm1 1v5h5v-5H4zm10-2h2v2h-2v-2zm2 0h2v2h-2v-2zm-2 3h2v2h-2v-2zm2 0h5v2h-5v-2zm-3-12h2v2h-2V5zm3 0h2v2h-2V5zm-3 6h2v2h-2v-2zm3 0h5v2h-5v-2zm-15 6h5v2H3v-2z',
+		title: 'Entrada com QR Code',
+		desc: 'Os teus bilhetes ficam armazenados na tua conta TicketZone. No dia do evento, apresenta o QR Code diretamente da plataforma na entrada.',
 	},
 ]
 
@@ -126,12 +126,12 @@ export function ComoFunciona() {
 						</span>
 						<div className="flex items-center gap-4 mb-3">
 							<h2 className="font-heading font-700 text-2xl sm:text-3xl text-text">
-								Comprar Bilhetes
+								Comprar Bilhetes e Addons
 							</h2>
 							<div className="flex-1 h-px bg-border hidden sm:block" />
 						</div>
 						<p className="text-text-secondary max-w-lg">
-							Em apenas 4 passos tens os teus bilhetes na mão
+							Em apenas 4 passos garantes o teu lugar
 						</p>
 					</div>
 					<div className="grid md:grid-cols-2 gap-x-12">

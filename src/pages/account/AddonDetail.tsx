@@ -5,7 +5,7 @@ import { Badge } from '../../components/ui/Badge'
 import { Skeleton } from '../../components/ui/Skeleton'
 import { Button } from '../../components/ui/Button'
 import { formatDate } from '../../lib/format'
-import { QRCodeSVG } from 'qrcode.react'
+import { ReactQRCode } from '@lglab/react-qr-code'
 
 const statusVariant: Record<string, 'emerald' | 'gray' | 'red'> = {
 	active: 'emerald',
@@ -131,11 +131,26 @@ export function AddonDetailPage() {
 					{qrState && (
 						<div className="relative mb-4">
 							<div className="w-64 h-64 bg-white rounded-2xl border-2 border-warm-border p-4 shadow-sm">
-								<QRCodeSVG
+								<ReactQRCode
 									value={qrState.qrCode}
 									size={224}
 									level="H"
-									includeMargin
+									marginSize={4}
+									dataModulesSettings={{ style: 'rounded', color: '#f16522' }}
+									finderPatternOuterSettings={{
+										style: 'rounded-lg',
+										color: '#f16522',
+									}}
+									finderPatternInnerSettings={{
+										style: 'rounded',
+										color: '#f16522',
+									}}
+									imageSettings={{
+										src: '/tz.png',
+										width: 48,
+										height: 48,
+										excavate: true,
+									}}
 								/>
 							</div>
 						</div>

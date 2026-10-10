@@ -6,7 +6,7 @@ import { Badge } from '../../components/ui/Badge'
 import { Skeleton } from '../../components/ui/Skeleton'
 import { Button } from '../../components/ui/Button'
 import { formatDate, formatKwanza } from '../../lib/format'
-import { QRCodeSVG } from 'qrcode.react'
+import { ReactQRCode } from '@lglab/react-qr-code'
 import { toast } from 'react-hot-toast'
 import type { PaymentInstructions } from '../../types/order'
 
@@ -435,7 +435,29 @@ export function OrderDetailPage() {
 									className="flex items-center gap-4 p-4 rounded-xl border border-warm-border bg-white"
 								>
 									<div className="w-14 h-14 shrink-0 bg-white rounded-lg border-2 border-warm-border flex items-center justify-center overflow-hidden">
-										<QRCodeSVG value={ticket.qrCode} size={50} level="M" />
+										<ReactQRCode
+											value={ticket.qrCode}
+											size={50}
+											level="M"
+											dataModulesSettings={{
+												style: 'rounded',
+												color: '#f16522',
+											}}
+											finderPatternOuterSettings={{
+												style: 'rounded-lg',
+												color: '#f16522',
+											}}
+											finderPatternInnerSettings={{
+												style: 'rounded',
+												color: '#f16522',
+											}}
+											imageSettings={{
+												src: '/tz.png',
+												width: 14,
+												height: 14,
+												excavate: true,
+											}}
+										/>
 									</div>
 									<div className="flex-1 min-w-0">
 										<p className="text-sm font-heading font-600 text-warm-text">
@@ -475,7 +497,29 @@ export function OrderDetailPage() {
 									className="flex items-center gap-4 p-4 rounded-xl border border-warm-border bg-white"
 								>
 									<div className="w-14 h-14 shrink-0 bg-white rounded-lg border-2 border-warm-border flex items-center justify-center overflow-hidden">
-										<QRCodeSVG value={ai.qrSecret} size={50} level="M" />
+										<ReactQRCode
+											value={ai.qrSecret}
+											size={50}
+											level="M"
+											dataModulesSettings={{
+												style: 'rounded',
+												color: '#f16522',
+											}}
+											finderPatternOuterSettings={{
+												style: 'rounded-lg',
+												color: '#f16522',
+											}}
+											finderPatternInnerSettings={{
+												style: 'rounded',
+												color: '#f16522',
+											}}
+											imageSettings={{
+												src: '/tz.png',
+												width: 14,
+												height: 14,
+												excavate: true,
+											}}
+										/>
 									</div>
 									<div className="flex-1 min-w-0">
 										<p className="text-sm font-heading font-600 text-warm-text">
