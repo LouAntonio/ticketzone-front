@@ -18,6 +18,11 @@ export function CarDetail() {
 	const [startDate, setStartDate] = useState('')
 	const [endDate, setEndDate] = useState('')
 	const [lightboxIndex, setLightboxIndex] = useState<number | null>(null)
+	const [paymentMethod, setPaymentMethod] = useState<'multicaixa' | 'reference'>('multicaixa')
+	const [phoneNumber, setPhoneNumber] = useState('')
+
+	const requiresPhone = paymentMethod === 'multicaixa'
+	const phoneValid = /^9\d{8}$/.test(phoneNumber.replace(/\s+/g, ''))
 
 	const car = data?.car
 	const photos = car?.photos ?? []
@@ -56,20 +61,26 @@ export function CarDetail() {
 			toast.error('A data de fim deve ser posterior à data de início')
 			return
 		}
+		if (requiresPhone && !phoneValid) {
+			toast.error('Indica um número de telemóvel válido (9 seguido de 8 dígitos)')
+			return
+		}
 		try {
 			const result = await createBooking.mutateAsync({
 				carId: car!.id,
 				startDate,
 				endDate,
+				paymentMethod,
+				phoneNumber: requiresPhone ? phoneNumber.replace(/\s+/g, '') : undefined,
 			})
-			toast.success('Viatura reservada com sucesso!')
+			toast.success('Viatura reservada! Conclui o pagamento para confirmar.')
 			if (result.order?.id) {
 				navigate(`/account/orders/${result.order.id}`)
 			} else {
 				navigate('/account/rentals')
 			}
-		} catch {
-			toast.error('Erro ao reservar. Tenta novamente.')
+		} catch (err) {
+			toast.error((err as Error)?.message ?? 'Erro ao reservar. Tenta novamente.')
 		}
 	}
 
@@ -298,10 +309,54 @@ export function CarDetail() {
 									</div>
 								)}
 
+								<div>
+									<label className="text-xs text-text-secondary block mb-1.5 font-heading font-600">
+										Método de pagamento
+									</label>
+									<select
+										className="input-field text-sm"
+										value={paymentMethod}
+										onChange={(e) =>
+											setPaymentMethod(
+												e.target.value as 'multicaixa' | 'reference',
+											)
+										}
+									>
+										<option value="multicaixa">Multicaixa Express</option>
+										<option value="reference">Referência Multicaixa</option>
+									</select>
+								</div>
+
+								{requiresPhone && (
+									<div>
+										<label className="text-xs text-text-secondary block mb-1.5 font-heading font-600">
+											Número de telemóvel
+										</label>
+										<input
+											type="tel"
+											inputMode="numeric"
+											placeholder="923 111 111"
+											className="input-field text-sm"
+											value={phoneNumber}
+											onChange={(e) => setPhoneNumber(e.target.value)}
+										/>
+										{phoneNumber.length > 0 && !phoneValid && (
+											<p className="text-xs text-red-600 mt-1.5">
+												Número angolano inválido (9 seguido de 8 dígitos).
+											</p>
+										)}
+									</div>
+								)}
+
 								<Button
 									className="w-full"
 									size="lg"
-									disabled={!startDate || !endDate || totalDays < 1}
+									disabled={
+										!startDate ||
+										!endDate ||
+										totalDays < 1 ||
+										(requiresPhone && !phoneValid)
+									}
 									onClick={handleReserve}
 									loading={createBooking.isPending}
 								>

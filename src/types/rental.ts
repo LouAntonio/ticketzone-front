@@ -53,7 +53,8 @@ export interface Rental {
 		totalAmount: number
 		paymentMethod?: string
 		multicaixaReference?: string | null
-		paypayReference?: string | null
+		multicaixaEntity?: string | null
+		paymentDueDate?: string | null
 		createdAt?: string
 	}
 }
@@ -82,5 +83,7 @@ export interface CreateBookingData {
 	carId: string
 	startDate: string
 	endDate: string
-	paymentMethod?: string
+	paymentMethod?: 'multicaixa' | 'reference'
+	/** Obrigatório para Multicaixa Express. Nunca é guardado no perfil. */
+	phoneNumber?: string
 }

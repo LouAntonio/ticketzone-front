@@ -1,6 +1,19 @@
-import type { User, OrganizerProfile } from '../../types/auth'
+﻿import type { User, OrganizerProfile } from '../../types/auth'
 import type { Event } from '../../types/event'
-import type { Order } from '../../types/order'
+import type { Order as MockOrderType } from '../../types/order'
+
+/**
+ * Encomenda no mock.
+ *
+ * O backend devolve campos adicionais da AppyPay (entidade, vencimento,
+ * estado do pagamento) que o tipo `Order` do frontend não modela — aqui
+ * mantemo-los para que os handlers possam simular o webhook.
+ */
+export type MockOrder = MockOrderType & {
+	paymentStatus?: string
+	multicaixaEntity?: string
+	paymentDueDate?: string
+}
 import type { Ticket } from '../../types/ticket'
 import type { Car } from '../../types/rental'
 import type { LinkedAccount, PromoterRequest } from '../../types/auth'
@@ -11,7 +24,7 @@ export interface MockDB {
 	users: User[]
 	organizers: OrganizerProfile[]
 	events: Event[]
-	orders: Order[]
+	orders: MockOrder[]
 	tickets: Ticket[]
 	cars: Car[]
 	tokens: Map<string, string>
@@ -441,8 +454,8 @@ export const db: MockDB = {
 			],
 			totalAmount: 7000,
 			status: 'confirmed',
-			paymentMethod: 'paypay',
-			paymentRef: 'PP-2025-005678',
+			paymentMethod: 'multicaixa',
+			paymentRef: 'TZ000000567',
 			ticketIds: ['ticket-3', 'ticket-4'],
 			createdAt: '2025-05-05T10:00:00Z',
 		},
@@ -530,8 +543,8 @@ export const db: MockDB = {
 			],
 			totalAmount: 19500,
 			status: 'confirmed',
-			paymentMethod: 'paypay',
-			paymentRef: 'PP-2025-007890',
+			paymentMethod: 'multicaixa',
+			paymentRef: 'TZ000000789',
 			ticketIds: ['ticket-11', 'ticket-12', 'ticket-13'],
 			createdAt: '2025-05-25T09:00:00Z',
 		},

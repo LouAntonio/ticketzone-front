@@ -59,7 +59,8 @@ interface RawRental {
 		totalAmount: number
 		paymentMethod?: string
 		multicaixaReference?: string | null
-		paypayReference?: string | null
+		multicaixaEntity?: string | null
+		paymentDueDate?: string | null
 		createdAt?: string
 	} | null
 }
@@ -134,7 +135,8 @@ export const rentalsApi = {
 			.post<{ data: RentalResponse }>(`/vehicles/${data.carId}/rent`, {
 				startDate: data.startDate,
 				endDate: data.endDate,
-				paymentMethod: data.paymentMethod,
+				paymentMethod: data.paymentMethod ?? 'MULTICAIXA_EXPRESS',
+				phoneNumber: data.phoneNumber,
 			})
 			.then((r) => {
 				const { order, rental } = r.data.data ?? r.data

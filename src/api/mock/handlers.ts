@@ -1,12 +1,13 @@
-import { http, HttpResponse, delay } from 'msw'
+﻿import { http, HttpResponse, delay } from 'msw'
 import { db } from './db'
 import type { Addon, Event } from '../../types/event'
 
 const API = 'http://localhost:3000/api'
 
 let tokenCounter = 1000
-let orderCounter = 100
+const orderCounter = 100
 let ticketCounter = 100
+let referenceCounter = 0
 
 function generateToken(): string {
 	return `tkn_mock_${++tokenCounter}`
@@ -31,6 +32,66 @@ function findUserByToken(token: string): string | null {
 		return token.replace('verify-', '')
 	}
 	return null
+}
+
+/**
+ * Simula a chegada do webhook da AppyPay.
+ *
+ * Em produção o backend recebe um POST em `/webhooks/appypay`, consulta
+ * `GET /charges/{id}` e só depois emite os bilhetes. Aqui reproduzimos o
+ * mesmo efeito com um `setTimeout` no handler de criação da encomenda.
+ */
+function confirmMockOrder(
+	orderId: string,
+	eventId: string,
+	eventTitle: string,
+	eventDate: string,
+	items: Array<{
+		ticketTypeId: string
+		ticketTypeName: string
+		quantity: number
+		peoplePerTicket: number
+	}>,
+): void {
+	const order = db.orders.find((o) => o.id === orderId)
+	if (!order || order.paymentStatus === 'PAID') return
+
+	const target = order as unknown as {
+		status: string
+		paymentStatus: string
+		ticketIds: string[]
+	}
+	target.status = 'confirmed'
+	target.paymentStatus = 'PAID'
+
+	const ticketIds: string[] = []
+	for (const item of items) {
+		for (let i = 0; i < item.quantity; i++) {
+			const ticketId = `ticket-${++ticketCounter}`
+			ticketIds.push(ticketId)
+			const validateUntil = new Date(
+				new Date(eventDate || Date.now()).getTime() + 86400000,
+			).toISOString()
+			db.tickets.push({
+				id: ticketId,
+				orderId,
+				eventId,
+				eventTitle,
+				eventDate,
+				eventImage: '',
+				ticketTypeName: item.ticketTypeName,
+				buyerName: order.buyerName,
+				qrCode: `TICKET-${eventId.toUpperCase()}-${String(ticketCounter).padStart(3, '0')}`,
+				groupSize: item.peoplePerTicket > 1 ? item.peoplePerTicket : undefined,
+				qrExpiresAt: validateUntil,
+				entriesAllowed: item.peoplePerTicket > 1 ? item.peoplePerTicket : 1,
+				status: 'active',
+				used: 0,
+				validateUntil,
+			})
+		}
+	}
+	target.ticketIds = ticketIds
 }
 
 // Static mock categories to support categoryIds filtering in dev
@@ -422,45 +483,36 @@ export const handlers = [
 				unitPrice: number
 				peoplePerTicket: number
 			}>
-			paymentMethod: string
+			addons?: Array<{ addonId: string; name: string; quantity: number; unitPrice: number }>
+			paymentMethod: 'multicaixa' | 'reference'
+			phoneNumber?: string
 		}
 		const event = db.events.find((e) => e.id === body.eventId)
 		if (!event) {
 			return HttpResponse.json({ error: 'Evento não encontrado' }, { status: 404 })
 		}
+		if (body.paymentMethod === 'multicaixa' && !/^9\d{8}$/.test(body.phoneNumber ?? '')) {
+			return HttpResponse.json(
+				{
+					msg: 'Indica um número de telefone válido para receber a notificação de pagamento',
+				},
+				{ status: 400 },
+			)
+		}
 		const user = db.users.find((u) => u.id === userId)
 
-		const ticketIds: string[] = []
-		for (const item of body.items) {
-			for (let i = 0; i < item.quantity; i++) {
-				ticketIds.push(`ticket-${++ticketCounter}`)
-				const validateUntil = new Date(
-					new Date(event.date ?? Date.now()).getTime() + 86400000,
-				).toISOString()
-				db.tickets.push({
-					id: `ticket-${ticketCounter}`,
-					orderId: `ord-${++orderCounter}`,
-					eventId: event.id,
-					eventTitle: event.title,
-					eventDate: event.date ?? '',
-					eventImage: event.coverImage ?? '',
-					ticketTypeName: item.ticketTypeName,
-					buyerName: user?.name ?? '',
-					qrCode: `TICKET-${event.id.toUpperCase()}-${String(ticketCounter).padStart(3, '0')}`,
-					groupSize: item.peoplePerTicket > 1 ? item.peoplePerTicket : undefined,
-					qrExpiresAt: validateUntil,
-					entriesAllowed: item.peoplePerTicket > 1 ? item.peoplePerTicket : 1,
-					status: 'active',
-					used: 0,
-					validateUntil,
-				})
-			}
-		}
+		const total =
+			body.items.reduce((sum, i) => sum + i.unitPrice * i.quantity, 0) +
+			(body.addons?.reduce((sum, a) => sum + a.unitPrice * a.quantity, 0) ?? 0)
 
-		const total = body.items.reduce((sum, i) => sum + i.unitPrice * i.quantity, 0)
+		const orderId = `ord-${orderCounter}`
+		const isReference = body.paymentMethod === 'reference'
+		const referenceNumber = `TZ${String(++referenceCounter).padStart(9, '0')}`
 
+		// Simula a AppyPay: a encomenda nasce PENDING e o "webhook" chega alguns
+		// segundos depois, tal como acontece em produção (modo assíncrono).
 		const order = {
-			id: `ord-${orderCounter}`,
+			id: orderId,
 			eventId: event.id,
 			eventTitle: event.title,
 			eventSlug: event.slug ?? '',
@@ -469,22 +521,95 @@ export const handlers = [
 			buyerId: userId,
 			buyerName: user?.name ?? '',
 			items: body.items,
+			addons: body.addons,
 			totalAmount: total,
-			status: 'confirmed' as const,
-			paymentMethod: body.paymentMethod as 'multicaixa' | 'paypay' | 'reference',
-			paymentRef:
-				body.paymentMethod === 'multicaixa'
-					? `MCX-2025-${String(Math.floor(Math.random() * 999999)).padStart(6, '0')}`
-					: body.paymentMethod === 'reference'
-						? `REF-${String(Math.floor(Math.random() * 999999999)).padStart(9, '0')}`
-						: undefined,
-			paymentQrCode: body.paymentMethod === 'paypay' ? `paypay-qr-${Date.now()}` : undefined,
-			ticketIds,
+			status: 'pending' as const,
+			paymentMethod: body.paymentMethod,
+			paymentStatus: 'PENDING' as const,
+			paymentRef: isReference ? referenceNumber : undefined,
+			multicaixaEntity: isReference ? '00348' : undefined,
+			paymentDueDate: isReference
+				? new Date(Date.now() + 7 * 86400000).toISOString()
+				: undefined,
+			ticketIds: [] as string[],
 			createdAt: new Date().toISOString(),
 		}
 		db.orders.push(order)
 
-		return HttpResponse.json({ order })
+		setTimeout(() => {
+			confirmMockOrder(orderId, event.id, event.title, event.date ?? '', body.items)
+		}, 4000)
+
+		const payment = {
+			orderId,
+			method: isReference ? 'MULTICAIXA_REFERENCE' : 'MULTICAIXA_EXPRESS',
+			chargeId: `chg-mock-${orderCounter}`,
+			status: 'PENDING',
+			paymentStatus: 'PENDING',
+			reference: isReference
+				? {
+						referenceNumber,
+						entity: '00348',
+						dueDate: order.paymentDueDate,
+					}
+				: null,
+			phoneNumber: body.phoneNumber ?? null,
+			expiresAt: new Date(Date.now() + 24 * 3600000).toISOString(),
+		}
+
+		return HttpResponse.json({ order, payment })
+	}),
+
+	// --- Payment status (polling do frontend) ---
+	http.get(`${API}/orders/:id/payment`, async ({ params }) => {
+		await delay(200)
+		const orderId = String(params.id)
+		const order = db.orders.find((o) => o.id === orderId)
+		if (!order) {
+			return HttpResponse.json({ msg: 'Pedido não encontrado' }, { status: 404 })
+		}
+		const isReference = order.paymentMethod === 'reference'
+		return HttpResponse.json({
+			orderId,
+			method: isReference ? 'MULTICAIXA_REFERENCE' : 'MULTICAIXA_EXPRESS',
+			chargeId: `chg-mock-${orderCounter}`,
+			status: order.status === 'pending' ? 'PENDING' : 'PAID',
+			paymentStatus: order.paymentStatus ?? 'PENDING',
+			reference: order.paymentRef
+				? {
+						referenceNumber: order.paymentRef,
+						entity: order.multicaixaEntity ?? '00348',
+						dueDate: order.paymentDueDate ?? null,
+					}
+				: null,
+			phoneNumber: null,
+			expiresAt: new Date(Date.now() + 24 * 3600000).toISOString(),
+		})
+	}),
+
+	http.post(`${API}/orders/:id/payment/sync`, async ({ params }) => {
+		await delay(400)
+		const orderId = String(params.id)
+		const order = db.orders.find((o) => o.id === orderId)
+		if (!order) {
+			return HttpResponse.json({ msg: 'Pedido não encontrado' }, { status: 404 })
+		}
+		if (order.status === 'pending') {
+			confirmMockOrder(orderId, order.eventId, order.eventTitle, order.eventDate, order.items)
+		}
+		return HttpResponse.json({
+			orderId,
+			method:
+				order.paymentMethod === 'reference' ? 'MULTICAIXA_REFERENCE' : 'MULTICAIXA_EXPRESS',
+			chargeId: `chg-mock-${orderCounter}`,
+			status: order.status === 'pending' ? 'PENDING' : 'PAID',
+			paymentStatus: order.paymentStatus ?? 'PENDING',
+			reference: order.paymentRef
+				? { referenceNumber: order.paymentRef, entity: '00348', dueDate: null }
+				: null,
+			phoneNumber: null,
+			expiresAt: null,
+		})
 	}),
 
 	http.get(`${API}/orders`, async ({ request }) => {

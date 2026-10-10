@@ -1,5 +1,5 @@
 import { api } from '../client'
-import type { Order, OrderDetail, CreateOrderData } from '../../types/order'
+import type { CreateOrderData, Order, OrderDetail, PaymentInstructions } from '../../types/order'
 
 interface RawTicket {
 	id: string
@@ -19,22 +19,37 @@ interface RawTicket {
 	}
 }
 
+/** Reserva de bilhetes guardada no backend (ainda sem bilhetes emitidos). */
+interface RawOrderItem {
+	id: string
+	batchId: string
+	eventId: string
+	name: string
+	quantity: number
+	unitPrice: number | string
+	isGroupTicket?: boolean
+	groupSize?: number
+}
+
 interface RawAddon {
 	addon: { id: string; name: string; description?: string | null }
 	quantity: number
-	unitPrice: number
+	unitPrice: number | string
 }
 
 interface RawOrder {
 	id: string
 	userId: string
+	eventId?: string | null
 	totalAmount: string | number
 	status: string
-	paymentMethod?: string
-	paymentStatus?: string
+	paymentMethod?: string | null
+	paymentStatus?: string | null
 	multicaixaReference?: string | null
-	paypayReference?: string | null
+	multicaixaEntity?: string | null
+	paymentDueDate?: string | null
 	createdAt: string
+	items?: RawOrderItem[]
 	tickets: RawTicket[]
 	addons: RawAddon[]
 	rentals?: unknown[]
@@ -72,24 +87,72 @@ interface RawOrderDetail extends RawOrder {
 	}>
 }
 
+function mapPaymentMethod(raw: string | null | undefined): Order['paymentMethod'] {
+	const value = raw?.toUpperCase()
+	if (value === 'MULTICAIXA_REFERENCE') return 'reference'
+	return 'multicaixa'
+}
+
+/**
+ * Itens da encomenda.
+ *
+ * Enquanto o pagamento não está confirmado ainda não existem `Ticket` — a
+ * reserva vive em `items`. Por isso derivamos sempre de `items` com fallback
+ * para `tickets`.
+ */
+function buildItems(raw: RawOrder): Order['items'] {
+	const reserved = (raw.items ?? [])
+		.filter((item) => item.quantity > 0)
+		.map((item) => ({
+			ticketTypeId: item.batchId,
+			ticketTypeName: item.name,
+			quantity: item.quantity,
+			unitPrice: Number(item.unitPrice),
+			peoplePerTicket: item.isGroupTicket ? (item.groupSize ?? 1) : 1,
+		}))
+
+	if (reserved.length > 0) return reserved
+
+	return raw.tickets.map((t) => ({
+		ticketTypeId: t.batch.name,
+		ticketTypeName: t.batch.name,
+		quantity: 1,
+		unitPrice: Number(t.batch.price),
+		peoplePerTicket: t.entriesAllowed,
+	}))
+}
+
+function firstEvent(raw: RawOrder) {
+	return raw.tickets[0]?.event ?? raw.items?.[0]
+}
+
+interface RawPayment {
+	orderId: string
+	method: string | null
+	chargeId: string | null
+	status: string
+	paymentStatus: string
+	reference: {
+		referenceNumber: string
+		entity?: string | null
+		dueDate?: string | null
+	} | null
+	phoneNumber: string | null
+	expiresAt: string | null
+}
+
 function mapOrder(raw: RawOrder): Order {
-	const firstEvent = raw.tickets[0]?.event
+	const event = firstEvent(raw)
 	return {
 		id: raw.id,
-		eventId: firstEvent?.id ?? '',
-		eventTitle: firstEvent?.title ?? '',
+		eventId: raw.eventId ?? event?.id ?? '',
+		eventTitle: event?.title ?? '',
 		eventSlug: '',
-		eventDate: firstEvent?.startDate ?? '',
+		eventDate: event?.startDate ?? '',
 		eventImage: '',
 		buyerId: '',
 		buyerName: '',
-		items: raw.tickets.map((t) => ({
-			ticketTypeId: '',
-			ticketTypeName: t.batch.name,
-			quantity: 1,
-			unitPrice: Number(t.batch.price),
-			peoplePerTicket: 1,
-		})),
+		items: buildItems(raw),
 		addons: raw.addons?.map((a) => ({
 			addonId: a.addon.id,
 			name: a.addon.name,
@@ -98,44 +161,33 @@ function mapOrder(raw: RawOrder): Order {
 		})),
 		totalAmount: Number(raw.totalAmount),
 		status: raw.status.toLowerCase(),
-		paymentMethod: (raw.paymentMethod?.toLowerCase() ?? '') as Order['paymentMethod'],
-		paymentStatus: raw.paymentStatus?.toLowerCase() as Order['paymentStatus'],
+		paymentMethod: mapPaymentMethod(raw.paymentMethod),
+		paymentStatus: raw.paymentStatus?.toUpperCase() as Order['paymentStatus'],
+		paymentRef: raw.multicaixaReference ?? undefined,
 		createdAt: raw.createdAt,
-		ticketIds: [],
+		ticketIds: raw.tickets.map((t) => t.id),
 	}
 }
 
 function mapOrderDetail(raw: RawOrderDetail): OrderDetail {
-	const firstTicket = raw.tickets[0]
-	const ev = firstTicket?.event
+	const event = firstEvent(raw)
+	const base = mapOrder(raw)
+
 	return {
-		id: raw.id,
-		eventId: ev?.id ?? '',
-		eventTitle: ev?.title ?? '',
-		eventSlug: '',
-		eventDate: ev?.startDate ?? '',
-		eventImage: ev?.bannerUrl ?? '',
+		...base,
+		eventImage: event?.bannerUrl ?? '',
 		buyerId: raw.userId,
 		buyerName: raw.user?.name ?? '',
-		items: raw.tickets.map((t) => ({
-			ticketTypeId: '',
-			ticketTypeName: t.batch.name,
-			quantity: 1,
-			unitPrice: Number(t.batch.price),
-			peoplePerTicket: 1,
-		})),
-		addons: raw.addons?.map((a) => ({
-			addonId: a.addon.id,
-			name: a.addon.name,
-			quantity: a.quantity,
-			unitPrice: Number(a.unitPrice),
-		})),
-		totalAmount: Number(raw.totalAmount),
-		status: raw.status.toLowerCase(),
-		paymentMethod: (raw.paymentMethod?.toLowerCase() ?? '') as Order['paymentMethod'],
-		paymentStatus: raw.paymentStatus?.toLowerCase() as Order['paymentStatus'],
-		paymentRef: raw.multicaixaReference ?? raw.paypayReference ?? undefined,
-		createdAt: raw.createdAt,
+		paymentRef: raw.multicaixaReference ?? undefined,
+		multicaixaEntity: raw.multicaixaEntity ?? null,
+		paymentDueDate: raw.paymentDueDate ?? null,
+		paymentReference: raw.multicaixaReference
+			? {
+					referenceNumber: raw.multicaixaReference,
+					entity: raw.multicaixaEntity ?? null,
+					dueDate: raw.paymentDueDate ?? null,
+				}
+			: undefined,
 		ticketIds: raw.tickets.map((t) => t.id),
 		addonInstances: raw.addonInstances?.map((ai) => ({
 			id: ai.id,
@@ -171,18 +223,39 @@ function mapOrderDetail(raw: RawOrderDetail): OrderDetail {
 					}
 				: { make: '', model: '', plate: '', photos: [] },
 		})),
-		eventProvince: ev?.province ?? undefined,
-		eventVenue: ev?.location ?? undefined,
-		eventStartDate: ev?.startDate ?? undefined,
-		eventEndDate: ev?.endDate ?? undefined,
+		eventProvince: event?.province ?? undefined,
+		eventVenue: event?.location ?? undefined,
+		eventStartDate: event?.startDate ?? undefined,
+		eventEndDate: event?.endDate ?? undefined,
 		userPhoneNumber: raw.user?.phoneNumber ?? undefined,
 		userEmail: raw.user?.email ?? undefined,
 	}
 }
 
+function mapPayment(raw: RawPayment): PaymentInstructions {
+	return {
+		orderId: raw.orderId,
+		method: (raw.method as PaymentInstructions['method']) ?? null,
+		chargeId: raw.chargeId,
+		status: raw.status as PaymentInstructions['status'],
+		paymentStatus: raw.paymentStatus as PaymentInstructions['paymentStatus'],
+		reference: raw.reference,
+		phoneNumber: raw.phoneNumber,
+		expiresAt: raw.expiresAt,
+	}
+}
+
+interface RawCreateOrderResponse {
+	order: RawOrder
+	payment: RawPayment
+}
+
 export const ordersApi = {
 	create: (data: CreateOrderData) =>
-		api.post<{ order: Order }>('/orders', data).then((r) => r.data),
+		api.post<RawCreateOrderResponse>('/orders', data).then((r) => ({
+			order: mapOrder(r.data.order),
+			payment: mapPayment(r.data.payment),
+		})),
 
 	list: () =>
 		api.get<{ orders: RawOrder[] }>('/orders').then((r) => ({
@@ -191,6 +264,12 @@ export const ordersApi = {
 
 	get: (id: string) =>
 		api.get<RawOrderDetail>(`/orders/${id}`).then((r) => mapOrderDetail(r.data)),
+
+	getPayment: (id: string) =>
+		api.get<RawPayment>(`/orders/${id}/payment`).then((r) => mapPayment(r.data)),
+
+	syncPayment: (id: string) =>
+		api.post<RawPayment>(`/orders/${id}/payment/sync`).then((r) => mapPayment(r.data)),
 
 	pay: (id: string) => api.post<never>(`/orders/${id}/pay`).then((r) => r.data),
 

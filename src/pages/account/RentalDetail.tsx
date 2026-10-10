@@ -213,11 +213,11 @@ export function RentalDetailPage() {
 									</span>
 								</div>
 							)}
-							{rental.order?.paypayReference && (
+							{rental.order?.multicaixaEntity && (
 								<div className="flex justify-between">
-									<span className="text-text-secondary">Referência</span>
+									<span className="text-text-secondary">Entidade</span>
 									<span className="font-heading font-600 text-warm-text font-mono text-xs">
-										{rental.order.paypayReference}
+										{rental.order.multicaixaEntity}
 									</span>
 								</div>
 							)}

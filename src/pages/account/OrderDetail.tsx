@@ -1,11 +1,14 @@
+import { useEffect } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { useOrder, useCancelOrder } from '../../api/hooks/useAccount'
+import { useOrderPayment, useSyncOrderPayment } from '../../api/hooks/useOrders'
 import { Badge } from '../../components/ui/Badge'
 import { Skeleton } from '../../components/ui/Skeleton'
 import { Button } from '../../components/ui/Button'
 import { formatDate, formatKwanza } from '../../lib/format'
 import { QRCodeSVG } from 'qrcode.react'
 import { toast } from 'react-hot-toast'
+import type { PaymentInstructions } from '../../types/order'
 
 const statusVariant: Record<string, 'emerald' | 'amber' | 'red' | 'gray'> = {
 	paid: 'emerald',
@@ -24,8 +27,146 @@ const statusLabel: Record<string, string> = {
 const paymentMethodLabel: Record<string, string> = {
 	multicaixa_express: 'Multicaixa Express',
 	multicaixa_reference: 'Referência Multicaixa',
-	paypay: 'PayPay',
 	reference: 'Referência Multicaixa',
+}
+
+const paymentStatusLabel: Record<string, string> = {
+	PENDING: 'A aguardar confirmação',
+	PAID: 'Confirmado',
+	FAILED: 'Recusado',
+	CANCELLED: 'Cancelado',
+	REFUNDED: 'Reembolsado',
+}
+
+/**
+ * Painel de estado do pagamento.
+ *
+ * Enquanto `PENDING` faz polling via `useOrderPayment` e dá ao utilizador um
+ * botão para forçar a reconciliação com a AppyPay ("Já paguei").
+ */
+function PaymentStatusPanel({ orderId }: { orderId: string }) {
+	const { data: payment } = useOrderPayment(orderId)
+	const syncPayment = useSyncOrderPayment()
+	const navigate = useNavigate()
+
+	const isPaid = payment?.paymentStatus === 'PAID'
+
+	useEffect(() => {
+		if (isPaid) {
+			toast.success('Pagamento confirmado! Os bilhetes já estão disponíveis.')
+		}
+	}, [isPaid])
+
+	if (!payment) return null
+
+	const isPending = payment.paymentStatus === 'PENDING'
+	const reference = payment.reference
+
+	const handleSync = async () => {
+		try {
+			await syncPayment.mutateAsync(orderId)
+			toast.success('Estado do pagamento actualizado')
+		} catch (err) {
+			toast.error((err as Error)?.message ?? 'Não foi possível actualizar o estado')
+		}
+	}
+
+	const tone = isPaid
+		? 'border-emerald-200 bg-emerald-50'
+		: payment.paymentStatus === 'FAILED'
+			? 'border-red-200 bg-red-50'
+			: 'border-brand/30 bg-brand-soft'
+
+	return (
+		<div className={`rounded-2xl border p-6 ${tone} stagger-3`}>
+			<div className="flex items-start gap-4">
+				<div className="flex-1">
+					<p className="text-xs font-heading font-600 uppercase tracking-wider text-text-secondary">
+						Estado do pagamento
+					</p>
+					<p className="font-heading font-700 text-lg text-warm-text mt-1">
+						{paymentStatusLabel[payment.paymentStatus] ?? payment.paymentStatus}
+					</p>
+					<p className="text-sm text-text-secondary mt-1">
+						{paymentStatusHint(payment, isPending)}
+					</p>
+				</div>
+				{isPending && (
+					<span className="flex items-center gap-2 text-xs text-text-secondary shrink-0">
+						<svg
+							width="14"
+							height="14"
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							strokeWidth="2"
+							className="animate-spin"
+						>
+							<path d="M21 12a9 9 0 11-6.219-8.56" />
+						</svg>
+						A verificar
+					</span>
+				)}
+			</div>
+
+			{isPending && reference && (
+				<div className="mt-4 bg-white rounded-xl p-4 space-y-2 border border-warm-border">
+					{reference.entity && (
+						<div className="flex justify-between text-sm">
+							<span className="text-text-secondary">Entidade</span>
+							<span className="font-heading font-700">{reference.entity}</span>
+						</div>
+					)}
+					<div className="flex justify-between text-sm">
+						<span className="text-text-secondary">Referência</span>
+						<span className="font-heading font-700 tracking-wider">
+							{reference.referenceNumber}
+						</span>
+					</div>
+					{reference.dueDate && (
+						<div className="flex justify-between text-sm">
+							<span className="text-text-secondary">Vencimento</span>
+							<span className="font-heading font-600">
+								{formatDate(reference.dueDate)}
+							</span>
+						</div>
+					)}
+				</div>
+			)}
+
+			{isPending && (
+				<div className="mt-4 flex flex-wrap gap-3">
+					<Button size="sm" onClick={handleSync} loading={syncPayment.isPending}>
+						Já paguei — verificar
+					</Button>
+					<Button
+						size="sm"
+						variant="outline"
+						onClick={() => navigate('/account/tickets')}
+					>
+						Ver bilhetes
+					</Button>
+				</div>
+			)}
+		</div>
+	)
+}
+
+function paymentStatusHint(payment: PaymentInstructions, isPending: boolean): string {
+	if (payment.paymentStatus === 'FAILED') {
+		return 'O pagamento não foi aceite. Podes tentar novamente ou escolher outro método.'
+	}
+	if (payment.paymentStatus === 'CANCELLED') {
+		return 'O pagamento foi cancelado e os lugares libertados.'
+	}
+	if (payment.paymentStatus === 'REFUNDED') {
+		return 'Este pedido foi reembolsado.'
+	}
+	if (!isPending) return ''
+
+	return payment.method === 'MULTICAIXA_REFERENCE'
+		? 'Paga a referência numa ATM, no Multicaixa Express ou no Internet Banking. Os bilhetes são emitidos assim que confirmarmos.'
+		: 'Confirma a notificação na aplicação Multicaixa Express do telemóvel indicado.'
 }
 
 export function OrderDetailPage() {
@@ -68,6 +209,8 @@ export function OrderDetailPage() {
 
 	const orderStatus = order.status ?? ''
 	const isPending = orderStatus === 'pending'
+	const showPaymentPanel =
+		orderStatus === 'pending' || (order.paymentStatus ?? '').toUpperCase() !== 'PAID'
 
 	return (
 		<div className="max-w-4xl mx-auto space-y-6">
@@ -142,6 +285,9 @@ export function OrderDetailPage() {
 				</div>
 			</div>
 
+			{/* Payment status */}
+			{showPaymentPanel && order.paymentMethod && <PaymentStatusPanel orderId={order.id} />}
+
 			{/* Order Info Grid */}
 			<div className="grid sm:grid-cols-2 gap-4 stagger-3">
 				<div className="card-account">
@@ -190,6 +336,23 @@ export function OrderDetailPage() {
 									<span className="text-text-secondary">Referência</span>
 									<span className="font-heading font-600 text-warm-text font-mono text-xs">
 										{order.paymentRef}
+									</span>
+								</div>
+							)}
+							{order.multicaixaEntity && (
+								<div className="flex justify-between">
+									<span className="text-text-secondary">Entidade</span>
+									<span className="font-heading font-600 text-warm-text font-mono text-xs">
+										{order.multicaixaEntity}
+									</span>
+								</div>
+							)}
+							{order.paymentStatus && (
+								<div className="flex justify-between">
+									<span className="text-text-secondary">Estado do pagamento</span>
+									<span className="font-heading font-600 text-warm-text">
+										{paymentStatusLabel[order.paymentStatus] ??
+											order.paymentStatus}
 									</span>
 								</div>
 							)}

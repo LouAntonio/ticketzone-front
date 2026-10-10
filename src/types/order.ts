@@ -1,4 +1,12 @@
-export type PaymentMethod = 'multicaixa' | 'paypay' | 'reference'
+/**
+ * Métodos de pagamento suportados.
+ *
+ * - `multicaixa` → Multicaixa Express (GPO) via AppyPay
+ * - `reference`  → Referência Multicaixa (REF) via AppyPay
+ *
+ * PayPay foi removido: não é suportado pela AppyPay.
+ */
+export type PaymentMethod = 'multicaixa' | 'reference'
 
 export type OrderStatus = 'PENDING' | 'PAID' | 'CANCELLED' | 'REFUNDED'
 
@@ -35,9 +43,32 @@ export interface Order {
 	paymentMethod: PaymentMethod
 	paymentStatus?: PaymentStatus
 	paymentRef?: string
-	paymentQrCode?: string
 	ticketIds: string[]
 	createdAt: string
+}
+
+/** Referência bancária devolvida pela AppyPay para o método Referência. */
+export interface PaymentReference {
+	referenceNumber: string
+	entity?: string | null
+	dueDate?: string | null
+}
+
+/** Instruções de pagamento devolvidas pelo backend (AppyPay). */
+export interface PaymentInstructions {
+	orderId: string
+	method: 'MULTICAIXA_EXPRESS' | 'MULTICAIXA_REFERENCE' | null
+	chargeId: string | null
+	status: OrderStatus
+	paymentStatus: PaymentStatus
+	reference: PaymentReference | null
+	phoneNumber: string | null
+	expiresAt: string | null
+}
+
+export interface CreateOrderResult {
+	order: Order
+	payment: PaymentInstructions
 }
 
 export interface OrderDetail extends Order {
@@ -80,6 +111,10 @@ export interface OrderDetail extends Order {
 	eventEndDate?: string
 	userPhoneNumber?: string
 	userEmail?: string
+	/** Dados bancários para pagamento por referência. */
+	paymentReference?: PaymentReference
+	multicaixaEntity?: string | null
+	paymentDueDate?: string | null
 }
 
 export interface CreateOrderData {
@@ -87,4 +122,6 @@ export interface CreateOrderData {
 	items: OrderItem[]
 	addons?: AddonItem[]
 	paymentMethod: PaymentMethod
+	/** Obrigatório para Multicaixa Express. Nunca é guardado no perfil. */
+	phoneNumber?: string
 }
