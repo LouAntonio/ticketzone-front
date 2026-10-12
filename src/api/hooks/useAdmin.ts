@@ -479,7 +479,7 @@ export function useAddEventGuests(eventId: string | undefined) {
 		mutationFn: (input: { batchId: string; guests: { name: string; partySize?: number }[] }) =>
 			adminApi.addEventGuests(eventId as string, input.batchId, input.guests),
 		onSuccess: (result) => {
-			const { created, skipped } = result
+			const { created, skipped } = result ?? { created: 0, skipped: [] }
 			if (skipped.length > 0) {
 				toast.success(
 					`${created} convidado(s) registado(s). ${skipped.length} ignorado(s): ` +
@@ -489,6 +489,10 @@ export function useAddEventGuests(eventId: string | undefined) {
 			} else {
 				toast.success(`${created} convidado(s) registado(s)`)
 			}
+		},
+		// Em `onSettled` e não em `onSuccess`: se a mensagem do toast lançar, a
+		// lista fica congelada e os convidados seem não ter sido gravados.
+		onSettled: () => {
 			qc.invalidateQueries({ queryKey: ['admin', 'event-guests', eventId] })
 		},
 		onError: (error: Error) => toast.error(error.message || 'Erro ao registar convidados'),
@@ -500,8 +504,8 @@ export function useUpdateEventGuest(eventId: string | undefined) {
 	return useMutation({
 		mutationFn: (input: { guestId: string; partySize: number }) =>
 			adminApi.updateEventGuest(eventId as string, input.guestId, input.partySize),
-		onSuccess: () => {
-			toast.success('Número de pessoas actualizado')
+		onSuccess: () => toast.success('Número de pessoas actualizado'),
+		onSettled: () => {
 			qc.invalidateQueries({ queryKey: ['admin', 'event-guests', eventId] })
 		},
 		onError: (error: Error) => toast.error(error.message || 'Erro ao actualizar'),
@@ -512,8 +516,8 @@ export function useRemoveEventGuest(eventId: string | undefined) {
 	const qc = useQueryClient()
 	return useMutation({
 		mutationFn: (guestId: string) => adminApi.removeEventGuest(eventId as string, guestId),
-		onSuccess: () => {
-			toast.success('Convidado removido')
+		onSuccess: () => toast.success('Convidado removido'),
+		onSettled: () => {
 			qc.invalidateQueries({ queryKey: ['admin', 'event-guests', eventId] })
 		},
 		onError: (error: Error) => toast.error(error.message || 'Erro ao remover convidado'),

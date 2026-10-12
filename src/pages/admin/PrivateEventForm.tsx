@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useCreatePrivateEvent } from '../../api/hooks/useAdmin'
 import { PROVINCES } from '../../lib/constants'
+import { toast } from 'react-hot-toast'
 
 /**
  * Criação de um evento privado.
@@ -55,8 +56,17 @@ export function PrivateEventForm() {
 				batches: [{ name: 'Convites', capacity: Number(form.capacity) || 200 }],
 			},
 			{
+				// Sem payload não há para onde ir. Falhar aqui é melhor do que
+				// navegar para `/admin/events/undefined`.
 				onSuccess: (event) => {
-					navigate(`/admin/events/${event.id}/guests`)
+					if (event?.id) {
+						navigate(`/admin/events/${event.id}/guests`)
+					} else {
+						toast.error(
+							'O evento foi criado, mas a resposta veio incompleta. Encontra-o na lista de eventos.',
+						)
+						navigate('/admin/events')
+					}
 				},
 			},
 		)

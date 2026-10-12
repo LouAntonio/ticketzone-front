@@ -541,11 +541,14 @@ export const adminApi = {
 		api.get<PaginatedAuditLogs>('/admin/audit-logs', { params }).then((r) => r.data),
 
 	// ==================== Eventos privados ====================
+	//
+	// O interceptor do backend embrulha sempre em `{ success, msg, data }` e o
+	// interceptor do axios desembrulha (client.ts:41). Ou seja: `r.data` JÁ é
+	// o payload. Os genéricos abaixo descrevem o payload desembrulhado — usar
+	// `{ data: X }` aqui é o que produz um segundo `.data` que dá `undefined`.
 
 	createPrivateEvent: (data: PrivateEventInput) =>
-		api
-			.post<{ msg: string; data: PrivateEvent }>('/admin/events/private', data)
-			.then((r) => r.data.data),
+		api.post<PrivateEvent>('/admin/events/private', data).then((r) => r.data),
 
 	getEventGuests: (eventId: string) =>
 		api
@@ -563,21 +566,20 @@ export const adminApi = {
 	) =>
 		api
 			.post<{
-				msg: string
-				data: { created: number; skipped: { name: string; reason: string }[] }
+				created: number
+				skipped: { name: string; reason: string }[]
 			}>(`/admin/events/${eventId}/guests`, { batchId, guests })
-			.then((r) => r.data.data),
+			.then((r) => r.data),
 
 	updateEventGuest: (eventId: string, guestId: string, partySize: number) =>
 		api
 			.patch<{
-				msg: string
-				data: { partySize: number }
+				partySize: number
 			}>(`/admin/events/${eventId}/guests/${guestId}`, { partySize })
-			.then((r) => r.data.data),
+			.then((r) => r.data),
 
 	removeEventGuest: (eventId: string, guestId: string) =>
 		api
-			.delete<{ msg: string }>(`/admin/events/${eventId}/guests/${guestId}`)
+			.delete<{ removed: boolean }>(`/admin/events/${eventId}/guests/${guestId}`)
 			.then((r) => r.data),
 }

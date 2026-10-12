@@ -121,25 +121,21 @@ export const rentalsApi = {
 			})),
 
 	getCar: (id: string) =>
-		api
-			.get<{ data: RawVehicle }>(`/vehicles/${id}`)
-			.then((r) => ({ car: mapVehicle(r.data.data ?? r.data) })),
+		api.get<RawVehicle>(`/vehicles/${id}`).then((r) => ({ car: mapVehicle(r.data) })),
 
 	getCarBySlug: (slug: string) =>
-		api
-			.get<{ data: RawVehicle }>(`/vehicles/slug/${slug}`)
-			.then((r) => ({ car: mapVehicle(r.data.data ?? r.data) })),
+		api.get<RawVehicle>(`/vehicles/slug/${slug}`).then((r) => ({ car: mapVehicle(r.data) })),
 
 	createBooking: (data: CreateBookingData) =>
 		api
-			.post<{ data: RentalResponse }>(`/vehicles/${data.carId}/rent`, {
+			.post<RentalResponse>(`/vehicles/${data.carId}/rent`, {
 				startDate: data.startDate,
 				endDate: data.endDate,
 				paymentMethod: data.paymentMethod ?? 'MULTICAIXA_EXPRESS',
 				phoneNumber: data.phoneNumber,
 			})
 			.then((r) => {
-				const { order, rental } = r.data.data ?? r.data
+				const { order, rental } = r.data
 				const booking: CarBooking = {
 					id: rental.id,
 					carId: rental.vehicleId,
@@ -161,7 +157,5 @@ export const rentalsApi = {
 			.then((r) => ({ rentals: (r.data.rentals ?? []).map(mapRental) })),
 
 	getRental: (id: string) =>
-		api
-			.get<{ data: RawRental }>(`/vehicles/rentals/${id}`)
-			.then((r) => ({ rental: mapRental(r.data.data ?? r.data) })),
+		api.get<RawRental>(`/vehicles/rentals/${id}`).then((r) => ({ rental: mapRental(r.data) })),
 }
