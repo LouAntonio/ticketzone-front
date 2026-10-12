@@ -1240,19 +1240,74 @@ export const handlers = [
 		return HttpResponse.json(apiResponse(null, 'Add-on removido com sucesso'))
 	}),
 
-	// --- Uploads ---
-	http.post(`${API}/uploads/signature`, async ({ request }) => {
+	// --- Media ---
+	// Espelha o fluxo de três passos do backend: signature -> upload -> confirm.
+	http.post(`${API}/media/signature`, async ({ request }) => {
 		await delay(200)
 		const userId = authHeader(request)
 		if (!userId) return apiError('Não autenticado', 401)
-		const body = (await request.json().catch(() => ({}))) as { folder?: string }
+
+		const body = (await request.json().catch(() => ({}))) as {
+			ownerType?: string
+			ownerId?: string
+			resourceType?: string
+		}
+
+		const root = 'ticketzone'
+		const validOwner = ['USER', 'EVENT', 'VEHICLE', 'PROMOTER', 'CATEGORY', 'PROMOTER_DOCS']
+		const ownerType =
+			body.ownerType && validOwner.includes(body.ownerType) ? body.ownerType : null
+		const folder = ownerType ? `${root}/${ownerType.toLowerCase()}` : `${root}/tmp`
+		const publicId = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2, 10)}`
+
 		return HttpResponse.json(
 			apiResponse({
-				signature: 'mock-signature-' + Date.now(),
-				timestamp: Math.round(Date.now() / 1000),
+				uploadUrl: 'https://api.cloudinary.com/v1_1/df9svkaon/image/upload',
 				cloudName: 'df9svkaon',
 				apiKey: '125776985212896',
-				folder: body.folder ?? 'ticketzone',
+				timestamp: Math.round(Date.now() / 1000),
+				signature: 'mock-signature-' + Date.now(),
+				publicId,
+				mediaId: `media-${Date.now()}`,
+				folder,
+				resourceType: body.resourceType ?? 'image',
+				transformation: 'c_limit,w_2560,h_2560,q_auto:good,f_auto',
+				eager: 'c_fill,w_320,h_320,q_auto:good,f_auto|c_limit,w_1024,q_auto:good,f_auto',
+				allowedFormats: 'jpg,jpeg,png,webp,avif',
+				maxBytes: 10 * 1024 * 1024,
+			}),
+		)
+	}),
+
+	http.post(`${API}/media/confirm`, async ({ request }) => {
+		await delay(300)
+		const userId = authHeader(request)
+		if (!userId) return apiError('Não autenticado', 401)
+
+		const body = (await request.json().catch(() => ({}))) as {
+			publicId?: string
+		}
+		if (!body.publicId) return apiError('publicId em falta', 400)
+
+		return HttpResponse.json(
+			apiResponse({
+				id: `media-${body.publicId}`,
+				publicId: body.publicId,
+				resourceType: 'IMAGE',
+				deliveryType: 'UPLOAD',
+				format: 'jpg',
+				bytes: 245_760,
+				width: 1920,
+				height: 1080,
+				secureUrl: `https://res.cloudinary.com/df9svkaon/image/upload/${body.publicId}`,
+				folder: body.publicId.split('/').slice(0, -1).join('/'),
+				status: 'CONFIRMED',
+				ownerType: null,
+				ownerId: null,
+				createdAt: new Date().toISOString(),
+				confirmedAt: new Date().toISOString(),
+				url: `https://res.cloudinary.com/df9svkaon/image/upload/c_limit,w_2560,h_2560,q_auto:good,f_auto/${body.publicId}`,
+				thumbnailUrl: `https://res.cloudinary.com/df9svkaon/image/upload/c_fill,w_320,h_320,q_auto:good,f_auto/${body.publicId}`,
 			}),
 		)
 	}),

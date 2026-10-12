@@ -158,17 +158,27 @@ export function BecomePromoterPage() {
 			let logo: DocFile | undefined
 			let banner: DocFile | undefined
 
-			const filesToUpload: { file: File; folder: string; dest: DocFile[] | null }[] = []
+			const filesToUpload: {
+				file: File
+				ownerType: 'PROMOTER' | 'PROMOTER_DOCS'
+				resourceType: 'image' | 'raw'
+				kind: 'doc' | 'logo' | 'banner'
+				dest: DocFile[] | null
+			}[] = []
 			let totalFiles = 0
 
 			console.log('[BecomePromoter] personalFiles:', personalFiles.length)
 			console.log('[BecomePromoter] enterpriseFiles:', enterpriseFiles.length)
 
+			// Documentos de verificação (PDF/imagens) vão para PROMOTER_DOCS com
+			// resourceType raw — a assinatura restringe os formatos permitidos.
 			if (form.promoterType === 'PESSOAL') {
 				for (const f of personalFiles) {
 					filesToUpload.push({
 						file: f,
-						folder: 'promotores/pessoal',
+						ownerType: 'PROMOTER_DOCS',
+						resourceType: 'raw',
+						kind: 'doc',
 						dest: personalDocs,
 					})
 				}
@@ -176,34 +186,52 @@ export function BecomePromoterPage() {
 				for (const f of enterpriseFiles) {
 					filesToUpload.push({
 						file: f,
-						folder: 'promotores/empresa',
+						ownerType: 'PROMOTER_DOCS',
+						resourceType: 'raw',
+						kind: 'doc',
 						dest: enterpriseDocs,
 					})
 				}
 			}
 
 			if (logoFile) {
-				filesToUpload.push({ file: logoFile, folder: 'promotores/logo', dest: null })
+				filesToUpload.push({
+					file: logoFile,
+					ownerType: 'PROMOTER',
+					resourceType: 'image',
+					kind: 'logo',
+					dest: null,
+				})
 			}
 			if (bannerFile) {
-				filesToUpload.push({ file: bannerFile, folder: 'promotores/banner', dest: null })
+				filesToUpload.push({
+					file: bannerFile,
+					ownerType: 'PROMOTER',
+					resourceType: 'image',
+					kind: 'banner',
+					dest: null,
+				})
 			}
 
 			totalFiles = filesToUpload.length
 			console.log('[BecomePromoter] filesToUpload:', totalFiles)
 
 			for (let i = 0; i < filesToUpload.length; i++) {
-				const { file, folder, dest } = filesToUpload[i]
+				const { file, ownerType, resourceType, kind, dest } = filesToUpload[i]
 				console.log(
-					`[BecomePromoter] uploading ${i + 1}/${totalFiles}: ${file.name} -> ${folder}`,
+					`[BecomePromoter] uploading ${i + 1}/${totalFiles}: ${file.name} -> ${ownerType}`,
 				)
-				const doc = await cloudinaryUpload.upload(file, folder)
+				const doc = await cloudinaryUpload.upload(file, {
+					ownerType,
+					resourceType,
+					maxBytes: resourceType === 'raw' ? 10 * 1024 * 1024 : 5 * 1024 * 1024,
+				})
 				console.log(`[BecomePromoter] upload result:`, doc)
 				if (dest) {
 					dest.push(doc)
-				} else if (folder === 'promotores/logo') {
+				} else if (kind === 'logo') {
 					logo = doc
-				} else if (folder === 'promotores/banner') {
+				} else if (kind === 'banner') {
 					banner = doc
 				}
 				setUploadProgress(Math.round(((i + 1) / totalFiles) * 100))

@@ -105,7 +105,11 @@ export function AdminFleet() {
 			// Upload pending files
 			const uploaded: PhotoFile[] = []
 			for (const file of filesToUpload) {
-				const result = await cloudinary.upload(file, 'veiculos')
+				const result = await cloudinary.upload(file, {
+					ownerType: 'VEHICLE',
+					ownerId: editTarget?.id,
+					maxBytes: 5 * 1024 * 1024,
+				})
 				uploaded.push({ url: result.url, idcloudinary: result.idcloudinary })
 			}
 

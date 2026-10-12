@@ -65,10 +65,15 @@ export function ProfilePage() {
 		}
 
 		try {
-			const result = await cloudinary.upload(file, 'avatars')
+			const result = await cloudinary.upload(file, {
+				ownerType: 'USER',
+				ownerId: user?.id,
+				maxBytes: 5 * 1024 * 1024,
+			})
 			await updateProfile.mutateAsync({ image: result.url })
-		} catch {
-			toast.error('Erro ao atualizar avatar')
+		} catch (err) {
+			// O hook de upload já emite o toast com a causa real.
+			if (!(err instanceof Error)) toast.error('Erro ao atualizar avatar')
 		}
 	}
 

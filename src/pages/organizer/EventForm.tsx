@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+﻿import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { toast } from 'react-hot-toast'
 import {
@@ -372,8 +372,16 @@ export function EventForm() {
 		let gallery: DocFile[]
 
 		try {
+			// Na criação o evento ainda não existe: o owner fica por vincular e
+			// é aplicado no `confirm`. Na edição já temos o id.
+			const mediaOwner = {
+				ownerType: 'EVENT' as const,
+				...(id ? { ownerId: id } : {}),
+				maxBytes: 10 * 1024 * 1024,
+			}
+
 			if (bannerFile) {
-				const result = await cloudinary.upload(bannerFile, 'eventos/banners')
+				const result = await cloudinary.upload(bannerFile, mediaOwner)
 				bannerUrl = result.url
 				cloudinaryId = result.idcloudinary
 			}
@@ -383,7 +391,7 @@ export function EventForm() {
 
 			if (newItems.length > 0) {
 				const uploaded = await Promise.all(
-					newItems.map((g) => cloudinary.upload(g.file!, 'eventos/galeria')),
+					newItems.map((g) => cloudinary.upload(g.file!, mediaOwner)),
 				)
 				gallery = [
 					...existingItems.map((g) => ({ url: g.url, idcloudinary: g.idcloudinary! })),

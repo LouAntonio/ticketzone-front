@@ -67,12 +67,17 @@ export function AdminCategories() {
 		}
 
 		try {
-			const result = await cloudinary.upload(file, 'categorias')
+			const result = await cloudinary.upload(file, {
+				ownerType: 'CATEGORY',
+				ownerId: editId ?? undefined,
+				maxBytes: 5 * 1024 * 1024,
+			})
 			setFormImage(result.url)
 			setFormCloudinaryId(result.idcloudinary)
 			setImagePreview(result.url)
-		} catch {
-			toast.error('Erro ao fazer upload da imagem')
+		} catch (err) {
+			// O hook de upload já emite o toast com a causa real.
+			if (!(err instanceof Error)) toast.error('Erro ao fazer upload da imagem')
 		}
 	}
 
