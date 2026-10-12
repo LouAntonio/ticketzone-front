@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import {
 	useAdminEvents,
 	useAdminPendingEvents,
@@ -103,12 +104,19 @@ export function AdminEvents() {
 	return (
 		<div className="space-y-6">
 			<div className="admin-stagger-1">
-				<h1 className="font-display text-4xl tracking-[0.08em] text-white uppercase">
-					Eventos
-				</h1>
-				<p className="text-[#8a7a6e] text-sm mt-1 font-heading">
-					Gestão de todos os eventos da plataforma
-				</p>
+				<div className="flex flex-wrap items-start justify-between gap-4">
+					<div>
+						<h1 className="font-display text-4xl tracking-[0.08em] text-white uppercase">
+							Eventos
+						</h1>
+						<p className="text-[#8a7a6e] text-sm mt-1 font-heading">
+							Gestão de todos os eventos da plataforma
+						</p>
+					</div>
+					<Link to="/admin/events/private/new" className="btn-admin-brand">
+						+ Evento privado
+					</Link>
+				</div>
 			</div>
 
 			{/* Tabs */}
@@ -208,9 +216,16 @@ export function AdminEvents() {
 									>
 										<td className="px-4 py-3">
 											<div>
-												<p className="text-sm font-heading font-500 text-[#d4c5b8]">
-													{event.title}
-												</p>
+												<div className="flex items-center gap-2 flex-wrap">
+													<p className="text-sm font-heading font-500 text-[#d4c5b8]">
+														{event.title}
+													</p>
+													{event.visibility === 'INVITE_ONLY' && (
+														<span className="badge-admin !border-[#8a7a6e] !text-[#d4c5b8]">
+															Privado
+														</span>
+													)}
+												</div>
 												<p className="text-xs text-[#6a5a4e] mt-0.5 font-heading">
 													{event.province} ·{' '}
 													{event.categoryName ?? event.category ?? '—'}
@@ -237,6 +252,15 @@ export function AdminEvents() {
 										</td>
 										<td className="px-4 py-3 text-right">
 											<div className="flex items-center justify-end gap-1.5 flex-wrap">
+												{event.visibility === 'INVITE_ONLY' && (
+													<Link
+														to={`/admin/events/${event.id}/guests`}
+														className="text-[11px] px-2 py-1 border-2 border-[#3d3028] text-[#8a7a6e] hover:border-[#d4c5b8] hover:text-[#d4c5b8] transition-colors font-heading font-500"
+														title="Gerir convidados e links de convite"
+													>
+														Convidados · {event.guestsCount ?? 0}
+													</Link>
+												)}
 												<button
 													onClick={() =>
 														toggleFeatured.mutate({ id: event.id })

@@ -55,6 +55,9 @@ import { ValidationPortal } from '../pages/validation/ValidationPortal'
 import { AdminDashboard } from '../pages/admin/Dashboard'
 import { AdminUsers } from '../pages/admin/Users'
 import { AdminEvents } from '../pages/admin/Events'
+import { AdminEventGuests } from '../pages/admin/EventGuests'
+import { PrivateEventForm } from '../pages/admin/PrivateEventForm'
+import { InvitationPage } from '../pages/invitation/InvitationPage'
 import { AdminOrders } from '../pages/admin/Orders'
 import { AdminOrganizers } from '../pages/admin/Organizers'
 import { AdminFinancial } from '../pages/admin/Financial'
@@ -159,6 +162,14 @@ export const router = createBrowserRouter([
 							{ path: '/admin', element: <AdminDashboard /> },
 							{ path: '/admin/users', element: <AdminUsers /> },
 							{ path: '/admin/events', element: <AdminEvents /> },
+							{
+								path: '/admin/events/private/new',
+								element: <PrivateEventForm />,
+							},
+							{
+								path: '/admin/events/:id/guests',
+								element: <AdminEventGuests />,
+							},
 							{ path: '/admin/orders', element: <AdminOrders /> },
 							{ path: '/admin/organizers', element: <AdminOrganizers /> },
 							{ path: '/admin/financial', element: <AdminFinancial /> },
@@ -174,6 +185,10 @@ export const router = createBrowserRouter([
 				element: <ProtectedRoute />,
 				children: [{ path: '/validate', element: <ValidationPortal /> }],
 			},
+
+			// Convite a um evento privado. Fora de qualquer layout: quem chega
+			// aqui vem por um link pessoal, não por navegação.
+			{ path: '/convite/:token', element: <InvitationPage /> },
 
 			{ path: '*', element: <Navigate to="/" replace /> },
 		],

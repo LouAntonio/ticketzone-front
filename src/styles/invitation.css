@@ -1,0 +1,296 @@
+@import '@fontsource/bodoni-moda/400.css';
+@import '@fontsource/bodoni-moda/500.css';
+@import '@fontsource/bodoni-moda/600.css';
+@import '@fontsource/bodoni-moda/700.css';
+@import '@fontsource/karla/400.css';
+@import '@fontsource/karla/500.css';
+@import '@fontsource/karla/600.css';
+@import '@fontsource/karla/700.css';
+@import '@fontsource/ibm-plex-mono/400.css';
+@import '@fontsource/ibm-plex-mono/500.css';
+
+/**
+ * Convite a um evento privado.
+ *
+ * Tokens com escopo no componente: a página nunca herda nem altera a paleta
+ * pública do TicketZone. É uma decisão deliberada — um convite não deve
+ * parecer-se com o catálogo, senão o convidado não sabe onde está.
+ *
+ * A direcção não é o creme/terracota do site público nem preto com acento
+ * neon. Aubergine com dourado antigo, e o cartão claro como superfície
+ * dominante: é formal sem ser solene.
+ */
+.invitation {
+	--plum: #2b1220;
+	--plum-deep: #1a0a13;
+	--bone: #f4efe4;
+	--gold: #c6a15b;
+	--gold-dim: #8f7340;
+	--dust: #bca9b0;
+
+	--inv-display: 'Bodoni Moda', Georgia, serif;
+	--inv-body: 'Karla', system-ui, sans-serif;
+	--inv-mono: 'IBM Plex Mono', ui-monospace, monospace;
+
+	position: relative;
+	isolation: isolate;
+	min-height: 100dvh;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 1.5rem 1rem 4rem;
+	background: var(--plum);
+	color: var(--bone);
+	font-family: var(--inv-body);
+	-webkit-font-smoothing: antialiased;
+}
+
+/* Vinheta: puxa o olho para o centro sem precisar de um gradiente óbvio. */
+.invitation::before {
+	content: '';
+	position: absolute;
+	inset: 0;
+	z-index: -1;
+	background: radial-gradient(120% 90% at 50% 0%, var(--plum) 0%, var(--plum-deep) 78%);
+}
+
+/* Papel: grão fino, para o cartão não parecer um rectângulo de ecrã. */
+.inv-card {
+	position: relative;
+	width: 100%;
+	max-width: 27rem;
+	background: var(--bone);
+	color: var(--plum-deep);
+	border-radius: 2px;
+	box-shadow:
+		0 1px 0 rgba(255, 255, 255, 0.22) inset,
+		0 28px 70px -24px rgba(0, 0, 0, 0.72);
+	transform-style: preserve-3d;
+	transition: transform 720ms cubic-bezier(0.2, 0.72, 0.2, 1);
+}
+
+/* Debossed: o nome do convidado é impresso no cartão, não escrito por cima. */
+.inv-card__face {
+	backface-visibility: hidden;
+	padding: 2.75rem 1.75rem 2.25rem;
+	text-align: center;
+}
+
+.inv-card__back {
+	transform: rotateY(180deg);
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 1.1rem;
+}
+
+.invitation[data-flipped='true'] .inv-card {
+	transform: rotateY(180deg);
+}
+
+.inv-eyebrow {
+	font-family: var(--inv-body);
+	font-size: 0.6875rem;
+	font-weight: 600;
+	letter-spacing: 0.28em;
+	text-transform: uppercase;
+	color: var(--gold-dim);
+}
+
+.inv-names {
+	font-family: var(--inv-display);
+	font-weight: 500;
+	font-size: clamp(2.1rem, 9vw, 2.85rem);
+	line-height: 1.08;
+	letter-spacing: -0.01em;
+	margin: 0.4rem 0 0;
+}
+
+/* Filete de ouro, com um losango ao centro: o único ornamento do cartão. */
+.inv-rule {
+	display: flex;
+	align-items: center;
+	gap: 0.65rem;
+	margin: 1.6rem 0;
+	color: var(--gold);
+}
+
+.inv-rule::before,
+.inv-rule::after {
+	content: '';
+	flex: 1;
+	height: 1px;
+	background: currentColor;
+	opacity: 0.55;
+}
+
+.inv-rule span {
+	font-size: 0.5rem;
+	line-height: 1;
+}
+
+.inv-meta {
+	font-family: var(--inv-mono);
+	font-size: 0.75rem;
+	letter-spacing: 0.02em;
+	line-height: 1.85;
+	color: #4a3a41;
+}
+
+.inv-place {
+	font-family: var(--inv-display);
+	font-size: 1.15rem;
+	font-weight: 500;
+	margin: 0.35rem 0 0.15rem;
+}
+
+/* O nome do convidado, em relevo. É o elemento pessoal de toda a página. */
+.inv-to {
+	display: block;
+	margin: 1.5rem 0 0.5rem;
+}
+
+.inv-to__label {
+	font-family: var(--inv-body);
+	font-size: 0.625rem;
+	font-weight: 600;
+	letter-spacing: 0.24em;
+	text-transform: uppercase;
+	color: var(--gold-dim);
+}
+
+.inv-to__name {
+	font-family: var(--inv-display);
+	font-size: 1.5rem;
+	font-weight: 500;
+	margin: 0.3rem 0 0;
+	/* Sombra dupla: da uma vez carimbo e sulco. */
+	text-shadow:
+		0 1px 0 rgba(255, 255, 255, 0.85),
+		0 -1px 0 rgba(27, 10, 19, 0.16);
+}
+
+.inv-to__count {
+	font-family: var(--inv-mono);
+	font-size: 0.75rem;
+	color: #6b565f;
+	margin: 0.35rem 0 0;
+}
+
+.inv-flip {
+	position: relative;
+	margin-top: 1.75rem;
+	background: none;
+	border: 0;
+	padding: 0;
+	font-family: var(--inv-body);
+	font-size: 0.75rem;
+	font-weight: 600;
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
+	color: var(--gold-dim);
+	cursor: pointer;
+}
+
+.inv-flip::after {
+	content: '';
+	position: absolute;
+	left: 0;
+	right: 0;
+	bottom: -3px;
+	height: 1px;
+	background: currentColor;
+	opacity: 0.4;
+	transition: opacity 180ms ease;
+}
+
+.inv-flip:hover::after,
+.inv-flip:focus-visible::after {
+	opacity: 1;
+}
+
+.inv-flip:focus-visible {
+	outline: 2px solid var(--gold);
+	outline-offset: 4px;
+}
+
+.inv-code {
+	font-family: var(--inv-mono);
+	font-size: 0.8125rem;
+	letter-spacing: 0.18em;
+	color: var(--gold-dim);
+}
+
+/* Estado do bilhete. Uma cor, e um rótulo que diz o que fazer a seguir. */
+.inv-status {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.45rem;
+	font-family: var(--inv-body);
+	font-size: 0.6875rem;
+	font-weight: 700;
+	letter-spacing: 0.18em;
+	text-transform: uppercase;
+	padding: 0.4rem 0.85rem;
+	border: 1px solid currentColor;
+	border-radius: 999px;
+}
+
+.inv-status[data-status='ACTIVE'] {
+	color: #4f6f4f;
+}
+
+.inv-status[data-status='USED'] {
+	color: var(--gold-dim);
+}
+
+.inv-status[data-status='VOIDED'],
+.inv-status[data-status='CANCELLED'] {
+	color: #8c4a4a;
+}
+
+.inv-foot {
+	margin: 0.25rem 0 0;
+	font-family: var(--inv-body);
+	font-size: 0.75rem;
+	color: var(--dust);
+	text-align: center;
+}
+
+.inv-foot a {
+	color: var(--gold);
+	text-underline-offset: 3px;
+}
+
+/* Estados de carregamento e erro, no tom da página e não do dashboard. */
+.inv-notice {
+	max-width: 27rem;
+	padding: 2.5rem 2rem;
+	background: var(--bone);
+	color: var(--plum-deep);
+	border-radius: 2px;
+	text-align: center;
+	box-shadow: 0 28px 70px -24px rgba(0, 0, 0, 0.72);
+}
+
+.inv-notice h1 {
+	font-family: var(--inv-display);
+	font-size: 1.6rem;
+	font-weight: 500;
+	margin: 0 0 0.6rem;
+}
+
+.inv-notice p {
+	font-size: 0.875rem;
+	line-height: 1.7;
+	color: #4a3a41;
+	margin: 0;
+}
+
+/* Sem movimento: o cartão troca de face sem girar. */
+@media (prefers-reduced-motion: reduce) {
+	.inv-card {
+		transition: none;
+	}
+}

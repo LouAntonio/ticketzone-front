@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'react-hot-toast'
 import { adminApi } from '../endpoints/admin'
+import type { PrivateEventInput } from '../endpoints/admin'
 import { categoriesApi } from '../endpoints/categories'
 
 // ==================== Stats ====================
@@ -448,5 +449,73 @@ export function useDeleteCategory() {
 			qc.invalidateQueries({ queryKey: ['admin', 'categories'] })
 		},
 		onError: () => toast.error('Erro ao eliminar categoria'),
+	})
+}
+
+// ==================== Eventos privados ====================
+
+export function useCreatePrivateEvent() {
+	return useMutation({
+		mutationFn: (data: PrivateEventInput) => adminApi.createPrivateEvent(data),
+		onSuccess: (event) => {
+			toast.success('Evento privado criado')
+			return event
+		},
+		onError: (error: Error) => toast.error(error.message || 'Erro ao criar o evento'),
+	})
+}
+
+export function useEventGuests(eventId: string | undefined) {
+	return useQuery({
+		queryKey: ['admin', 'event-guests', eventId],
+		queryFn: () => adminApi.getEventGuests(eventId as string),
+		enabled: Boolean(eventId),
+	})
+}
+
+export function useAddEventGuests(eventId: string | undefined) {
+	const qc = useQueryClient()
+	return useMutation({
+		mutationFn: (input: { batchId: string; guests: { name: string; partySize?: number }[] }) =>
+			adminApi.addEventGuests(eventId as string, input.batchId, input.guests),
+		onSuccess: (result) => {
+			const { created, skipped } = result
+			if (skipped.length > 0) {
+				toast.success(
+					`${created} convidado(s) registado(s). ${skipped.length} ignorado(s): ` +
+						skipped.map((s) => `${s.name} (${s.reason.toLowerCase()})`).join(', '),
+					{ duration: 6000 },
+				)
+			} else {
+				toast.success(`${created} convidado(s) registado(s)`)
+			}
+			qc.invalidateQueries({ queryKey: ['admin', 'event-guests', eventId] })
+		},
+		onError: (error: Error) => toast.error(error.message || 'Erro ao registar convidados'),
+	})
+}
+
+export function useUpdateEventGuest(eventId: string | undefined) {
+	const qc = useQueryClient()
+	return useMutation({
+		mutationFn: (input: { guestId: string; partySize: number }) =>
+			adminApi.updateEventGuest(eventId as string, input.guestId, input.partySize),
+		onSuccess: () => {
+			toast.success('Número de pessoas actualizado')
+			qc.invalidateQueries({ queryKey: ['admin', 'event-guests', eventId] })
+		},
+		onError: (error: Error) => toast.error(error.message || 'Erro ao actualizar'),
+	})
+}
+
+export function useRemoveEventGuest(eventId: string | undefined) {
+	const qc = useQueryClient()
+	return useMutation({
+		mutationFn: (guestId: string) => adminApi.removeEventGuest(eventId as string, guestId),
+		onSuccess: () => {
+			toast.success('Convidado removido')
+			qc.invalidateQueries({ queryKey: ['admin', 'event-guests', eventId] })
+		},
+		onError: (error: Error) => toast.error(error.message || 'Erro ao remover convidado'),
 	})
 }

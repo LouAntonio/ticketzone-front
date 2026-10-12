@@ -58,6 +58,10 @@ export interface AdminEvent {
 	title: string
 	status: string
 	isApproved: boolean
+	/** `PUBLIC` ou `INVITE_ONLY`. Só os privados é que têm lista de convidados. */
+	visibility: string
+	/** Quantos convidados registados — só faz sentido em `INVITE_ONLY`. */
+	guestsCount: number
 	denialReason: string | null
 	province: string
 	location: string
@@ -364,6 +368,44 @@ export interface AdminVehicleDetail {
 
 // ==================== API Calls ====================
 
+// ==================== Tipos: eventos privados ====================
+
+/** Evento `INVITE_ONLY`: nasce publicado e aprovado, sem passar por revisão. */
+export interface PrivateEvent {
+	id: string
+	slug: string
+	title: string
+	startDate: string
+	visibility: string
+	batches?: { id: string; name: string; capacity: number; sold: number }[]
+}
+
+export interface PrivateEventInput {
+	title: string
+	organizerName: string
+	description: string
+	province: string
+	location: string
+	venue?: string
+	address?: string
+	bannerUrl?: string
+	cloudinaryId?: string
+	startDate: string
+	endDate: string
+	keywords?: string[]
+	batches?: { name: string; capacity: number }[]
+}
+
+export interface EventGuest {
+	id: string
+	name: string
+	partySize: number
+	token: string
+	email: string | null
+	createdAt: string
+	ticket: { status: string; entriesUsed: number; entriesAllowed: number } | null
+}
+
 export const adminApi = {
 	// Stats
 	stats: () => api.get<{ stats: AdminStats }>('/admin/stats').then((r) => r.data.stats),
@@ -497,4 +539,45 @@ export const adminApi = {
 	// Audit Logs
 	getAuditLogs: (params?: { page?: number; limit?: number; action?: string; entity?: string }) =>
 		api.get<PaginatedAuditLogs>('/admin/audit-logs', { params }).then((r) => r.data),
+
+	// ==================== Eventos privados ====================
+
+	createPrivateEvent: (data: PrivateEventInput) =>
+		api
+			.post<{ msg: string; data: PrivateEvent }>('/admin/events/private', data)
+			.then((r) => r.data.data),
+
+	getEventGuests: (eventId: string) =>
+		api
+			.get<{
+				batches: { id: string; name: string; capacity: number; sold: number }[]
+				guests: EventGuest[]
+				totals: { parties: number; people: number }
+			}>(`/admin/events/${eventId}/guests`)
+			.then((r) => r.data),
+
+	addEventGuests: (
+		eventId: string,
+		batchId: string,
+		guests: { name: string; partySize?: number }[],
+	) =>
+		api
+			.post<{
+				msg: string
+				data: { created: number; skipped: { name: string; reason: string }[] }
+			}>(`/admin/events/${eventId}/guests`, { batchId, guests })
+			.then((r) => r.data.data),
+
+	updateEventGuest: (eventId: string, guestId: string, partySize: number) =>
+		api
+			.patch<{
+				msg: string
+				data: { partySize: number }
+			}>(`/admin/events/${eventId}/guests/${guestId}`, { partySize })
+			.then((r) => r.data.data),
+
+	removeEventGuest: (eventId: string, guestId: string) =>
+		api
+			.delete<{ msg: string }>(`/admin/events/${eventId}/guests/${guestId}`)
+			.then((r) => r.data),
 }
