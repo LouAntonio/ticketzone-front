@@ -396,6 +396,18 @@ export interface PrivateEventInput {
 	batches?: { name: string; capacity: number }[]
 }
 
+export interface AdminValidator {
+	id: string
+	createdAt: string
+	user: {
+		id: string
+		name: string | null
+		email: string
+		image: string | null
+	}
+	addedBy: { id: string; name: string | null }
+}
+
 export interface EventGuest {
 	id: string
 	name: string
@@ -581,5 +593,30 @@ export const adminApi = {
 	removeEventGuest: (eventId: string, guestId: string) =>
 		api
 			.delete<{ removed: boolean }>(`/admin/events/${eventId}/guests/${guestId}`)
+			.then((r) => r.data),
+
+	// ==================== Validadores de evento privado ====================
+	//
+	// `listStaff` devolve `{ data: staff }` e o interceptor do backend embrulha
+	// em `{ success, msg, data }`; o axios desembrulha uma vez. Logo `r.data` já
+	// é a lista — um segundo `.data` daria `undefined`.
+
+	listEventValidators: (eventId: string) =>
+		api.get<AdminValidator[]>(`/admin/events/${eventId}/validators`).then((r) => r.data),
+
+	addEventValidator: (eventId: string, userId: string) =>
+		api
+			.post<{ msg: string }>(`/admin/events/${eventId}/validators`, { userId })
+			.then((r) => r.data),
+
+	removeEventValidator: (eventId: string, userId: string) =>
+		api
+			.delete<{ msg: string }>(`/admin/events/${eventId}/validators/${userId}`)
+			.then((r) => r.data),
+
+	/** Iniciar o evento. Sem isto o `validateTicket` recusa o consumo. */
+	startPrivateEvent: (eventId: string) =>
+		api
+			.post<{ msg: string; startedAt: string }>(`/admin/events/${eventId}/start`)
 			.then((r) => r.data),
 }

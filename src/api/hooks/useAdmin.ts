@@ -523,3 +523,49 @@ export function useRemoveEventGuest(eventId: string | undefined) {
 		onError: (error: Error) => toast.error(error.message || 'Erro ao remover convidado'),
 	})
 }
+
+// ==================== Validadores de evento privado ====================
+
+export function useEventValidators(eventId: string | undefined) {
+	return useQuery({
+		queryKey: ['admin', 'event-validators', eventId],
+		queryFn: () => adminApi.listEventValidators(eventId as string),
+		enabled: Boolean(eventId),
+	})
+}
+
+export function useAddEventValidator(eventId: string | undefined) {
+	const qc = useQueryClient()
+	return useMutation({
+		mutationFn: (userId: string) => adminApi.addEventValidator(eventId as string, userId),
+		onSuccess: () => toast.success('Validador adicionado'),
+		onSettled: () => {
+			qc.invalidateQueries({ queryKey: ['admin', 'event-validators', eventId] })
+		},
+		onError: (error: Error) => toast.error(error.message || 'Erro ao adicionar validador'),
+	})
+}
+
+export function useRemoveEventValidator(eventId: string | undefined) {
+	const qc = useQueryClient()
+	return useMutation({
+		mutationFn: (userId: string) => adminApi.removeEventValidator(eventId as string, userId),
+		onSuccess: () => toast.success('Validador removido'),
+		onSettled: () => {
+			qc.invalidateQueries({ queryKey: ['admin', 'event-validators', eventId] })
+		},
+		onError: (error: Error) => toast.error(error.message || 'Erro ao remover validador'),
+	})
+}
+
+export function useStartPrivateEvent(eventId: string | undefined) {
+	const qc = useQueryClient()
+	return useMutation({
+		mutationFn: () => adminApi.startPrivateEvent(eventId as string),
+		onSuccess: () => toast.success('Evento iniciado. Já é possível consumir entradas.'),
+		onSettled: () => {
+			qc.invalidateQueries({ queryKey: ['admin', 'events'] })
+		},
+		onError: (error: Error) => toast.error(error.message || 'Erro ao iniciar o evento'),
+	})
+}

@@ -57,6 +57,7 @@ import { AdminUsers } from '../pages/admin/Users'
 import { AdminEvents } from '../pages/admin/Events'
 import { AdminEventGuests } from '../pages/admin/EventGuests'
 import { PrivateEventForm } from '../pages/admin/PrivateEventForm'
+import { AdminEventValidators } from '../pages/admin/EventValidators'
 import { InvitationPage } from '../pages/invitation/InvitationPage'
 import { AdminOrders } from '../pages/admin/Orders'
 import { AdminOrganizers } from '../pages/admin/Organizers'
@@ -169,6 +170,10 @@ export const router = createBrowserRouter([
 							{
 								path: '/admin/events/:id/guests',
 								element: <AdminEventGuests />,
+							},
+							{
+								path: '/admin/events/:id/validators',
+								element: <AdminEventValidators />,
 							},
 							{ path: '/admin/orders', element: <AdminOrders /> },
 							{ path: '/admin/organizers', element: <AdminOrganizers /> },

@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { useAuthStore } from '../../stores/useAuthStore'
 import { authApi } from '../../api/endpoints/auth'
+import { useValidatorEvents } from '../../api/hooks/useAuth'
 import { Header } from './Header'
 
 type SidebarLink = {
@@ -91,6 +92,11 @@ export function DashboardLayout() {
 	}, [user?.id, user?.emailVerified, setUser])
 
 	const isOrgPath = location.pathname.startsWith('/organizer')
+	// Quem valida um evento privado não é organizador: é um `USER` added a
+	// `EventTicketValidator`. A rota `/validate` sempre o aceitou, mas o botão
+	// só aparecia em `/organizer`, ou seja, não tinha por onde entrar.
+	const { data: validatorEvents } = useValidatorEvents()
+	const canValidate = isOrgPath || (validatorEvents?.length ?? 0) > 0
 	const links = isOrgPath ? organizerLinks : buyerLinks
 
 	return (
@@ -131,7 +137,7 @@ export function DashboardLayout() {
 					</nav>
 
 					{/* Quick validation link */}
-					{isOrgPath && (
+					{canValidate && (
 						<div className="p-4 border-t border-border">
 							<NavLink
 								to="/validate"

@@ -253,13 +253,22 @@ export function AdminEvents() {
 										<td className="px-4 py-3 text-right">
 											<div className="flex items-center justify-end gap-1.5 flex-wrap">
 												{event.visibility === 'INVITE_ONLY' && (
-													<Link
-														to={`/admin/events/${event.id}/guests`}
-														className="text-[11px] px-2 py-1 border-2 border-[#3d3028] text-[#8a7a6e] hover:border-[#d4c5b8] hover:text-[#d4c5b8] transition-colors font-heading font-500"
-														title="Gerir convidados e links de convite"
-													>
-														Convidados · {event.guestsCount ?? 0}
-													</Link>
+													<>
+														<Link
+															to={`/admin/events/${event.id}/guests`}
+															className="text-[11px] px-2 py-1 border-2 border-[#3d3028] text-[#8a7a6e] hover:border-[#d4c5b8] hover:text-[#d4c5b8] transition-colors font-heading font-500"
+															title="Gerir convidados e links de convite"
+														>
+															Convidados · {event.guestsCount ?? 0}
+														</Link>
+														<Link
+															to={`/admin/events/${event.id}/validators`}
+															className="text-[11px] px-2 py-1 border-2 border-[#3d3028] text-[#8a7a6e] hover:border-[#d4c5b8] hover:text-[#d4c5b8] transition-colors font-heading font-500"
+															title="Gerir validadores e iniciar o evento"
+														>
+															Validadores
+														</Link>
+													</>
 												)}
 												<button
 													onClick={() =>

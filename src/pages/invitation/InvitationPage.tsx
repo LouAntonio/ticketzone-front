@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { ReactQRCode } from '@lglab/react-qr-code'
 import { api } from '../../api/client'
@@ -24,11 +24,25 @@ export interface Invitation {
 		status: string
 		entriesUsed: number
 		entriesAllowed: number
+		/** Segredo real do QR — é por ele que `verifyQrCode` localiza o bilhete. */
+		qrSecret: string
+		qrExpiresAt: string
 	}
 }
 
 async function loadInvitation(token: string): Promise<Invitation> {
 	const response = await api.get<Invitation>(`/invitations/${token}`)
+	return response.data
+}
+
+/** Igual ao TTL de `rotateQrCode`: 60 segundos. */
+async function rotateInvitationQr(
+	token: string,
+): Promise<{ qrSecret: string; qrExpiresAt: string }> {
+	// O interceptor do axios já desembrulha `{ success, msg, data }`.
+	const response = await api.post<{ qrSecret: string; qrExpiresAt: string }>(
+		`/invitations/${token}/rotate-qr`,
+	)
 	return response.data
 }
 
@@ -71,6 +85,52 @@ export function InvitationPage() {
 		enabled: Boolean(token),
 		retry: false,
 	})
+
+	// O QR vive 60 segundos. Mantemos um relógio e renovamos ao expirar, tal
+	// como `MyTickets` faz com os bilhetes de um comprador — assim um print do
+	// ecrã deixa de servir mal passa um minuto.
+	//
+	// `renewed` só guarda a última rotação; sem ele o valor vem do convite.
+	// Assim não é preciso sincronizar estado dentro de um efeito.
+	const [renewed, setRenewed] = useState<{
+		qrSecret: string
+		qrExpiresAt: string
+	} | null>(null)
+	const [now, setNow] = useState(() => Date.now())
+	const rotating = useRef(false)
+
+	const qr = useMemo<{ qrSecret: string; qrExpiresAt: string } | null>(
+		() =>
+			renewed ??
+			(data
+				? { qrSecret: data.ticket.qrSecret, qrExpiresAt: data.ticket.qrExpiresAt }
+				: null),
+		[renewed, data],
+	)
+
+	useEffect(() => {
+		const id = setInterval(() => setNow(Date.now()), 1000)
+		return () => clearInterval(id)
+	}, [])
+
+	useEffect(() => {
+		if (!qr || !token) return
+		if (now < new Date(qr.qrExpiresAt).getTime()) return
+		if (rotating.current) return
+
+		rotating.current = true
+		rotateInvitationQr(token)
+			.then((next) => {
+				setRenewed(next)
+				setNow(Date.now())
+			})
+			.catch(() => {
+				/* Sem rede: o QR expira e volta quando houver ligação. */
+			})
+			.finally(() => {
+				rotating.current = false
+			})
+	}, [now, qr, token])
 
 	useEffect(() => {
 		document.title = data ? `${data.event.title} — Convite` : 'Convite'
@@ -158,7 +218,9 @@ export function InvitationPage() {
 						}}
 					>
 						<ReactQRCode
-							value={ticket.code}
+							// O segredo, não o código: é por `qrSecret` que o
+							// scanner encontra o bilhete.
+							value={qr?.qrSecret ?? ''}
 							size={148}
 							level="M"
 							marginSize={2}
@@ -177,10 +239,31 @@ export function InvitationPage() {
 						{ticket.entriesUsed} usada{ticket.entriesUsed === 1 ? '' : 's'}
 					</p>
 
+					{!used && (
+						<button
+							type="button"
+							className="inv-flip"
+							onClick={() => {
+								if (!token || rotating.current) return
+								rotating.current = true
+								rotateInvitationQr(token)
+									.then((next) => {
+										setRenewed(next)
+										setNow(Date.now())
+									})
+									.finally(() => {
+										rotating.current = false
+									})
+							}}
+						>
+							Renovar código
+						</button>
+					)}
+
 					<p className="inv-foot">
 						{used
 							? 'Este bilhete já deu entrada. Obrigado por teres vindo.'
-							: 'Mostra este código à entrada. Não é preciso ter conta.'}
+							: 'Mostra este código à entrada. Renova-o se ficar mais de um minuto sem usar.'}
 					</p>
 
 					<button type="button" className="inv-flip" onClick={() => setFlipped(false)}>
