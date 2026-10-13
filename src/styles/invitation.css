@@ -36,9 +36,11 @@
 	isolation: isolate;
 	min-height: 100dvh;
 	display: flex;
-	align-items: center;
 	justify-content: center;
-	padding: 1.5rem 1rem 4rem;
+	/* Sem `align-items: center`: com o cartão mais alto que o ecrã, centrar
+	   verticalmente transborda por cima e deixa de haver scroll até lá. O
+	   `margin: auto` do cartão centra só quando sobra espaço. */
+	padding: 1.5rem 1rem 2rem;
 	background: var(--plum);
 	color: var(--bone);
 	font-family: var(--inv-body);
@@ -59,34 +61,35 @@
 	position: relative;
 	width: 100%;
 	max-width: 27rem;
+	/* Centra vertical e só quando sobra espaço; se o cartão for mais alto que
+	   o ecrã, a margem colapsa a zero e nada fica cortado. */
+	margin: auto;
 	background: var(--bone);
 	color: var(--plum-deep);
 	border-radius: 2px;
 	box-shadow:
 		0 1px 0 rgba(255, 255, 255, 0.22) inset,
 		0 28px 70px -24px rgba(0, 0, 0, 0.72);
-	transform-style: preserve-3d;
-	transition: transform 720ms cubic-bezier(0.2, 0.72, 0.2, 1);
 }
 
 /* Debossed: o nome do convidado é impresso no cartão, não escrito por cima. */
 .inv-card__face {
-	backface-visibility: hidden;
 	padding: 2.75rem 1.75rem 2.25rem;
 	text-align: center;
 }
 
-.inv-card__back {
-	transform: rotateY(180deg);
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	justify-content: center;
-	gap: 1.1rem;
-}
-
-.invitation[data-flipped='true'] .inv-card {
-	transform: rotateY(180deg);
+/**
+ * Perfuração do canhoto: separa o convite do bilhete e diz que o cartão tem
+ * duas partes, sem precisar de o explicar. Tracejado, como num bilhete em
+ * papel.
+ *
+ * Não há entalhes circulares nas laterais de propósito — o fundo da página é
+ * um gradiente e um círculo de cor sólida destacaria em cada canto do cartão.
+ */
+.inv-stub {
+	margin: 2.25rem 0 1.5rem;
+	border: 0;
+	border-top: 1px dashed rgba(43, 18, 32, 0.3);
 }
 
 .inv-eyebrow {
@@ -178,43 +181,6 @@
 	margin: 0.35rem 0 0;
 }
 
-.inv-flip {
-	position: relative;
-	margin-top: 1.75rem;
-	background: none;
-	border: 0;
-	padding: 0;
-	font-family: var(--inv-body);
-	font-size: 0.75rem;
-	font-weight: 600;
-	letter-spacing: 0.14em;
-	text-transform: uppercase;
-	color: var(--gold-dim);
-	cursor: pointer;
-}
-
-.inv-flip::after {
-	content: '';
-	position: absolute;
-	left: 0;
-	right: 0;
-	bottom: -3px;
-	height: 1px;
-	background: currentColor;
-	opacity: 0.4;
-	transition: opacity 180ms ease;
-}
-
-.inv-flip:hover::after,
-.inv-flip:focus-visible::after {
-	opacity: 1;
-}
-
-.inv-flip:focus-visible {
-	outline: 2px solid var(--gold);
-	outline-offset: 4px;
-}
-
 .inv-code {
 	font-family: var(--inv-mono);
 	font-size: 0.8125rem;
@@ -286,11 +252,4 @@
 	line-height: 1.7;
 	color: #4a3a41;
 	margin: 0;
-}
-
-/* Sem movimento: o cartão troca de face sem girar. */
-@media (prefers-reduced-motion: reduce) {
-	.inv-card {
-		transition: none;
-	}
 }

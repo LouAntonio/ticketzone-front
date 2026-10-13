@@ -77,7 +77,6 @@ const STATUS_TEXT: Record<string, string> = {
  */
 export function InvitationPage() {
 	const { token } = useParams<{ token: string }>()
-	const [flipped, setFlipped] = useState(false)
 
 	const { data, isLoading, isError } = useQuery({
 		queryKey: ['invitation', token],
@@ -164,9 +163,8 @@ export function InvitationPage() {
 	const used = ticket.entriesUsed >= ticket.entriesAllowed
 
 	return (
-		<main className="invitation" data-flipped={flipped ? 'true' : 'false'}>
+		<main className="invitation">
 			<div className="inv-card">
-				{/* Frente: o convite. */}
 				<div className="inv-card__face">
 					<p className="inv-eyebrow">Convite</p>
 					<h1 className="inv-names">{event.title}</h1>
@@ -200,13 +198,9 @@ export function InvitationPage() {
 						</p>
 					</div>
 
-					<button type="button" className="inv-flip" onClick={() => setFlipped(true)}>
-						Ver o bilhete
-					</button>
-				</div>
+					{/* Canhoto: a perfuração separa o convite do bilhete. */}
+					<hr className="inv-stub" aria-hidden="true" />
 
-				{/* Verso: o bilhete. */}
-				<div className="inv-card__face inv-card__back">
 					<p className="inv-eyebrow">Bilhete</p>
 					<p className="inv-code">{ticket.code}</p>
 
@@ -215,6 +209,8 @@ export function InvitationPage() {
 							background: '#ffffff',
 							padding: '0.75rem',
 							borderRadius: '2px',
+							display: 'inline-block',
+							margin: '1.1rem 0',
 						}}
 					>
 						<ReactQRCode
@@ -234,41 +230,16 @@ export function InvitationPage() {
 						{STATUS_TEXT[ticket.status] ?? ticket.status}
 					</span>
 
-					<p className="inv-to__count" style={{ margin: 0 }}>
+					<p className="inv-to__count" style={{ margin: '0.6rem 0 0' }}>
 						{ticket.entriesAllowed} entrada{ticket.entriesAllowed === 1 ? '' : 's'} ·{' '}
 						{ticket.entriesUsed} usada{ticket.entriesUsed === 1 ? '' : 's'}
 					</p>
 
-					{!used && (
-						<button
-							type="button"
-							className="inv-flip"
-							onClick={() => {
-								if (!token || rotating.current) return
-								rotating.current = true
-								rotateInvitationQr(token)
-									.then((next) => {
-										setRenewed(next)
-										setNow(Date.now())
-									})
-									.finally(() => {
-										rotating.current = false
-									})
-							}}
-						>
-							Renovar código
-						</button>
-					)}
-
-					<p className="inv-foot">
+					<p className="inv-foot" style={{ marginTop: '1.1rem' }}>
 						{used
 							? 'Este bilhete já deu entrada. Obrigado por teres vindo.'
-							: 'Mostra este código à entrada. Renova-o se ficar mais de um minuto sem usar.'}
+							: 'Mostra este código à entrada.'}
 					</p>
-
-					<button type="button" className="inv-flip" onClick={() => setFlipped(false)}>
-						Voltar ao convite
-					</button>
 				</div>
 			</div>
 		</main>
