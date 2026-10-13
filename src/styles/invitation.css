@@ -1,255 +1,542 @@
-@import '@fontsource/bodoni-moda/400.css';
-@import '@fontsource/bodoni-moda/500.css';
-@import '@fontsource/bodoni-moda/600.css';
-@import '@fontsource/bodoni-moda/700.css';
-@import '@fontsource/karla/400.css';
-@import '@fontsource/karla/500.css';
-@import '@fontsource/karla/600.css';
-@import '@fontsource/karla/700.css';
+@import '@fontsource-variable/caveat';
 @import '@fontsource/ibm-plex-mono/400.css';
 @import '@fontsource/ibm-plex-mono/500.css';
 
 /**
- * Convite a um evento privado.
+ * Convite a um evento privado, dentro de um envelope.
  *
- * Tokens com escopo no componente: a página nunca herda nem altera a paleta
- * pública do TicketZone. É uma decisão deliberada — um convite não deve
- * parecer-se com o catálogo, senão o convidado não sabe onde está.
+ * Mecânica e cores adaptadas de um envelope em CSS puro: aba que roda, carta
+ * que sobe, coração que gira. O gesto e a paleta são do original; o conteúdo
+ * dentro da carta é o convite real.
  *
- * A direcção não é o creme/terracota do site público nem preto com acento
- * neon. Aubergine com dourado antigo, e o cartão claro como superfície
- * dominante: é formal sem ser solene.
+ * UMA VARIÁVEL PARA A GEOMETRIA
+ *
+ * A aba e a capa são triângulos de `border-*` e os lados deles têm de somar à
+ * largura do envelope. Com a largura fixa num sítio e os triângulos noutro,
+ * basta um mudar para os dois saírem do sítio. Tudo mede `--env-w`, e a altura
+ * sai de `--letter-h`, que também é a altura do envelope.
+ *
+ * PORQUÊ A CARTA COBRE-SE INTEIRA
+ *
+ * A aba (`::before`) desce do topo até metade da altura, e a capa (`::after`)
+ * cobre desde a dobra até à base. As duas diagonais são paralelas porque a aba
+ * tem exactamente metade da altura, e a união das duas cobre a caixa toda.
+ * A carta cabe nessa união, logo nunca se vê por baixo.
+ *
+ * PORQUÊ A CARTA ROLA
+ *
+ * A altura do envelope segue a carta, não ao contrário. Se o conteúdo não
+ * couber num ecrã baixo, a carta rola em vez de cortar o QR, que é a única
+ * coisa que o convidado precisa à porta.
  */
+
+:root {
+	--primary: #fff;
+	--bg-color: #254336;
+	--bg-envelope-color: #f5edd1;
+	--envelope-tab: #ecdeb8;
+	--envelope-cover: #e6cfa7;
+	--shadow-color: #1c1c1c;
+	--heart-color: #c2465d;
+
+	/* Texto da carta. Marcas escuras sobre creme, para aguentar contraste. */
+	--txt-color: #3d3324;
+	--txt-soft: #6d5f47;
+
+	/*
+	 * A largura do envelope estrangula por três lados, não por um.
+	 *
+	 * Só pela largura (`86vw`) o envelope ficava enorme num ecrã baixo e largo,
+	 * e a página transbordava. O `dvh` entra para o conjunto caber na altura:
+	 * a soma do envelope, da carta que sobe e da dica tem de caber em
+	 * `100dvh`, senão volta a barra de deslocamento no estado fechado.
+	 *
+	 * O `34dvh` é calibrado a medir nos três tamanhos de ecrã (ver o harness).
+	 */
+	--env-w: min(340px, 86vw);
+	--env-half: calc(var(--env-w) / 2);
+
+	/* Altura do envelope. Proporção do original (350×250 é 0.714); aqui é
+	   um pouco mais alto porque a carta tem de caber com o QR dentro. */
+	--env-h: calc(var(--env-w) * 0.86);
+	/* A carta é mais alta que o envelope: é ela que sobe para fora dele. */
+	--letter-h: calc(var(--env-w) * 1.24);
+	--tab-h: calc(var(--env-h) * 0.5);
+	--cover-top: calc(var(--env-h) * 0.5);
+	--cover-bottom: calc(var(--env-h) * 0.5);
+
+	/*
+	 * A caixa do invólucro tem a altura do estado ABERTO nos dois estados.
+	 *
+	 * Fechado, o espaço acima do envelope fica vazio — é fundo, não se vê — e
+	 * o envelope fica centrado no ecrã. A carta sobe depois para esse espaço
+	 * que já estava reservado, o que evita que o envelope salte ao abrir.
+	 *
+	 * É também o que resolve a barra de deslocamento: a altura não muda, logo
+	 * a página não precisa de crescer entre os dois estados.
+	 */
+	--stage-h: calc(var(--letter-h) + var(--env-h) * 1.14);
+}
+
 .invitation {
-	--plum: #2b1220;
-	--plum-deep: #1a0a13;
-	--bone: #f4efe4;
-	--gold: #c6a15b;
-	--gold-dim: #8f7340;
-	--dust: #bca9b0;
-
-	--inv-display: 'Bodoni Moda', Georgia, serif;
-	--inv-body: 'Karla', system-ui, sans-serif;
-	--inv-mono: 'IBM Plex Mono', ui-monospace, monospace;
-
-	position: relative;
-	isolation: isolate;
 	min-height: 100dvh;
 	display: flex;
+	flex-direction: column;
+	align-items: center;
+	/*
+	 * `flex-start` e não `center`: a carta sobe por cima do envelope ao abrir,
+	 * e centralizar pela caixa dava espaço em baixo a mais e empurrava o
+	 * envelope para cima. O `padding-top` é o espaço que a carta precisa.
+	 */
 	justify-content: center;
-	/* Sem `align-items: center`: com o cartão mais alto que o ecrã, centrar
-	   verticalmente transborda por cima e deixa de haver scroll até lá. O
-	   `margin: auto` do cartão centra só quando sobra espaço. */
-	padding: 1.5rem 1rem 2rem;
-	background: var(--plum);
-	color: var(--bone);
-	font-family: var(--inv-body);
+	padding: 2rem 1rem 1.5rem;
+	background: var(--bg-color);
+	color: var(--primary);
+	font-family: var(--font-body, 'Nunito'), system-ui, sans-serif;
 	-webkit-font-smoothing: antialiased;
 }
 
-/* Vinheta: puxa o olho para o centro sem precisar de um gradiente óbvio. */
-.invitation::before {
+/* O envelope é o botão: tem de ser focável e ter nome acessível.
+ *
+ * `background: transparent` é obrigatório. Com o creme aqui, a caixa pintava
+ * um rectângulo à volta do envelope: era a "folha" da mesma cor que aparecia
+ * por cima quando fechada, e uma faixa por baixo da carta. Quem dá a cor ao
+ * envelope é o `.envelope` e os seus triângulos.
+ */
+.envelope-wrapper {
+	position: relative;
+	background: transparent;
+	border: 0;
+	padding: 0;
+	cursor: pointer;
+	width: var(--env-w);
+	/* Altura fixa, igual nos dois estados: ver `--stage-h`. */
+	height: var(--stage-h);
+	-webkit-tap-highlight-color: transparent;
+}
+
+.envelope-wrapper:focus-visible {
+	outline: 2px solid var(--heart-color);
+	outline-offset: 8px;
+}
+
+.envelope {
+	position: absolute;
+	left: 0;
+	/*
+	 * Centrado na vertical da caixa, e não ancorado à base.
+	 *
+	 * A caixa tem a altura do estado aberto (ver `--stage-h`), para que o
+	 * envelope não salte ao abrir. Ancorado ao fundo, ficava encostado à base
+	 * do ecrã com todo o espaço reservado vazio por cima. Metade da sobra de
+	 * cada lado é o que o põe ao centro.
+	 */
+	top: calc((var(--stage-h) - var(--env-h)) / 2);
+	width: 100%;
+	height: var(--env-h);
+	background: var(--bg-envelope-color);
+	border-radius: 3px;
+	box-shadow: 0 0 40px var(--shadow-color);
+	perspective: 1200px;
+	/*
+	 * O corte só no estado fechado. A carta é mais alta que o envelope, por
+	 * isso a parte que fica abaixo da base transbordaria sem ele. Aberto o corte
+	 * desaparece, porque a carta tem de sair de dentro do envelope.
+	 *
+	 * `overflow` não é animável, por isso muda de repente. Não se nota: muda no
+	 * instante em que a carta começa a subir, e nessa altura a capa já a
+	 * tapava toda.
+	 */
+	overflow: hidden;
+}
+
+.flap > .envelope {
+	overflow: visible;
+}
+
+/* A aba: o triângulo que dobra para trás. */
+.envelope::before {
 	content: '';
 	position: absolute;
-	inset: 0;
-	z-index: -1;
-	background: radial-gradient(120% 90% at 50% 0%, var(--plum) 0%, var(--plum-deep) 78%);
+	top: 0;
+	left: 0;
+	z-index: 2;
+	border-top: var(--tab-h) solid var(--envelope-tab);
+	border-right: var(--env-half) solid transparent;
+	border-left: var(--env-half) solid transparent;
+	transform-origin: top;
+	transition: transform 0.5s ease-in-out 0.5s;
 }
 
-/* Papel: grão fino, para o cartão não parecer um rectângulo de ecrã. */
-.inv-card {
-	position: relative;
-	width: 100%;
-	max-width: 27rem;
-	/* Centra vertical e só quando sobra espaço; se o cartão for mais alto que
-	   o ecrã, a margem colapsa a zero e nada fica cortado. */
-	margin: auto;
-	background: var(--bone);
-	color: var(--plum-deep);
-	border-radius: 2px;
-	box-shadow:
-		0 1px 0 rgba(255, 255, 255, 0.22) inset,
-		0 28px 70px -24px rgba(0, 0, 0, 0.72);
-}
-
-/* Debossed: o nome do convidado é impresso no cartão, não escrito por cima. */
-.inv-card__face {
-	padding: 2.75rem 1.75rem 2.25rem;
-	text-align: center;
+/* A capa: o triângulo de baixo, que tapa a carta. */
+.envelope::after {
+	content: '';
+	position: absolute;
+	bottom: 0;
+	left: 0;
+	z-index: 2;
+	width: 0;
+	height: 0;
+	border-top: var(--cover-top) solid transparent;
+	border-right: var(--env-half) solid var(--envelope-cover);
+	border-bottom: var(--cover-bottom) solid var(--envelope-cover);
+	border-left: var(--env-half) solid var(--envelope-cover);
 }
 
 /**
- * Perfuração do canhoto: separa o convite do bilhete e diz que o cartão tem
- * duas partes, sem precisar de o explicar. Tracejado, como num bilhete em
- * papel.
+ * O nome do evento, impresso na capa.
  *
- * Não há entalhes circulares nas laterais de propósito — o fundo da página é
- * um gradiente e um círculo de cor sólida destacaria em cada canto do cartão.
+ * É a primeira coisa que o convidado quer saber, e está no envelope antes de o
+ * abrir. Some quando a aba se levanta: o envelope leva o título consigo e a
+ * carta passa a ser o convite.
  */
-.inv-stub {
-	margin: 2.25rem 0 1.5rem;
-	border: 0;
-	border-top: 1px dashed rgba(43, 18, 32, 0.3);
-}
-
-.inv-eyebrow {
-	font-family: var(--inv-body);
-	font-size: 0.6875rem;
-	font-weight: 600;
-	letter-spacing: 0.28em;
-	text-transform: uppercase;
-	color: var(--gold-dim);
-}
-
-.inv-names {
-	font-family: var(--inv-display);
-	font-weight: 500;
-	font-size: clamp(2.1rem, 9vw, 2.85rem);
-	line-height: 1.08;
-	letter-spacing: -0.01em;
-	margin: 0.4rem 0 0;
-}
-
-/* Filete de ouro, com um losango ao centro: o único ornamento do cartão. */
-.inv-rule {
-	display: flex;
-	align-items: center;
-	gap: 0.65rem;
-	margin: 1.6rem 0;
-	color: var(--gold);
-}
-
-.inv-rule::before,
-.inv-rule::after {
-	content: '';
-	flex: 1;
-	height: 1px;
-	background: currentColor;
-	opacity: 0.55;
-}
-
-.inv-rule span {
-	font-size: 0.5rem;
-	line-height: 1;
-}
-
-.inv-meta {
-	font-family: var(--inv-mono);
-	font-size: 0.75rem;
-	letter-spacing: 0.02em;
-	line-height: 1.85;
-	color: #4a3a41;
-}
-
-.inv-place {
-	font-family: var(--inv-display);
-	font-size: 1.15rem;
-	font-weight: 500;
-	margin: 0.35rem 0 0.15rem;
-}
-
-/* O nome do convidado, em relevo. É o elemento pessoal de toda a página. */
-.inv-to {
-	display: block;
-	margin: 1.5rem 0 0.5rem;
-}
-
-.inv-to__label {
-	font-family: var(--inv-body);
-	font-size: 0.625rem;
-	font-weight: 600;
-	letter-spacing: 0.24em;
-	text-transform: uppercase;
-	color: var(--gold-dim);
-}
-
-.inv-to__name {
-	font-family: var(--inv-display);
-	font-size: 1.5rem;
-	font-weight: 500;
-	margin: 0.3rem 0 0;
-	/* Sombra dupla: da uma vez carimbo e sulco. */
-	text-shadow:
-		0 1px 0 rgba(255, 255, 255, 0.85),
-		0 -1px 0 rgba(27, 10, 19, 0.16);
-}
-
-.inv-to__count {
-	font-family: var(--inv-mono);
-	font-size: 0.75rem;
-	color: #6b565f;
-	margin: 0.35rem 0 0;
-}
-
-.inv-code {
-	font-family: var(--inv-mono);
-	font-size: 0.8125rem;
-	letter-spacing: 0.18em;
-	color: var(--gold-dim);
-}
-
-/* Estado do bilhete. Uma cor, e um rótulo que diz o que fazer a seguir. */
-.inv-status {
-	display: inline-flex;
-	align-items: center;
-	gap: 0.45rem;
-	font-family: var(--inv-body);
-	font-size: 0.6875rem;
+.envelope-label {
+	position: absolute;
+	/*
+	 * Em baixo, sobre a faixa da capa e abaixo do vértice do V, que fica a meia
+	 * altura do envelope. O coração ocupa dos 136 aos 157px da base, com o
+	 * envelope a 292px, por isso o título abaixo de 12% não colide com ele.
+	 */
+	bottom: 12%;
+	left: 0;
+	right: 0;
+	z-index: 3;
+	padding: 0 1.25rem;
+	text-align: center;
+	font-family: 'Caveat Variable', cursive;
+	font-size: 1.35rem;
 	font-weight: 700;
-	letter-spacing: 0.18em;
-	text-transform: uppercase;
-	padding: 0.4rem 0.85rem;
-	border: 1px solid currentColor;
-	border-radius: 999px;
+	line-height: 1.15;
+	color: var(--txt-color);
+	pointer-events: none;
+	transition: opacity 0.3s ease 0.1s;
 }
 
-.inv-status[data-status='ACTIVE'] {
-	color: #4f6f4f;
+.flap .envelope-label {
+	opacity: 0;
+	transition-delay: 0s;
 }
 
-.inv-status[data-status='USED'] {
-	color: var(--gold-dim);
-}
-
-.inv-status[data-status='VOIDED'],
-.inv-status[data-status='CANCELLED'] {
-	color: #8c4a4a;
-}
-
-.inv-foot {
-	margin: 0.25rem 0 0;
-	font-family: var(--inv-body);
-	font-size: 0.75rem;
-	color: var(--dust);
+/*
+ * A carta. Fica dentro do envelope, atrás da capa (`z-index` dos
+ * pseudo-elementos é 2), e sobe para fora dele ao abrir.
+ *
+ * Fechada, o seu topo está `letter-h` acima da base do envelope, que é onde a
+ * capa cobre. Ao abrir, sobe `letter-h - env-h`, o que a traz inteiramente
+ * para fora, com a base a assentar na dobra. Como a carta é mais alta que o
+ * envelope, essa translação é maior do que a altura do próprio envelope.
+ */
+.letter {
+	position: absolute;
+	left: 12%;
+	bottom: 0;
+	width: 76%;
+	height: var(--letter-h);
+	z-index: 0;
+	/*
+	 * Fechada, a carta desce `letter-h - env-h` para dentro do envelope: o seu
+	 * topo passa a coincidir com o topo do envelope, e a capa cobre tudo.
+	 *
+	 * O sinal é o que importa. Com `letter-h - env-h` **negativo**, que é
+	 * `calc(var(--env-h) - var(--letter-h))`, a carta sobe e o rodapé dela
+	 * aparece por baixo do envelope. Foi o que aconteceu na primeira
+	 * tentativa.
+	 */
+	transform: translateY(calc(var(--letter-h) - var(--env-h)));
+	background: var(--primary);
 	text-align: center;
+	box-shadow: 0 0 5px var(--shadow-color);
+	padding: 0.9rem 0.8rem;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 0.3rem;
+	/*
+	 * Rola em vez de cortar. Numa janela baixa o conteúdo é mais alto do que a
+	 * carta e o QR é a última coisa a ser vista; cortar deixava o convidado
+	 * sem bilhete. `contain` impede que o scroll da cartapte o da página.
+	 */
+	overflow-y: auto;
+	overscroll-behavior: contain;
+	scrollbar-width: thin;
+	scrollbar-color: var(--txt-soft) transparent;
+	transition: transform 1s ease-in-out;
 }
 
-.inv-foot a {
-	color: var(--gold);
-	text-underline-offset: 3px;
-}
-
-/* Estados de carregamento e erro, no tom da página e não do dashboard. */
-.inv-notice {
-	max-width: 27rem;
-	padding: 2.5rem 2rem;
-	background: var(--bone);
-	color: var(--plum-deep);
-	border-radius: 2px;
+.letter .text {
+	font-family: 'Caveat Variable', cursive;
+	color: var(--txt-color);
 	text-align: center;
-	box-shadow: 0 28px 70px -24px rgba(0, 0, 0, 0.72);
+	font-size: 1rem;
+	line-height: 1.25;
+	align-self: stretch;
 }
 
-.inv-notice h1 {
-	font-family: var(--inv-display);
-	font-size: 1.6rem;
-	font-weight: 500;
-	margin: 0 0 0.6rem;
+/* O nome do convidado é a coisa mais importante da carta. */
+.letter .text strong {
+	display: block;
+	font-size: 1.5rem;
+	font-weight: 700;
+	line-height: 1.1;
 }
 
-.inv-notice p {
-	font-size: 0.875rem;
-	line-height: 1.7;
-	color: #4a3a41;
+.letter .sincerely {
+	text-align: center;
+	font-size: 0.85rem;
+	color: var(--txt-soft);
+	margin: 0.15rem 0 0;
+}
+
+/* Data e lugar: fora da letra manuscrita, para se lerem depressa. */
+.letter .when {
+	font-family: 'IBM Plex Mono', monospace;
+	font-size: 0.5625rem;
+	line-height: 1.55;
+	color: var(--txt-soft);
+	text-align: center;
 	margin: 0;
+	white-space: pre-line;
+}
+
+/* ======================= O QR ======================= */
+
+/*
+ * O QR é a única coisa que o convidado precisa à porta. `white` e não
+ * `--primary`: um QR scan-ável precisa de contraste real.
+ */
+.letter .qr {
+	display: flex;
+	justify-content: center;
+	margin: 0.1rem 0 0;
+	flex: none;
+}
+
+.letter .qr-frame {
+	background: #fff;
+	padding: 0.35rem;
+	border-radius: 3px;
+	line-height: 0;
+}
+
+.letter .qr-life {
+	font-family: 'IBM Plex Mono', monospace;
+	font-size: 0.5rem;
+	letter-spacing: 0.02em;
+	color: var(--txt-soft);
+	text-align: center;
+	margin: 0;
+	font-variant-numeric: tabular-nums;
+}
+
+.letter .status {
+	display: inline-block;
+	flex: none;
+	font-family: 'IBM Plex Mono', monospace;
+	font-size: 0.5rem;
+	font-weight: 500;
+	letter-spacing: 0.16em;
+	text-transform: uppercase;
+	padding: 0.2rem 0.45rem;
+	border: 1px solid currentColor;
+	border-radius: 3px;
+}
+
+.letter .status[data-status='ACTIVE'] {
+	color: #3f6b45;
+}
+
+.letter .status[data-status='USED'] {
+	color: var(--txt-soft);
+}
+
+.letter .status[data-status='VOIDED'],
+.letter .status[data-status='CANCELLED'] {
+	color: #9c2b1c;
+}
+
+/**
+ * O coração.
+ *
+ * Vai no vinco: o ponto onde as duas diagonais da capa se encontram, que é a
+ * metade da altura do envelope. Fica ao lado do `.envelope` na mesma caixa, por
+ * isso usa o mesmo `top` que ele mais meia altura, e não `bottom`.
+ *
+ * `translate` em ambos os estados: o original só o põe no estado fechado, e ao
+ * abrir o coração saltava do sítio.
+ */
+.heart {
+	position: absolute;
+	top: calc((var(--stage-h) - var(--env-h)) / 2 + var(--env-h) / 2);
+	left: 50%;
+	width: 15px;
+	height: 15px;
+	background: var(--heart-color);
+	z-index: 5;
+	/*
+	 * `-50%, -50%` centra a caixa no ponto: `left: 50%` põe a margem esquerda
+	 * no eixo, e o `top` já está no vértice do V, por isso o eixo Y também
+	 * precisa de centrado. Com `50%` em Y o coração descia meio quadrado.
+	 */
+	transform: translate(-50%, -50%) rotate(45deg);
+	transition: transform 0.5s ease-in-out 1s;
+	box-shadow: 0 1px 6px var(--shadow-color);
+	pointer-events: none;
+}
+
+.heart::before,
+.heart::after {
+	content: '';
+	position: absolute;
+	width: 15px;
+	height: 15px;
+	background-color: var(--heart-color);
+	border-radius: 50%;
+}
+
+/*
+ * Os dois lobos do coração, nas posições do original.
+ *
+ * O original define só `top` no primeiro e só `right` no segundo, deixando cada
+ * círculo assentar numa aresta do quadrado: um em cima, outro à direita. É isso
+ * que, depois do `rotate(45deg)` do quadrado, dá o coração reconhecível.
+ *
+ * Com os dois círculos centrados nos cantos (`-7.5px` em ambos os eixos) o
+ * desenho saía mais arredondado e com menos ar de coração.
+ *
+ * Os valores computados estão escritos à mão em vez de se depender da posição
+ * estática implícita: `left: 0` e `top: 0` são o que o browser assume, mas
+ * escrevê-los deixa o desenho legível sem ter de saber isso.
+ */
+.heart::before {
+	top: -7.5px;
+	left: 0;
+}
+
+.heart::after {
+	top: 0;
+	right: 7.5px;
+}
+
+/* ======================= ABERTO ======================= */
+
+/*
+ * A carta sobe para o topo do invólucro e fica com a base assente na dobra.
+ * Só se mexe em `transform`, que corre na GPU.
+ *
+ * Sem `scale`: o escalão é centrado no próprio ponto, o que empurrava a carta
+ * uns píxeis para a direita e descentrava-a do eixo do envelope.
+ */
+.flap > .envelope > .letter {
+	transform: translateY(calc(var(--env-h) * -0.14));
+	/*
+	 * À frente da capa. Fechada a carta tem de estar ATRÁS dela (a capa
+	 * esconde-a), mas aberta é o contrário: a capa é a parte de baixo do
+	 * envelope e a carta passa a ser a frente. Sem isto os triângulos da capa
+	 * desenhavam-se por cima do QR e cortavam-lhe um canto, e um QR cortado não
+	 * é legível — que é o problema que a carta inteira existe para resolver.
+	 *
+	 * O `z-index` não é animável, por isso muda de repente. Não se nota: muda
+	 * no instante em que a carta começa a subir, quando a capa ainda a tapava.
+	 */
+	z-index: 3;
+	transition-delay: 0.45s;
+}
+
+.flap > .envelope::before {
+	transform: rotateX(180deg);
+	z-index: 0;
+}
+
+.flap > .heart {
+	/*
+	 * Aberto, o coração desaparece em vez de rodar.
+	 *
+	 * Ele é um fecho: só existe sobre o envelope selado. Aberto, a ponta do V
+	 * desce até à carta e qualquer rotação do coração punha o desenho por cima
+	 * do QR ou do estado do bilhete. Um `z-index` mais alto não resolvia — o
+	 * coração ficava à frente da carta, que é precisamente o problema.
+	 *
+	 * `scale(0)` não entra: nada aparece do nada. É um `opacity` com um
+	 * encolhimento ligeiro, que o dissolve sem o empurrar de sítio.
+	 */
+	transform: translate(-50%, 50%) scale(0.4);
+	opacity: 0;
+	transition:
+		transform 0.4s ease-in-out,
+		opacity 0.3s ease-in-out;
+	transition-delay: 0.4s;
+}
+
+/* O texto de ajuda troca com o estado, para nunca estar a mentir. */
+.hint {
+	margin-top: 1.25rem;
+	white-space: nowrap;
+	font-family: 'IBM Plex Mono', monospace;
+	font-size: 0.625rem;
+	letter-spacing: 0.2em;
+	text-transform: uppercase;
+	color: rgba(255, 255, 255, 0.55);
+	pointer-events: none;
+	transition: opacity 0.4s ease;
+}
+
+.flap .hint {
+	opacity: 0;
+}
+
+/* ======================= ESTADOS ======================= */
+
+/*
+ * Carregamento e erro ficam fora do envelope. Um link partido precisa de uma
+ * frase clara e acção, não de um envelope fechado por cima.
+ */
+.notice {
+	max-width: 26rem;
+	padding: 2rem 1.75rem;
+	background: var(--bg-envelope-color);
+	color: var(--txt-color);
+	border-radius: 3px;
+	text-align: center;
+	box-shadow: 0 0 40px var(--shadow-color);
+}
+
+.notice h1 {
+	font-size: 1.25rem;
+	font-weight: 600;
+	letter-spacing: -0.02em;
+	margin: 0 0 0.75rem;
+}
+
+.notice p {
+	font-family: 'IBM Plex Mono', monospace;
+	font-size: 0.75rem;
+	line-height: 1.8;
+	color: var(--txt-soft);
+	margin: 0;
+}
+
+/* ======================= MOVIMENTO REDUZIDO =======================
+ *
+ * A carta fica levantada de imediato e o conteúdo legível. Perde-se o gesto,
+ * não a informação.
+ */
+@media (prefers-reduced-motion: reduce) {
+	.envelope::before,
+	.letter,
+	.heart,
+	.hint,
+	.envelope-label {
+		transition: none;
+		transition-delay: 0s;
+	}
+
+	/* Sem a animação, a carta tem de ficar fora do envelope à mesma. */
+	.letter {
+		transform: translateY(calc(var(--letter-h) * -0.86));
+	}
+
+	.envelope-label {
+		opacity: 0;
+	}
 }

@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { ReactQRCode } from '@lglab/react-qr-code'
 import { api } from '../../api/client'
@@ -20,11 +20,10 @@ export interface Invitation {
 	}
 	guest: { name: string; partySize: number }
 	ticket: {
-		code: string
 		status: string
 		entriesUsed: number
 		entriesAllowed: number
-		/** Segredo real do QR — é por ele que `verifyQrCode` localiza o bilhete. */
+		/** Segredo real do QR. É por ele que o scanner encontra o bilhete. */
 		qrSecret: string
 		qrExpiresAt: string
 	}
@@ -48,9 +47,9 @@ async function rotateInvitationQr(
 
 function formatDay(iso: string): string {
 	return new Date(iso).toLocaleDateString('pt-PT', {
-		day: '2-digit',
-		month: '2-digit',
-		year: 'numeric',
+		weekday: 'long',
+		day: 'numeric',
+		month: 'long',
 	})
 }
 
@@ -69,11 +68,14 @@ const STATUS_TEXT: Record<string, string> = {
 }
 
 /**
- * Convite pessoal a um evento privado.
+ * Convite pessoal a um evento privado, dentro de um envelope.
  *
  * Fica fora do `PublicLayout` de propósito: não há header, nem catálogo, nem
- * login. Quem chega aqui chega por um link que recebeu, e a única coisa que
- * precisa de fazer é confirmar que vem e guardar o bilhete.
+ * login. Quem chega aqui chega por um link que recebeu.
+ *
+ * O envelope começa fechado, como no original. O nome do evento está na capa,
+ * que é onde se lê um convite em papel antes de o abrir; ao levantar a aba, o
+ * envelope leva o título consigo e a carta passa a ser o convite.
  */
 export function InvitationPage() {
 	const { token } = useParams<{ token: string }>()
@@ -85,9 +87,9 @@ export function InvitationPage() {
 		retry: false,
 	})
 
-	// O QR vive 60 segundos. Mantemos um relógio e renovamos ao expirar, tal
-	// como `MyTickets` faz com os bilhetes de um comprador — assim um print do
-	// ecrã deixa de servir mal passa um minuto.
+	// O QR vive 60 segundos. Renovamos ao expirar, tal como `MyTickets` faz
+	// com os bilhetes de um comprador, para que um print do ecrã deixe de
+	// servir mal passa um minuto.
 	//
 	// `renewed` só guarda a última rotação; sem ele o valor vem do convite.
 	// Assim não é preciso sincronizar estado dentro de um efeito.
@@ -98,11 +100,18 @@ export function InvitationPage() {
 	const [now, setNow] = useState(() => Date.now())
 	const rotating = useRef(false)
 
+	/** O envelope começa fechado. Ver a nota acima. */
+	const [open, setOpen] = useState(false)
+	const toggle = useCallback(() => setOpen((v) => !v), [])
+
 	const qr = useMemo<{ qrSecret: string; qrExpiresAt: string } | null>(
 		() =>
 			renewed ??
 			(data
-				? { qrSecret: data.ticket.qrSecret, qrExpiresAt: data.ticket.qrExpiresAt }
+				? {
+						qrSecret: data.ticket.qrSecret,
+						qrExpiresAt: data.ticket.qrExpiresAt,
+					}
 				: null),
 		[renewed, data],
 	)
@@ -132,14 +141,14 @@ export function InvitationPage() {
 	}, [now, qr, token])
 
 	useEffect(() => {
-		document.title = data ? `${data.event.title} — Convite` : 'Convite'
+		document.title = data ? `${data.event.title}, convite` : 'Convite'
 	}, [data])
 
 	if (isLoading) {
 		return (
 			<main className="invitation">
-				<div className="inv-notice">
-					<p>A abrir o teu convite…</p>
+				<div className="notice">
+					<p>A abrir o teu convite...</p>
 				</div>
 			</main>
 		)
@@ -148,11 +157,11 @@ export function InvitationPage() {
 	if (isError || !data) {
 		return (
 			<main className="invitation">
-				<div className="inv-notice">
-					<h1>Convite não encontrado</h1>
+				<div className="notice">
+					<h1>Convite indisponível</h1>
 					<p>
-						Este link pode ter sido revogado, ou o evento já não está disponível.
-						Contacta quem te convidou.
+						Este link já não abre. Pede a quem te convidou um link novo, ou manda
+						mensagem se achas que é um engano.
 					</p>
 				</div>
 			</main>
@@ -161,87 +170,92 @@ export function InvitationPage() {
 
 	const { event, guest, ticket } = data
 	const used = ticket.entriesUsed >= ticket.entriesAllowed
+	const secondsLeft = qr
+		? Math.max(0, Math.ceil((new Date(qr.qrExpiresAt).getTime() - now) / 1000))
+		: 0
 
 	return (
 		<main className="invitation">
-			<div className="inv-card">
-				<div className="inv-card__face">
-					<p className="inv-eyebrow">Convite</p>
-					<h1 className="inv-names">{event.title}</h1>
+			<button
+				type="button"
+				className={`envelope-wrapper${open ? ' flap' : ''}`}
+				onClick={toggle}
+				aria-expanded={open}
+				aria-label={open ? 'Fechar o convite' : `Abrir o convite para ${event.title}`}
+			>
+				<div className="envelope">
+					{/*
+					 * O nome do evento na capa. Está antes da carta no DOM para
+					 * ser lido pelos leitores de ecrã antes do conteúdo que só
+					 * aparece depois de abrir.
+					 */}
+					<p className="envelope-label">{event.title}</p>
 
-					<div className="inv-rule" aria-hidden="true">
-						<span>◆</span>
-					</div>
+					{/*
+					 * Fechada, a carta está atrás da capa: não se vê. O
+					 * `inert` tira-a da árvore de acessibilidade para que um
+					 * leitor de ecrã não leia um QR e um estado que ninguém
+					 * está a ver. `inert` e não `hidden`, porque `hidden`
+					 * saltaria a animação de abertura.
+					 */}
+					<div className="letter" inert={!open}>
+						<div className="text">
+							<strong>{guest.name}</strong>
+							<p className="sincerely">
+								{guest.partySize === 1
+									? 'Um lugar reservado'
+									: `${guest.partySize} lugares reservados`}{' '}
+								por {event.organizer}
+							</p>
+						</div>
 
-					<div className="inv-meta">
-						<p>
-							{formatDay(event.startDate)} · {formatHour(event.startDate)}
+						<p className="when">
+							{formatDay(event.startDate)}, {formatHour(event.startDate)}
+							{event.venue ? `\n${event.venue}` : ''}
 						</p>
-						{event.venue && <p className="inv-place">{event.venue}</p>}
-						<p>
-							{[event.address, event.location || event.province]
-								.filter(Boolean)
-								.join(' · ')}
+
+						<div className="qr">
+							<div className="qr-frame">
+								<ReactQRCode
+									// O segredo, não um código: é por `qrSecret` que o
+									// scanner encontra o bilhete.
+									value={qr?.qrSecret ?? ''}
+									size={128}
+									level="M"
+									marginSize={1}
+									dataModulesSettings={{ style: 'rounded', color: '#1c1c1c' }}
+									finderPatternOuterSettings={{
+										style: 'rounded',
+										color: '#1c1c1c',
+									}}
+									finderPatternInnerSettings={{
+										style: 'rounded',
+										color: '#1c1c1c',
+									}}
+								/>
+							</div>
+						</div>
+
+						<p className="qr-life">
+							{secondsLeft > 0 ? `Renova em ${secondsLeft}s` : 'A renovar...'}
+						</p>
+
+						<span className="status" data-status={ticket.status}>
+							{STATUS_TEXT[ticket.status] ?? ticket.status}
+						</span>
+
+						<p className="sincerely">
+							{used ? 'A tua entrada já foi registada.' : 'Mostra este QR à porta.'}
 						</p>
 					</div>
-
-					<div className="inv-rule" aria-hidden="true">
-						<span>◆</span>
-					</div>
-
-					<div className="inv-to">
-						<span className="inv-to__label">Convidado</span>
-						<p className="inv-to__name">{guest.name}</p>
-						<p className="inv-to__count">
-							{guest.partySize} pessoa{guest.partySize === 1 ? '' : 's'} reservada
-							{guest.partySize === 1 ? '' : 's'}
-						</p>
-					</div>
-
-					{/* Canhoto: a perfuração separa o convite do bilhete. */}
-					<hr className="inv-stub" aria-hidden="true" />
-
-					<p className="inv-eyebrow">Bilhete</p>
-					<p className="inv-code">{ticket.code}</p>
-
-					<div
-						style={{
-							background: '#ffffff',
-							padding: '0.75rem',
-							borderRadius: '2px',
-							display: 'inline-block',
-							margin: '1.1rem 0',
-						}}
-					>
-						<ReactQRCode
-							// O segredo, não o código: é por `qrSecret` que o
-							// scanner encontra o bilhete.
-							value={qr?.qrSecret ?? ''}
-							size={148}
-							level="M"
-							marginSize={2}
-							dataModulesSettings={{ style: 'rounded', color: '#1a0a13' }}
-							finderPatternOuterSettings={{ style: 'rounded', color: '#1a0a13' }}
-							finderPatternInnerSettings={{ style: 'rounded', color: '#1a0a13' }}
-						/>
-					</div>
-
-					<span className="inv-status" data-status={ticket.status}>
-						{STATUS_TEXT[ticket.status] ?? ticket.status}
-					</span>
-
-					<p className="inv-to__count" style={{ margin: '0.6rem 0 0' }}>
-						{ticket.entriesAllowed} entrada{ticket.entriesAllowed === 1 ? '' : 's'} ·{' '}
-						{ticket.entriesUsed} usada{ticket.entriesUsed === 1 ? '' : 's'}
-					</p>
-
-					<p className="inv-foot" style={{ marginTop: '1.1rem' }}>
-						{used
-							? 'Este bilhete já deu entrada. Obrigado por teres vindo.'
-							: 'Mostra este código à entrada.'}
-					</p>
 				</div>
-			</div>
+
+				<span className="heart" aria-hidden="true" />
+			</button>
+
+			<span className="hint" aria-hidden="true">
+				{open ? 'Toca para fechar' : 'Toca para abrir'}
+			</span>
 		</main>
 	)
 }
